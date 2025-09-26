@@ -1,0 +1,112 @@
+openapi: 3.0.0
+info:
+  title: Proxy Whale APIs
+  version: 1.0.0
+servers:
+  - url: http://localhost:3000
+    description: Local Proxy Server
+paths:
+  /proxy/whale/update-supplier-id:
+    post:
+      summary: Proxy to Whale API (TW QA) for updating supplier ID
+      description: |
+        Proxy API for batch updating supplier ID for stories. This endpoint forwards requests to Whale API TW QA server (/admin/update-supplier-id).
+      tags:
+        - Proxy
+      parameters:
+        - name: ny-operator
+          in: header
+          required: true
+          description: Operation header for tracking
+          schema:
+            type: string
+            example: 'Amy Wang'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - shopId
+                - market
+                - oldSupplierId
+                - newSupplierId
+              properties:
+                shopId:
+                  type: integer
+                  description: Shop ID to filter stories
+                  example: 12345
+                market:
+                  type: string
+                  description: System market identifier
+                  example: 'TW'
+                oldSupplierId:
+                  type: integer
+                  description: Current supplier ID to be replaced
+                  example: 100
+                newSupplierId:
+                  type: integer
+                  description: New supplier ID to replace with
+                  example: 200
+              additionalProperties: false
+      responses:
+        '200':
+          description: Supplier ID updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      updatedCount:
+                        type: integer
+                        description: Number of stories updated
+                        example: 5
+                      shopId:
+                        type: integer
+                        description: Shop ID that was updated
+                        example: 12345
+                      market:
+                        type: string
+                        description: Market that was updated
+                        example: 'TW'
+                      supplierId:
+                        type: integer
+                        description: New supplier ID that was set
+                        example: 200
+        '400':
+          description: Bad request - invalid input parameters
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: 'Invalid input parameters.'
+        '502':
+          description: Bad Gateway - Whale API unreachable or error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: 'Whale API unreachable or error.'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: 'Internal server error.'

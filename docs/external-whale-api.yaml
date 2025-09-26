@@ -1,0 +1,95 @@
+openapi: 3.0.0
+info:
+  title: Replace Supplier ID API
+  version: 1.0.0
+servers:
+  - url: http://whale-api-internal.91app.io/
+    description: TW server (Prod)
+  - url: http://whale-api-internal.hk.91app.io/
+    description: HK server (Prod)
+  - url: http://whale-api-internal.my.91app.io/
+    description: MY server (Prod)
+  - url: http://whale-api-internal.qa.91dev.tw/
+    description: TW server (QA)
+  - url: http://whale-api-internal.qa1.hk.91dev.tw/
+    description: HK server (QA)
+  - url: http://whale-api-internal.qa1.my.91dev.tw/
+    description: MY server (QA)
+paths:
+  /admin/update-supplier-id:
+    post:
+      tags:
+        - Admin
+      summary: Update Supplier ID for Stories
+      description: Batch update supplier ID for all stories matching the specified criteria
+      parameters:
+        - name: ny-operator
+          in: header
+          required: true
+          description: Operation header for tracking
+          schema:
+            type: string
+            example: 'Amy Wang'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - shopId
+                - market
+                - oldSupplierId
+                - newSupplierId
+              properties:
+                shopId:
+                  type: integer
+                  description: Shop ID to filter stories
+                  example: 12345
+                market:
+                  type: string
+                  description: System market identifier
+                  example: 'TW'
+                oldSupplierId:
+                  type: integer
+                  description: Current supplier ID to be replaced
+                  example: 100
+                newSupplierId:
+                  type: integer
+                  description: New supplier ID to replace with
+                  example: 200
+              additionalProperties: false
+      responses:
+        '200':
+          description: Supplier ID updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      updatedCount:
+                        type: integer
+                        description: Number of stories updated
+                        example: 5
+                      shopId:
+                        type: integer
+                        description: Shop ID that was updated
+                        example: 12345
+                      market:
+                        type: string
+                        description: Market that was updated
+                        example: 'TW'
+                      supplierId:
+                        type: integer
+                        description: New supplier ID that was set
+                        example: 200
+        '400':
+          description: Bad request - invalid input parameters
+        '500':
+          description: Internal server error

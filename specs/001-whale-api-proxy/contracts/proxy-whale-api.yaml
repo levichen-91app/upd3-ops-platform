@@ -1,0 +1,179 @@
+openapi: 3.0.0
+info:
+  title: Whale API Proxy Contract
+  version: 1.0.0
+  description: API contract for Whale API proxy service endpoints
+servers:
+  - url: http://localhost:3000
+    description: Local development server
+
+paths:
+  /proxy/whale/update-supplier-id:
+    post:
+      summary: Proxy to Whale API for updating supplier ID
+      description: |
+        Forwards supplier ID update requests to Whale API TW QA server.
+        Validates input, logs all requests/responses, and handles errors gracefully.
+      operationId: updateSupplierId
+      tags:
+        - Proxy
+      parameters:
+        - name: ny-operator
+          in: header
+          required: true
+          description: Operation header for tracking (forwarded to Whale API)
+          schema:
+            type: string
+            example: 'Amy Wang'
+            minLength: 1
+      requestBody:
+        required: true
+        description: Supplier update request payload
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateSupplierRequest'
+            example:
+              shopId: 12345
+              market: 'TW'
+              oldSupplierId: 100
+              newSupplierId: 200
+      responses:
+        '200':
+          description: Supplier ID updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpdateSupplierSuccessResponse'
+              example:
+                success: true
+                data:
+                  updatedCount: 5
+                  shopId: 12345
+                  market: 'TW'
+                  supplierId: 200
+        '400':
+          description: Bad request - validation error or missing header
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                validation_error:
+                  value:
+                    error: "Validation failed: shopId must be a positive integer"
+                missing_header:
+                  value:
+                    error: "Missing required header: ny-operator"
+                additional_properties:
+                  value:
+                    error: "Additional properties are not allowed"
+        '502':
+          description: Bad Gateway - Whale API error or unexpected response format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                upstream_error:
+                  value:
+                    error: "Whale API returned an error"
+                invalid_format:
+                  value:
+                    error: "Whale API response format is invalid"
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "Internal server error"
+
+components:
+  schemas:
+    UpdateSupplierRequest:
+      type: object
+      required:
+        - shopId
+        - market
+        - oldSupplierId
+        - newSupplierId
+      additionalProperties: false
+      properties:
+        shopId:
+          type: integer
+          minimum: 1
+          description: Shop ID to filter stories
+          example: 12345
+        market:
+          type: string
+          minLength: 1
+          description: System market identifier
+          example: 'TW'
+        oldSupplierId:
+          type: integer
+          minimum: 1
+          description: Current supplier ID to be replaced
+          example: 100
+        newSupplierId:
+          type: integer
+          minimum: 1
+          description: New supplier ID to replace with
+          example: 200
+
+    UpdateSupplierSuccessResponse:
+      type: object
+      required:
+        - success
+        - data
+      properties:
+        success:
+          type: boolean
+          description: Operation success indicator
+          example: true
+        data:
+          type: object
+          required:
+            - updatedCount
+            - shopId
+            - market
+            - supplierId
+          properties:
+            updatedCount:
+              type: integer
+              minimum: 0
+              description: Number of stories updated
+              example: 5
+            shopId:
+              type: integer
+              description: Shop ID that was updated
+              example: 12345
+            market:
+              type: string
+              description: Market that was updated
+              example: 'TW'
+            supplierId:
+              type: integer
+              description: New supplier ID that was set
+              example: 200
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
+          description: Error message describing what went wrong
+          example: "Validation failed"
+
+  # Security schemes (none required for this endpoint)
+  securitySchemes: {}
+
+# No global security requirements
+security: []
+
+tags:
+  - name: Proxy
+    description: API proxy operations for external service integration
