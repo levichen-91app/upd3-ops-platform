@@ -1,77 +1,83 @@
-import {
-  ExceptionFilter,
-  Catch,
-  ArgumentsHost,
-  HttpException,
-  HttpStatus,
-  Logger,
-} from '@nestjs/common';
-import { Request, Response } from 'express';
-import { BaseApiException } from '../exceptions/base-api.exception';
+import { Injectable, ExceptionFilter, Catch, ArgumentsHost, HttpException, HttpStatus, Logger } from '@nestjs/common';
+import { Response, Request } from 'express';
+import { ApiErrorResponse, ErrorObject } from '../interfaces/api-error-response.interface';
+import { ErrorCode, ErrorCodeCategory } from '../enums/error-code.enum';
+import { RequestIdMiddleware } from '../middleware/request-id.middleware';
 
-@Catch(HttpException)
+@Injectable()
+@Catch()
 export class HttpExceptionFilter implements ExceptionFilter {
   private readonly logger = new Logger(HttpExceptionFilter.name);
 
-  catch(exception: HttpException, host: ArgumentsHost) {
+  catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
-    const status = exception.getStatus();
-    const requestId = request.headers['x-request-id'] || 'unknown';
+    const requestId = RequestIdMiddleware.getRequestId(request);
 
-    const errorResponse = {
-      error: exception.message,
+    let status: number;
+    let errorCode: ErrorCode;
+    let message: string;
+    let details: any = undefined;
+
+    if (exception instanceof HttpException) {
+      status = exception.getStatus();
+      const exceptionResponse = exception.getResponse();
+
+      // Check if exception response has custom error structure
+      if (typeof exceptionResponse === 'object' && exceptionResponse !== null && 'code' in exceptionResponse) {
+        const customError = exceptionResponse as any;
+        errorCode = customError.code;
+        message = customError.message;
+        details = customError.details;
+      }
+      // Handle validation errors
+      else if (status === 400 && typeof exceptionResponse === 'object' && 'message' in exceptionResponse) {
+        const messages = Array.isArray(exceptionResponse.message)
+          ? exceptionResponse.message
+          : [exceptionResponse.message];
+
+        message = messages[0] || 'Validation failed';
+        errorCode = message.toLowerCase().includes('required')
+          ? ErrorCode.MISSING_REQUIRED_FIELD
+          : ErrorCode.VALIDATION_ERROR;
+        details = { validationErrors: messages };
+      }
+      // Handle authorization errors
+      else if (status === 401) {
+        errorCode = ErrorCode.UNAUTHORIZED_ACCESS;
+        message = 'Invalid or missing authentication credentials';
+      }
+      // Handle other HTTP exceptions
+      else {
+        errorCode = status >= 500 ? ErrorCode.INTERNAL_SERVER_ERROR : ErrorCode.VALIDATION_ERROR;
+        message = typeof exceptionResponse === 'string' ? exceptionResponse : exception.message;
+      }
+    } else {
+      // Handle non-HTTP exceptions
+      status = HttpStatus.INTERNAL_SERVER_ERROR;
+      errorCode = ErrorCode.INTERNAL_SERVER_ERROR;
+      message = exception instanceof Error ? exception.message : 'Internal server error';
+    }
+
+    // Log the exception
+    this.logger.error('Exception caught', {
+      requestId,
+      method: request.method,
+      url: request.url,
       statusCode: status,
-      timestamp: new Date().toISOString(),
-      path: request.url,
-    };
+      errorCode,
+      message,
+      stack: exception instanceof Error ? exception.stack : undefined,
+    });
 
-    // Log the exception with structured format
-    this.logger.error(
-      'HTTP Exception caught',
-      JSON.stringify({
-        requestId,
-        timestamp: new Date().toISOString(),
-        method: request.method,
-        url: request.url,
-        statusCode: status,
-        error: exception.message,
-        stack: exception.stack,
-        isBaseApiException: exception instanceof BaseApiException,
-        exceptionResponse: exception.getResponse(),
-      }),
+    // Create standardized error response
+    const errorResponse = new ApiErrorResponse(
+      new ErrorObject(errorCode, message, details),
+      requestId
     );
 
-    // Check if it's a BaseApiException with errorCode
-    if (exception instanceof BaseApiException) {
-      const exceptionResponse = exception.getResponse() as any;
-      this.logger.log(
-        'BaseApiException response:',
-        JSON.stringify(exceptionResponse),
-      );
-      response.status(status).json({
-        success: false,
-        error: {
-          message: exceptionResponse.message,
-          errorCode: exceptionResponse.errorCode,
-        },
-      });
-    } else {
-      // For client errors (4xx), return simplified error message
-      if (status >= 400 && status < 500) {
-        response.status(status).json({
-          success: false,
-          error: exception.message,
-        });
-      } else {
-        // For server errors (5xx), return generic error message
-        response.status(status).json({
-          success: false,
-          error: 'Internal server error',
-        });
-      }
-    }
+    response.status(status).json(errorResponse);
   }
 }
 

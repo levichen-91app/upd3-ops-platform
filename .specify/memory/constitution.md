@@ -265,11 +265,10 @@ interface ApiErrorResponse {
 }
 ```
 
-**驗證和安全:**
+**驗證和資料處理:**
 - 所有 DTO 必須使用 `class-validator` 裝飾器
-- 實作適當的身份驗證和授權機制
-- 使用速率限制防止 API 濫用
-- 輸入驗證和清理以防止安全攻擊
+- 實作適當的輸入驗證和資料轉換
+- 確保 API 回應格式的一致性
 
 #### **5.3 OpenAPI/Swagger 文件要求**
 
@@ -321,7 +320,7 @@ interface ApiErrorResponse {
 - [ ] 所有 DTO 都已加上 class-validator 驗證規則和 @ApiProperty Swagger 說明。\
 - [ ] API 端點都包含完整的 @ApiOperation、@ApiResponse 註解。\
 - [ ] 錯誤處理遵循標準化的錯誤代碼設計。\
-- [ ] 實作了適當的輸入驗證和安全措施。\
+- [ ] 實作了適當的輸入驗證和資料轉換。\
 
 #### **7.3 程式碼品質檢查**
 - [ ] Service 層已包含適當的錯誤處理，優先拋出 HttpException 或自定義的 BaseApiException。\
@@ -334,7 +333,7 @@ interface ApiErrorResponse {
 #### **7.4 文件與規範檢查**
 - [ ] 新增的 API 已更新到 Swagger 文件中。\
 - [ ] 遵循 [API 設計規範](../../api-spec.md) 的所有相關標準。\
-- [ ] 如有涉及安全敏感操作，已實作適當的安全控制措施。\
+- [ ] API 回應格式符合統一標準，包含必要的欄位結構。\
 
 ---
 

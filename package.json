@@ -70,15 +70,24 @@
       "json",
       "ts"
     ],
-    "rootDir": "api",
+    "roots": [
+      "<rootDir>/api",
+      "<rootDir>/test"
+    ],
     "testRegex": ".*\\.spec\\.ts$",
     "transform": {
       "^.+\\.(t|j)s$": "ts-jest"
     },
     "collectCoverageFrom": [
-      "**/*.(t|j)s"
+      "api/**/*.(t|j)s",
+      "!api/**/*.spec.ts",
+      "!api/dist/**",
+      "!api/node_modules/**"
     ],
-    "coverageDirectory": "../coverage",
-    "testEnvironment": "node"
+    "coverageDirectory": "coverage",
+    "testEnvironment": "node",
+    "moduleNameMapping": {
+      "^@/(.*)$": "<rootDir>/api/$1"
+    }
   }
 }

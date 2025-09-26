@@ -1,0 +1,277 @@
+openapi: 3.0.3
+info:
+  title: Supplier Update API
+  description: Standardized Proxy API for supplier ID updates
+  version: 1.0.0
+  contact:
+    name: 91APP Platform Team
+    email: platform@91app.com
+
+servers:
+  - url: /api/v1
+    description: API v1 base path
+
+paths:
+  /shops/{shopId}/suppliers:
+    patch:
+      summary: Update supplier ID
+      description: Updates supplier ID for products in a specific shop and market
+      operationId: updateSupplierId
+      parameters:
+        - name: shopId
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+          description: Shop identifier
+          example: 12345
+        - name: ny-operator
+          in: header
+          required: true
+          schema:
+            type: string
+            minLength: 1
+          description: Operator information
+          example: "user@91app.com"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SupplierUpdateRequest'
+      responses:
+        '200':
+          description: Supplier ID updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SupplierUpdateResponse'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              examples:
+                validation_error:
+                  summary: Missing required field
+                  value:
+                    success: false
+                    error:
+                      code: "MISSING_REQUIRED_FIELD"
+                      message: "Market is required"
+                      details:
+                        field: "market"
+                    timestamp: "2025-09-26T14:30:52.123Z"
+                    requestId: "req-20250926143052-a8b2c4d6e"
+                identical_supplier_ids:
+                  summary: Identical supplier IDs
+                  value:
+                    success: false
+                    error:
+                      code: "SUPPLIER_IDS_IDENTICAL"
+                      message: "Old and new supplier IDs must be different"
+                      details:
+                        oldSupplierId: 100
+                        newSupplierId: 100
+                    timestamp: "2025-09-26T14:30:52.123Z"
+                    requestId: "req-20250926143052-a8b2c4d6e"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              example:
+                success: false
+                error:
+                  code: "UNAUTHORIZED_ACCESS"
+                  message: "Invalid or missing authentication credentials"
+                timestamp: "2025-09-26T14:30:52.123Z"
+                requestId: "req-20250926143052-a8b2c4d6e"
+        '502':
+          description: Bad Gateway - upstream service error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              example:
+                success: false
+                error:
+                  code: "WHALE_API_UNAVAILABLE"
+                  message: "External service is temporarily unavailable"
+                  details:
+                    service: "whale-api"
+                    timeout: 5000
+                timestamp: "2025-09-26T14:30:52.123Z"
+                requestId: "req-20250926143052-a8b2c4d6e"
+
+components:
+  schemas:
+    SupplierUpdateRequest:
+      type: object
+      required:
+        - market
+        - oldSupplierId
+        - newSupplierId
+      properties:
+        market:
+          type: string
+          minLength: 1
+          maxLength: 10
+          pattern: '^[A-Z]{2,4}$'
+          description: Market code (e.g., TW, HK)
+          example: "TW"
+        oldSupplierId:
+          type: integer
+          minimum: 1
+          description: Original supplier ID
+          example: 100
+        newSupplierId:
+          type: integer
+          minimum: 1
+          description: New supplier ID
+          example: 200
+      additionalProperties: false
+
+    SupplierUpdateResponse:
+      allOf:
+        - $ref: '#/components/schemas/ApiResponse'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/SupplierUpdateData'
+
+    SupplierUpdateData:
+      type: object
+      required:
+        - updatedCount
+        - shopId
+        - market
+        - supplierId
+      properties:
+        updatedCount:
+          type: integer
+          minimum: 0
+          description: Number of records updated
+          example: 5
+        shopId:
+          type: integer
+          minimum: 1
+          description: Shop identifier
+          example: 12345
+        market:
+          type: string
+          description: Market code
+          example: "TW"
+        supplierId:
+          type: integer
+          minimum: 1
+          description: New supplier ID
+          example: 200
+      additionalProperties: false
+
+    ApiResponse:
+      type: object
+      required:
+        - success
+        - data
+        - timestamp
+        - requestId
+      properties:
+        success:
+          type: boolean
+          enum: [true]
+          description: Success indicator (always true for successful responses)
+        data:
+          type: object
+          description: Response data (type varies by endpoint)
+        timestamp:
+          type: string
+          format: date-time
+          description: ISO 8601 timestamp
+          example: "2025-09-26T14:30:52.123Z"
+        requestId:
+          type: string
+          pattern: '^req-\d{14}-[a-f0-9-]{36}$'
+          description: Unique request identifier
+          example: "req-20250926143052-a8b2c4d6e8f0-1234-5678-90ab-cdef12345678"
+      additionalProperties: false
+
+    ApiErrorResponse:
+      type: object
+      required:
+        - success
+        - error
+        - timestamp
+        - requestId
+      properties:
+        success:
+          type: boolean
+          enum: [false]
+          description: Success indicator (always false for error responses)
+        error:
+          $ref: '#/components/schemas/ErrorObject'
+        timestamp:
+          type: string
+          format: date-time
+          description: ISO 8601 timestamp
+          example: "2025-09-26T14:30:52.123Z"
+        requestId:
+          type: string
+          pattern: '^req-\d{14}-[a-f0-9-]{36}$'
+          description: Unique request identifier
+          example: "req-20250926143052-a8b2c4d6e8f0-1234-5678-90ab-cdef12345678"
+      additionalProperties: false
+
+    ErrorObject:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          enum:
+            # Validation errors (1000-1999)
+            - "VALIDATION_ERROR"
+            - "MISSING_REQUIRED_FIELD"
+            - "INVALID_FIELD_FORMAT"
+            - "INVALID_MARKET_CODE"
+            - "INVALID_SUPPLIER_ID"
+            # Business logic errors (4000-4999)
+            - "BUSINESS_RULE_VIOLATION"
+            - "SUPPLIER_IDS_IDENTICAL"
+            - "SUPPLIER_NOT_FOUND"
+            - "SHOP_NOT_FOUND"
+            # System errors (5000-5999)
+            - "EXTERNAL_SERVICE_ERROR"
+            - "WHALE_API_UNAVAILABLE"
+            - "DATABASE_CONNECTION_ERROR"
+            - "INTERNAL_SERVER_ERROR"
+            - "UNAUTHORIZED_ACCESS"
+          description: Structured error code
+        message:
+          type: string
+          minLength: 1
+          description: English error message
+        details:
+          type: object
+          description: Optional error context and additional information
+          additionalProperties: true
+      additionalProperties: false
+
+  securitySchemes:
+    OperatorHeader:
+      type: apiKey
+      in: header
+      name: ny-operator
+      description: Operator identification header
+
+security:
+  - OperatorHeader: []
+
+tags:
+  - name: Suppliers
+    description: Supplier management operations

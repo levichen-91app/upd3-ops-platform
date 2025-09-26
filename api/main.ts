@@ -2,21 +2,16 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import {
-  HttpExceptionFilter,
-  AllExceptionsFilter,
-} from './common/filters/http-exception.filter';
-import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
-import { RequestIdMiddleware } from './common/middleware/request-id.middleware';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // Configure global middleware for request ID generation
-  const requestIdMiddleware = new RequestIdMiddleware();
-  app.use((req: any, res: any, next: any) =>
-    requestIdMiddleware.use(req, res, next),
-  );
+  // Enable CORS for API documentation access
+  app.enableCors({
+    origin: '*',
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'ny-operator', 'x-request-id'],
+  });
 
   // Configure global validation pipe
   app.useGlobalPipes(
@@ -30,23 +25,38 @@ async function bootstrap() {
     }),
   );
 
-  // Configure global exception filters
-  app.useGlobalFilters(new AllExceptionsFilter(), new HttpExceptionFilter());
-
-  // Configure global interceptors
-  app.useGlobalInterceptors(new LoggingInterceptor());
-
+  // Configure Swagger documentation
   const config = new DocumentBuilder()
-    .setTitle('Whale API Proxy')
-    .setDescription(
-      'Proxy API for forwarding requests to Whale API TW QA server',
-    )
+    .setTitle('UPD3 Operations Platform API')
+    .setDescription('Standardized API for supplier operations and management')
     .setVersion('1.0')
-    .addTag('Proxy', 'Whale API proxy endpoints')
+    .addTag('Suppliers', 'Supplier management operations')
+    .addApiKey({
+      type: 'apiKey',
+      name: 'ny-operator',
+      in: 'header',
+      description: 'Operator identification header'
+    }, 'operator-auth')
     .build();
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api-docs', app, document);
 
-  await app.listen(process.env.PORT || 3000);
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('api-docs', app, document, {
+    swaggerOptions: {
+      persistAuthorization: true,
+    },
+  });
+
+  // Serve OpenAPI JSON at /api-json
+  app.getHttpAdapter().get('/api-json', (req, res) => {
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.send(document);
+  });
+
+  const port = process.env.PORT || 3000;
+  await app.listen(port);
+  console.log(`🚀 Application is running on: http://localhost:${port}`);
+  console.log(`📚 API Documentation: http://localhost:${port}/api-docs`);
+  console.log(`📋 OpenAPI JSON: http://localhost:${port}/api-json`);
 }
 bootstrap();
