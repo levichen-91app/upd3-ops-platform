@@ -18,7 +18,9 @@ export class SuppliersService {
     private readonly httpService: HttpService,
     private readonly configService: ConfigService,
   ) {
-    this.whaleApiUrl = this.configService.get<string>('WHALE_API_URL') || 'https://api.whale.example.com';
+    this.whaleApiUrl =
+      this.configService.get<string>('WHALE_API_URL') ||
+      'http://whale-api-internal.qa.91dev.tw/admin';
   }
 
   async updateSupplierId(
@@ -37,19 +39,23 @@ export class SuppliersService {
     try {
       // Call Whale API to perform the actual update
       const response = await firstValueFrom(
-        this.httpService.post(`${this.whaleApiUrl}/update-supplier-id`, {
-          shopId,
-          market: updateDto.market,
-          oldSupplierId: updateDto.oldSupplierId,
-          newSupplierId: updateDto.newSupplierId,
-          operator,
-        }, {
-          timeout: 10000,
-          headers: {
-            'Content-Type': 'application/json',
-            'User-Agent': 'upd3-ops-platform/1.0',
+        this.httpService.post(
+          `${this.whaleApiUrl}/update-supplier-id`,
+          {
+            shopId,
+            market: updateDto.market,
+            oldSupplierId: updateDto.oldSupplierId,
+            newSupplierId: updateDto.newSupplierId,
           },
-        })
+          {
+            timeout: 10000,
+            headers: {
+              'Content-Type': 'application/json',
+              'User-Agent': 'upd3-ops-platform/1.0',
+              'ny-operator': operator,
+            },
+          },
+        ),
       );
 
       this.logger.log(`Whale API response received`, {
@@ -61,11 +67,17 @@ export class SuppliersService {
       return {
         updatedCount: response.data?.updatedCount || 0,
       };
-
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      const errorResponse = error && typeof error === 'object' && 'response' in error ? (error as any).response : undefined;
-      const errorCode = error && typeof error === 'object' && 'code' in error ? (error as any).code : undefined;
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
+      const errorResponse =
+        error && typeof error === 'object' && 'response' in error
+          ? (error as any).response
+          : undefined;
+      const errorCode =
+        error && typeof error === 'object' && 'code' in error
+          ? (error as any).code
+          : undefined;
 
       this.logger.error(`Whale API call failed`, {
         shopId,
@@ -74,7 +86,12 @@ export class SuppliersService {
         data: errorResponse?.data,
       });
 
-      if (errorCode === 'ECONNREFUSED' || errorCode === 'ENOTFOUND' || errorCode === 'ETIMEDOUT' || errorCode === 'ECONNABORTED') {
+      if (
+        errorCode === 'ECONNREFUSED' ||
+        errorCode === 'ENOTFOUND' ||
+        errorCode === 'ETIMEDOUT' ||
+        errorCode === 'ECONNABORTED'
+      ) {
         throw new BadGatewayException({
           code: ErrorCode.WHALE_API_UNAVAILABLE,
           message: 'External service is temporarily unavailable',
