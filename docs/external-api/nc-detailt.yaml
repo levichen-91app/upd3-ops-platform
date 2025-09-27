@@ -1,0 +1,352 @@
+openapi: 3.0.3
+info:
+  title: Notification  API
+  description: API for getting notification details by shopId and NCId
+  version: 1.0.0
+  contact:
+    name: NineYi OmniCRM Team
+servers:
+  - url: http://nc-api.qa.91dev.tw
+    description: QA server
+  - url: http://nc-api.internal.91app.io
+    description: Staging server
+
+paths:
+  /api/v1/notifications/detail/{shopId}/{ncId}:
+    get:
+      tags:
+        - Notifications
+      summary: Get Notification Detail (現有API，新增欄位PR中)
+      description: Get notification detail by shopId and NCId. Returns null if notification not found.
+      operationId: getNotificationDetail
+      parameters:
+        - name: shopId
+          in: path
+          required: true
+          description: 商店序號
+          schema:
+            type: integer
+            format: int64
+          example: 12345
+        - name: ncId
+          in: path
+          required: true
+          description: Notification Center Id
+          schema:
+            type: string
+          example: "a4070188-050d-47f7-ab24-2523145408cf"
+      responses:
+        '200':
+          description: Success - Returns notification details or null if not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+              example:
+                RequestId: "00f2eeb1-670d-4313-a792-2af157bb80c3"
+                StatusCode: 200
+                Message: ""
+                Data:
+                  NCId: "832a920a-223b-48b4-bc83-225db7f7c5e2"
+                  Status: "Completed"
+                  ChannelType: "Push"
+                  CreateDateTime: "2025-09-15T01:58:31.117"
+                  Report:
+                    NoTokenData: 0
+                    Received: 0
+                    Total: 1
+                    NoUserData: 0
+                    InBlackList: 0
+                    DontWantToReceiveThisMessageType: 0
+                    Sent: 1
+                    Fail: 0
+                    DidNotSend: 0
+                    Cancel: 0
+                  ShortMessageReportLink: ""
+                  NSId: "d68e720f-62ed-4955-802b-8e3f04c56a19"
+        '400':
+          description: Bad Request - Parameter validation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                shopId_invalid:
+                  summary: ShopId validation error
+                  value:
+                    error: "ShopId Out of Range"
+                    details: "ShopId must be greater than 0"
+                    timestamp: "2024-01-15T10:30:00Z"
+                ncId_invalid:
+                  summary: NCId validation error
+                  value:
+                    error: "NCId Should be Guid"
+                    details: "NCId must be a valid GUID format"
+                    timestamp: "2024-01-15T10:30:00Z"
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "Internal server error"
+                details: "An unexpected error occurred"
+                timestamp: "2024-01-15T10:30:00Z"
+
+  /api/v2/ncx/{shopId}/{ncId}/GetPreSignUrl/Audience:
+    get:
+      tags:
+        - Notifications
+      summary: GetPreSignUrl 名單 (現有API)
+      description: Get pre-signed URL for audience data download. Returns empty S3PreSignUrlEntity if S3 operation fails.
+      operationId: getAudiencePreSignUrl
+      parameters:
+        - name: shopId
+          in: path
+          required: true
+          description: 商店序號
+          schema:
+            type: integer
+            format: int64
+          example: 12345
+        - name: ncId
+          in: path
+          required: true
+          description: Notification Center Id
+          schema:
+            type: string
+          example: "a4070188-050d-47f7-ab24-2523145408cf"
+      responses:
+        '200':
+          description: Success - Returns S3PreSignUrlEntity (may be empty if S3 operation fails)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/S3PreSignUrlEntity'
+              example:
+                S3Url: "https://s3.amazonaws.com/bucket/audience/NC-2024-001.csv?AWSAccessKeyId=AKIAIOSFODNN7EXAMPLE&Expires=1640995200&Signature=signature"
+        '400':
+          description: Bad Request - Business logic error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "沒有 S3 名單"
+                details: "S3FileKey is empty or null"
+                timestamp: "2024-01-15T10:30:00Z"
+        '500':
+          description: Internal Server Error - Database query failed or AWS configuration error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "GetNcExtensionJobByNcId Failed"
+                details: "Database query failed or AWS configuration error"
+                timestamp: "2024-01-15T10:30:00Z"
+
+components:
+  schemas:
+    ApiResponse:
+      type: object
+      properties:
+        RequestId:
+          type: string
+          description: Request ID for tracking
+          example: "00f2eeb1-670d-4313-a792-2af157bb80c3"
+        StatusCode:
+          type: integer
+          description: HTTP status code
+          example: 200
+        Message:
+          type: string
+          description: Response message
+          example: ""
+        Data:
+          oneOf:
+            - $ref: '#/components/schemas/NotificationEntity'
+            - type: 'null'
+          description: Notification data or null if not found
+      required:
+        - RequestId
+        - StatusCode
+        - Message
+        - Data
+
+    NotificationEntity:
+      type: object
+      properties:
+        NCId:
+          type: string
+          description: NCId
+          example: "a4070188-050d-47f7-ab24-2523145408cf"
+        NSId:
+          type: string
+          description: NSId
+          example: "2853e80a-452e-4edf-b3b1-3a232453d6eb"
+        Status:
+          type: string
+          description: Job 狀態
+          example: "Completed"
+        ChannelType:
+          type: string
+          description: 遞送方式
+          example: "Email"
+        CreateDateTime:
+          type: string
+          format: date-time
+          description: 建立時間
+          example: "2024-01-15T10:30:00Z"
+        Report:
+          oneOf:
+            - $ref: '#/components/schemas/BaseReportEntity'
+            - $ref: '#/components/schemas/PushReportEntity'
+            - $ref: '#/components/schemas/EmailReportEntity'
+            - $ref: '#/components/schemas/SMSReportEntity'
+        ShortMessageReportLink:
+          type: string
+          nullable: true
+          description: 簡訊明細下載連結
+          example: ""
+      required:
+        - NCId
+        - NSId
+        - Status
+        - ChannelType
+        - CreateDateTime
+        - Report
+
+    BaseReportEntity:
+      type: object
+      properties:
+        Total:
+          type: integer
+          description: 總共幾筆
+          example: 1000
+        NoUserData:
+          type: integer
+          description: 找不到使用者資料
+          example: 50
+        InBlackList:
+          type: integer
+          description: 被黑名單篩掉
+          example: 20
+        DontWantToReceiveThisMessageType:
+          type: integer
+          description: 不想收到這種訊息
+          example: 30
+        Sent:
+          type: integer
+          description: (NS)已遞送
+          example: 800
+        Fail:
+          type: integer
+          description: (NS)遞送失敗
+          example: 50
+        DidNotSend:
+          type: integer
+          description: (NS)沒有遞送出去
+          example: 30
+        Cancel:
+          type: integer
+          description: (NC)取消
+          example: 20
+      required:
+        - Total
+        - NoUserData
+        - InBlackList
+        - DontWantToReceiveThisMessageType
+        - Sent
+        - Fail
+        - DidNotSend
+        - Cancel
+
+    PushReportEntity:
+      allOf:
+        - $ref: '#/components/schemas/BaseReportEntity'
+        - type: object
+          properties:
+            NoTokenData:
+              type: integer
+              description: 沒有Token資料
+              example: 0
+            Received:
+              type: integer
+              description: NS 收到
+              example: 0
+
+    EmailReportEntity:
+      allOf:
+        - $ref: '#/components/schemas/BaseReportEntity'
+        - type: object
+          properties:
+            EmailIsEmpty:
+              type: integer
+              description: Email是空值
+              example: 0
+
+    SMSReportEntity:
+      allOf:
+        - $ref: '#/components/schemas/BaseReportEntity'
+        - type: object
+          properties:
+            CellPhoneIsEmpty:
+              type: integer
+              description: 手機是空值
+              example: 0
+            Received:
+              type: integer
+              description: (NS)收到
+              example: 0
+            Success:
+              type: integer
+              description: 客戶確實收到
+              example: 0
+            Declined:
+              type: integer
+              description: (供應商)取消遞送
+              example: 0
+            CellPhoneIsNotTW:
+              type: integer
+              description: 非TW電話
+              example: 0
+            CellPhoneIsNotMY:
+              type: integer
+              description: 非MY電話
+              example: 0
+
+    S3PreSignUrlEntity:
+      type: object
+      properties:
+        S3Url:
+          type: string
+          description: S3Url
+          example: "https://s3.amazonaws.com/bucket/audience/NC-2024-001.csv?AWSAccessKeyId=AKIAIOSFODNN7EXAMPLE&Expires=1640995200&Signature=signature"
+      required:
+        - S3Url
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+          example: "Invalid parameters"
+        details:
+          type: string
+          description: Error details
+          example: "ShopId must be a positive integer"
+        timestamp:
+          type: string
+          format: date-time
+          description: Error timestamp
+          example: "2024-01-15T10:30:00Z"
+      required:
+        - error
+        - timestamp
+
+tags:
+  - name: Notifications
+    description: Notification management operations

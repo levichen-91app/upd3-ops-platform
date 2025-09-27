@@ -1,0 +1,352 @@
+openapi: 3.0.3
+info:
+  title: Marketing Cloud 裝置 API 整合
+  description: 查詢會員在 Marketing Cloud 系統中的裝置資訊
+  version: 1.0.0
+servers:
+  - url: http://localhost:3000/api/v1
+    description: Development server
+
+paths:
+  /shops/{shopId}/members/by-phone/{phone}/devices:
+    get:
+      summary: 查詢會員裝置清單
+      description: 透過商店 ID 和手機號碼查詢該會員在 Marketing Cloud 中註冊的所有裝置
+      operationId: getMemberDevices
+      parameters:
+        - name: shopId
+          in: path
+          required: true
+          description: 商店 ID
+          schema:
+            type: integer
+            format: int32
+            example: 12345
+        - name: phone
+          in: path
+          required: true
+          description: 會員手機號碼
+          schema:
+            type: string
+            example: "0912345678"
+        - name: ny-operator
+          in: header
+          required: true
+          description: 操作者識別
+          schema:
+            type: string
+            example: "system-admin"
+      responses:
+        '200':
+          description: 成功取得會員裝置清單
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemberDevicesResponse'
+              examples:
+                single_device:
+                  summary: 會員有一個裝置
+                  value:
+                    success: true
+                    data:
+                      shopId: 12345
+                      phone: "0912345678"
+                      devices:
+                        - guid: "550e8400-e29b-41d4-a716-446655440000"
+                          udid: "A1B2C3D4E5F6"
+                          token: "abc123def456..."
+                          shopId: 12345
+                          platformDef: "iOS"
+                          memberId: 67890
+                          advertiseId: "12345678-1234-5678-9012-123456789012"
+                          appVersion: "1.2.3"
+                          updatedDateTime: "2025-09-27T10:30:00.000Z"
+                          createdDateTime: "2025-09-01T08:15:00.000Z"
+                      totalCount: 1
+                    timestamp: "2025-09-27T10:45:00.000Z"
+                    requestId: "req-20250927104500-uuid"
+                multiple_devices:
+                  summary: 會員有多個裝置
+                  value:
+                    success: true
+                    data:
+                      shopId: 12345
+                      phone: "0912345678"
+                      devices:
+                        - guid: "550e8400-e29b-41d4-a716-446655440000"
+                          token: "abc123def456..."
+                          shopId: 12345
+                          platformDef: "iOS"
+                          memberId: 67890
+                          updatedDateTime: "2025-09-27T10:30:00.000Z"
+                          createdDateTime: "2025-09-01T08:15:00.000Z"
+                        - guid: "660e8400-e29b-41d4-a716-446655440001"
+                          token: "def456ghi789..."
+                          shopId: 12345
+                          platformDef: "Android"
+                          memberId: 67890
+                          updatedDateTime: "2025-09-25T15:20:00.000Z"
+                          createdDateTime: "2025-09-20T12:10:00.000Z"
+                      totalCount: 2
+                    timestamp: "2025-09-27T10:45:00.000Z"
+                    requestId: "req-20250927104500-uuid"
+        '400':
+          description: 請求參數無效
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              example:
+                success: false
+                error:
+                  code: "INVALID_REQUEST"
+                  message: "Invalid shop ID format"
+                  details:
+                    field: "shopId"
+                    value: "abc"
+                    constraint: "must be a positive integer"
+                timestamp: "2025-09-27T10:45:00.000Z"
+                requestId: "req-20250927104500-uuid"
+        '401':
+          description: 缺少操作者識別
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              example:
+                success: false
+                error:
+                  code: "UNAUTHORIZED"
+                  message: "Missing ny-operator header"
+                timestamp: "2025-09-27T10:45:00.000Z"
+                requestId: "req-20250927104500-uuid"
+        '404':
+          description: 會員不存在或無裝置資料
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              example:
+                success: false
+                error:
+                  code: "MEMBER_NOT_FOUND"
+                  message: "Member not found or has no registered devices"
+                  details:
+                    shopId: 12345
+                    phone: "0912345678"
+                timestamp: "2025-09-27T10:45:00.000Z"
+                requestId: "req-20250927104500-uuid"
+        '502':
+          description: 外部服務異常
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              examples:
+                service_unavailable:
+                  summary: 外部服務無法連線
+                  value:
+                    success: false
+                    error:
+                      code: "EXTERNAL_SERVICE_UNAVAILABLE"
+                      message: "Marketing Cloud service is temporarily unavailable"
+                      details:
+                        service: "marketing-cloud-api"
+                        errorCode: "ECONNREFUSED"
+                        timeout: 5000
+                    timestamp: "2025-09-27T10:45:00.000Z"
+                    requestId: "req-20250927104500-uuid"
+                timeout:
+                  summary: 外部服務超時
+                  value:
+                    success: false
+                    error:
+                      code: "EXTERNAL_SERVICE_TIMEOUT"
+                      message: "Marketing Cloud service request timeout"
+                      details:
+                        service: "marketing-cloud-api"
+                        timeout: 5000
+                    timestamp: "2025-09-27T10:45:00.000Z"
+                    requestId: "req-20250927104500-uuid"
+
+components:
+  schemas:
+    Device:
+      type: object
+      required:
+        - guid
+        - token
+        - shopId
+        - platformDef
+        - memberId
+        - createdDateTime
+        - updatedDateTime
+      properties:
+        guid:
+          type: string
+          format: uuid
+          description: 裝置唯一識別碼
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        udid:
+          type: string
+          description: 裝置 UDID
+          example: "A1B2C3D4E5F6"
+        token:
+          type: string
+          description: 推播 Token
+          example: "abc123def456..."
+        shopId:
+          type: integer
+          format: int32
+          description: 商店 ID
+          example: 12345
+        platformDef:
+          type: string
+          description: 平台定義
+          enum: ["iOS", "Android"]
+          example: "iOS"
+        memberId:
+          type: integer
+          format: int32
+          description: 會員 ID
+          example: 67890
+        advertiseId:
+          type: string
+          description: 廣告追蹤 ID
+          example: "12345678-1234-5678-9012-123456789012"
+        appVersion:
+          type: string
+          description: App 版本
+          example: "1.2.3"
+        updatedDateTime:
+          type: string
+          format: date-time
+          description: 更新時間
+          example: "2025-09-27T10:30:00.000Z"
+        createdDateTime:
+          type: string
+          format: date-time
+          description: 建立時間
+          example: "2025-09-01T08:15:00.000Z"
+
+    MemberDevicesResponse:
+      type: object
+      required:
+        - success
+        - data
+        - timestamp
+        - requestId
+      properties:
+        success:
+          type: boolean
+          description: 請求是否成功
+          example: true
+        data:
+          type: object
+          required:
+            - shopId
+            - phone
+            - devices
+            - totalCount
+          properties:
+            shopId:
+              type: integer
+              format: int32
+              description: 商店 ID
+              example: 12345
+            phone:
+              type: string
+              description: 會員手機號碼
+              example: "0912345678"
+            devices:
+              type: array
+              items:
+                $ref: '#/components/schemas/Device'
+              description: 裝置清單
+            totalCount:
+              type: integer
+              format: int32
+              description: 裝置總數
+              example: 1
+        timestamp:
+          type: string
+          format: date-time
+          description: 回應時間戳記
+          example: "2025-09-27T10:45:00.000Z"
+        requestId:
+          type: string
+          description: 請求追蹤 ID
+          example: "req-20250927104500-uuid"
+
+    ApiErrorResponse:
+      type: object
+      required:
+        - success
+        - error
+        - timestamp
+        - requestId
+      properties:
+        success:
+          type: boolean
+          description: 請求是否成功
+          example: false
+        error:
+          type: object
+          required:
+            - code
+            - message
+          properties:
+            code:
+              type: string
+              description: 錯誤代碼
+              enum:
+                - "INVALID_REQUEST"
+                - "UNAUTHORIZED"
+                - "MEMBER_NOT_FOUND"
+                - "EXTERNAL_SERVICE_UNAVAILABLE"
+                - "EXTERNAL_SERVICE_TIMEOUT"
+              example: "MEMBER_NOT_FOUND"
+            message:
+              type: string
+              description: 錯誤訊息
+              example: "Member not found or has no registered devices"
+            details:
+              type: object
+              description: 錯誤詳細資訊
+              additionalProperties: true
+        timestamp:
+          type: string
+          format: date-time
+          description: 錯誤時間戳記
+          example: "2025-09-27T10:45:00.000Z"
+        requestId:
+          type: string
+          description: 請求追蹤 ID
+          example: "req-20250927104500-uuid"
+
+  parameters:
+    ShopId:
+      name: shopId
+      in: path
+      required: true
+      description: 商店 ID
+      schema:
+        type: integer
+        format: int32
+        minimum: 1
+    Phone:
+      name: phone
+      in: path
+      required: true
+      description: 會員手機號碼
+      schema:
+        type: string
+        minLength: 1
+    OperatorHeader:
+      name: ny-operator
+      in: header
+      required: true
+      description: 操作者識別
+      schema:
+        type: string
+        minLength: 1

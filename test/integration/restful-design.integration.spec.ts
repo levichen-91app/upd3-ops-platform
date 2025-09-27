@@ -155,7 +155,7 @@ describe('RESTful API Design Validation (Integration)', () => {
       const validOperators = [
         'user@91app.com',
         'admin@company.com',
-        'test-operator'
+        'test-operator',
       ];
 
       for (const operator of validOperators) {

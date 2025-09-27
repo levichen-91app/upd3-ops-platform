@@ -45,7 +45,7 @@ describe('Unified Response Format Integration Tests', () => {
 
       // Validate required fields are present
       expect(Object.keys(response.body)).toEqual(
-        expect.arrayContaining(['success', 'data', 'timestamp', 'requestId'])
+        expect.arrayContaining(['success', 'data', 'timestamp', 'requestId']),
       );
 
       // No additional properties should be present
@@ -62,7 +62,9 @@ describe('Unified Response Format Integration Tests', () => {
       const timestamp = response.body.timestamp;
 
       // Should match ISO 8601 format
-      expect(timestamp).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
+      expect(timestamp).toMatch(
+        /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/,
+      );
 
       // Should be a valid date
       const date = new Date(timestamp);
@@ -156,7 +158,7 @@ describe('Unified Response Format Integration Tests', () => {
 
       // No additional properties should be present
       expect(Object.keys(response.body)).toEqual(
-        expect.arrayContaining(['success', 'error', 'timestamp', 'requestId'])
+        expect.arrayContaining(['success', 'error', 'timestamp', 'requestId']),
       );
       expect(Object.keys(response.body)).toHaveLength(4);
     });
@@ -166,18 +168,18 @@ describe('Unified Response Format Integration Tests', () => {
         {
           request: { oldSupplierId: 100, newSupplierId: 200 }, // Missing market
           expectedCode: /^(VALIDATION_ERROR|MISSING_REQUIRED_FIELD)$/,
-          description: 'missing required field'
+          description: 'missing required field',
         },
         {
           request: { market: 'TW', oldSupplierId: 100, newSupplierId: 100 }, // Identical IDs
           expectedCode: 'SUPPLIER_IDS_IDENTICAL',
-          description: 'business logic violation'
+          description: 'business logic violation',
         },
         {
           request: { market: 'INVALID', oldSupplierId: -1, newSupplierId: 200 }, // Invalid values
           expectedCode: /^(VALIDATION_ERROR|INVALID_FIELD_FORMAT)$/,
-          description: 'invalid field format'
-        }
+          description: 'invalid field format',
+        },
       ];
 
       for (const testCase of testCases) {
@@ -237,7 +239,9 @@ describe('Unified Response Format Integration Tests', () => {
         .expect(400);
 
       // Same timestamp validation as success responses
-      expect(response.body.timestamp).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
+      expect(response.body.timestamp).toMatch(
+        /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/,
+      );
 
       // Same requestId validation as success responses
       expect(response.body.requestId).toMatch(/^req-\d{14}-[a-f0-9-]{36}$/);
@@ -267,7 +271,11 @@ describe('Unified Response Format Integration Tests', () => {
     });
 
     it('should return proper Content-Type header for error responses', async () => {
-      const invalidRequest = { market: '', oldSupplierId: 100, newSupplierId: 200 };
+      const invalidRequest = {
+        market: '',
+        oldSupplierId: 100,
+        newSupplierId: 200,
+      };
 
       await request(app.getHttpServer())
         .patch(`/api/v1/shops/${shopId}/suppliers`)

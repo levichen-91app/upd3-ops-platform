@@ -1,4 +1,9 @@
-import { Injectable, BadGatewayException, Logger, Inject } from '@nestjs/common';
+import {
+  Injectable,
+  BadGatewayException,
+  Logger,
+  Inject,
+} from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import type { ConfigType } from '@nestjs/config';
 import { SupplierUpdateRequestDto } from './dto/supplier-update-request.dto';
@@ -24,7 +29,11 @@ export class SuppliersService {
     @Inject(externalApisConfig.KEY)
     private readonly apisConfig: ConfigType<typeof externalApisConfig>,
   ) {
-    const environment = (process.env.NODE_ENV || 'development') as 'development' | 'staging' | 'production' | 'test';
+    const environment = (process.env.NODE_ENV || 'development') as
+      | 'development'
+      | 'staging'
+      | 'production'
+      | 'test';
     const market = (process.env.MARKET || 'TW') as 'TW' | 'HK' | 'MY';
 
     // Get configuration for current environment and market
@@ -33,8 +42,12 @@ export class SuppliersService {
 
     this.whaleApiConfig = {
       baseUrl: process.env.WHALE_API_URL_OVERRIDE || marketConfig.url,
-      timeout: process.env.WHALE_API_TIMEOUT ? parseInt(process.env.WHALE_API_TIMEOUT) : marketConfig.timeout || 10000,
-      retries: process.env.WHALE_API_RETRIES ? parseInt(process.env.WHALE_API_RETRIES) : marketConfig.retries || 3,
+      timeout: process.env.WHALE_API_TIMEOUT
+        ? parseInt(process.env.WHALE_API_TIMEOUT)
+        : marketConfig.timeout || 10000,
+      retries: process.env.WHALE_API_RETRIES
+        ? parseInt(process.env.WHALE_API_RETRIES)
+        : marketConfig.retries || 3,
     };
 
     this.logger.log(`Whale API configured for ${environment}/${market}`, {

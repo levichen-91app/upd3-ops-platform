@@ -30,23 +30,27 @@ describe('Structured Error Handling Integration Tests', () => {
         {
           request: { oldSupplierId: 100, newSupplierId: 200 }, // Missing market
           expectedCodes: ['VALIDATION_ERROR', 'MISSING_REQUIRED_FIELD'],
-          description: 'missing required field'
+          description: 'missing required field',
         },
         {
           request: { market: '', oldSupplierId: 100, newSupplierId: 200 }, // Empty market
           expectedCodes: ['VALIDATION_ERROR', 'INVALID_FIELD_FORMAT'],
-          description: 'empty required field'
+          description: 'empty required field',
         },
         {
           request: { market: 'TOOLONG', oldSupplierId: 0, newSupplierId: 200 }, // Invalid supplier ID
           expectedCodes: ['VALIDATION_ERROR', 'INVALID_SUPPLIER_ID'],
-          description: 'invalid supplier ID format'
+          description: 'invalid supplier ID format',
         },
         {
-          request: { market: 'INVALID_FORMAT_123', oldSupplierId: 100, newSupplierId: 200 }, // Invalid market format
+          request: {
+            market: 'INVALID_FORMAT_123',
+            oldSupplierId: 100,
+            newSupplierId: 200,
+          }, // Invalid market format
           expectedCodes: ['VALIDATION_ERROR', 'INVALID_MARKET_CODE'],
-          description: 'invalid market code format'
-        }
+          description: 'invalid market code format',
+        },
       ];
 
       for (const testCase of validationTestCases) {
@@ -68,8 +72,8 @@ describe('Structured Error Handling Integration Tests', () => {
         {
           request: { market: 'TW', oldSupplierId: 100, newSupplierId: 100 }, // Identical IDs
           expectedCode: 'SUPPLIER_IDS_IDENTICAL',
-          description: 'identical supplier IDs not allowed'
-        }
+          description: 'identical supplier IDs not allowed',
+        },
       ];
 
       for (const testCase of businessLogicTestCases) {
@@ -86,7 +90,11 @@ describe('Structured Error Handling Integration Tests', () => {
     });
 
     it('should return system errors (5000-5999) for external service failures', async () => {
-      const validRequest = { market: 'TW', oldSupplierId: 100, newSupplierId: 200 };
+      const validRequest = {
+        market: 'TW',
+        oldSupplierId: 100,
+        newSupplierId: 200,
+      };
 
       // Test Whale API unavailable error
       testHelper.mockWhaleApiNetworkError();
@@ -100,17 +108,27 @@ describe('Structured Error Handling Integration Tests', () => {
       expect(response.body).toMatchObject({
         success: false,
         error: {
-          code: expect.stringMatching(/WHALE_API_UNAVAILABLE|EXTERNAL_SERVICE_ERROR|NETWORK_ERROR/),
-          message: expect.stringMatching(/service.*unavailable|network.*error|external.*error/i),
-          details: expect.any(Object)
+          code: expect.stringMatching(
+            /WHALE_API_UNAVAILABLE|EXTERNAL_SERVICE_ERROR|NETWORK_ERROR/,
+          ),
+          message: expect.stringMatching(
+            /service.*unavailable|network.*error|external.*error/i,
+          ),
+          details: expect.any(Object),
         },
-        timestamp: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/),
-        requestId: expect.stringMatching(/^req-\d{14}-[a-f0-9-]{36}$/)
+        timestamp: expect.stringMatching(
+          /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/,
+        ),
+        requestId: expect.stringMatching(/^req-\d{14}-[a-f0-9-]{36}$/),
       });
     });
 
     it('should return system errors for Whale API timeout', async () => {
-      const validRequest = { market: 'TW', oldSupplierId: 100, newSupplierId: 200 };
+      const validRequest = {
+        market: 'TW',
+        oldSupplierId: 100,
+        newSupplierId: 200,
+      };
 
       testHelper.mockWhaleApiTimeout();
 
@@ -120,12 +138,20 @@ describe('Structured Error Handling Integration Tests', () => {
         .send(validRequest)
         .expect(502);
 
-      expect(response.body.error.code).toMatch(/TIMEOUT|EXTERNAL_SERVICE_ERROR|WHALE_API_UNAVAILABLE/);
-      expect(response.body.error.message).toMatch(/timeout|external.*error|unavailable|service/i);
+      expect(response.body.error.code).toMatch(
+        /TIMEOUT|EXTERNAL_SERVICE_ERROR|WHALE_API_UNAVAILABLE/,
+      );
+      expect(response.body.error.message).toMatch(
+        /timeout|external.*error|unavailable|service/i,
+      );
     });
 
     it('should return system errors for Whale API server errors', async () => {
-      const validRequest = { market: 'TW', oldSupplierId: 100, newSupplierId: 200 };
+      const validRequest = {
+        market: 'TW',
+        oldSupplierId: 100,
+        newSupplierId: 200,
+      };
 
       testHelper.mockWhaleApi500Error();
 
@@ -135,8 +161,12 @@ describe('Structured Error Handling Integration Tests', () => {
         .send(validRequest)
         .expect(502);
 
-      expect(response.body.error.code).toMatch(/WHALE_API_ERROR|EXTERNAL_SERVICE_ERROR|SERVER_ERROR/);
-      expect(response.body.error.message).toMatch(/server.*error|external.*error/i);
+      expect(response.body.error.code).toMatch(
+        /WHALE_API_ERROR|EXTERNAL_SERVICE_ERROR|SERVER_ERROR/,
+      );
+      expect(response.body.error.message).toMatch(
+        /server.*error|external.*error/i,
+      );
     });
   });
 
@@ -148,7 +178,7 @@ describe('Structured Error Handling Integration Tests', () => {
       const testCases = [
         { market: '', oldSupplierId: 100, newSupplierId: 200 },
         { market: 'TW', oldSupplierId: 100, newSupplierId: 100 },
-        { market: 'INVALID', oldSupplierId: -1, newSupplierId: 200 }
+        { market: 'INVALID', oldSupplierId: -1, newSupplierId: 200 },
       ];
 
       for (const testCase of testCases) {
@@ -167,7 +197,9 @@ describe('Structured Error Handling Integration Tests', () => {
 
         // Should be meaningful and descriptive
         expect(message.length).toBeGreaterThan(5);
-        expect(message.toLowerCase()).toMatch(/(error|invalid|required|missing|different|not|cannot|must|be)/);
+        expect(message.toLowerCase()).toMatch(
+          /(error|invalid|required|missing|different|not|cannot|must|be)/,
+        );
       }
     });
 
@@ -175,16 +207,16 @@ describe('Structured Error Handling Integration Tests', () => {
       const errorTestCases = [
         {
           request: { oldSupplierId: 100, newSupplierId: 200 }, // Missing market
-          expectedKeywords: ['market']
+          expectedKeywords: ['market'],
         },
         {
           request: { market: 'TW', oldSupplierId: 100, newSupplierId: 100 }, // Identical IDs
-          expectedKeywords: ['supplier', 'different', 'must']
+          expectedKeywords: ['supplier', 'different', 'must'],
         },
         {
           request: { market: '', oldSupplierId: 100, newSupplierId: 200 }, // Empty market
-          expectedKeywords: ['market']
-        }
+          expectedKeywords: ['market'],
+        },
       ];
 
       for (const testCase of errorTestCases) {
@@ -228,7 +260,11 @@ describe('Structured Error Handling Integration Tests', () => {
     });
 
     it('should provide business context for business logic errors', async () => {
-      const requestPayload = { market: 'TW', oldSupplierId: 100, newSupplierId: 100 };
+      const requestPayload = {
+        market: 'TW',
+        oldSupplierId: 100,
+        newSupplierId: 100,
+      };
 
       const response = await request(app.getHttpServer())
         .patch(`/api/v1/shops/${shopId}/suppliers`)
@@ -239,18 +275,26 @@ describe('Structured Error Handling Integration Tests', () => {
       expect(response.body.error.code).toBe('SUPPLIER_IDS_IDENTICAL');
       expect(response.body.error.details).toMatchObject({
         oldSupplierId: 100,
-        newSupplierId: 100
+        newSupplierId: 100,
       });
 
       // Should help with debugging and troubleshooting
-      expect(response.body.error.details.oldSupplierId).toBe(requestPayload.oldSupplierId);
-      expect(response.body.error.details.newSupplierId).toBe(requestPayload.newSupplierId);
+      expect(response.body.error.details.oldSupplierId).toBe(
+        requestPayload.oldSupplierId,
+      );
+      expect(response.body.error.details.newSupplierId).toBe(
+        requestPayload.newSupplierId,
+      );
     });
   });
 
   describe('Global Error Handling Consistency', () => {
     it('should handle authorization errors consistently', async () => {
-      const validRequest = { market: 'TW', oldSupplierId: 100, newSupplierId: 200 };
+      const validRequest = {
+        market: 'TW',
+        oldSupplierId: 100,
+        newSupplierId: 200,
+      };
 
       // Missing ny-operator header
       const response = await request(app.getHttpServer())
@@ -262,10 +306,14 @@ describe('Structured Error Handling Integration Tests', () => {
         success: false,
         error: {
           code: 'UNAUTHORIZED_ACCESS',
-          message: expect.stringMatching(/authentication|authorization|credential|missing|operator/i)
+          message: expect.stringMatching(
+            /authentication|authorization|credential|missing|operator/i,
+          ),
         },
-        timestamp: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/),
-        requestId: expect.stringMatching(/^req-\d{14}-[a-f0-9-]{36}$/)
+        timestamp: expect.stringMatching(
+          /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/,
+        ),
+        requestId: expect.stringMatching(/^req-\d{14}-[a-f0-9-]{36}$/),
       });
     });
 
@@ -279,7 +327,11 @@ describe('Structured Error Handling Integration Tests', () => {
     });
 
     it('should handle unsupported Content-Type consistently', async () => {
-      const validRequest = { market: 'TW', oldSupplierId: 100, newSupplierId: 200 };
+      const validRequest = {
+        market: 'TW',
+        oldSupplierId: 100,
+        newSupplierId: 200,
+      };
 
       await request(app.getHttpServer())
         .patch('/api/v1/shops/12345/suppliers')
@@ -296,8 +348,14 @@ describe('Structured Error Handling Integration Tests', () => {
 
     it('should return proper Content-Type for all error responses', async () => {
       const errorTestCases = [
-        { request: { oldSupplierId: 100, newSupplierId: 200 }, expectedStatus: 400 },
-        { request: { market: 'TW', oldSupplierId: 100, newSupplierId: 100 }, expectedStatus: 400 }
+        {
+          request: { oldSupplierId: 100, newSupplierId: 200 },
+          expectedStatus: 400,
+        },
+        {
+          request: { market: 'TW', oldSupplierId: 100, newSupplierId: 100 },
+          expectedStatus: 400,
+        },
       ];
 
       for (const testCase of errorTestCases) {
@@ -313,14 +371,20 @@ describe('Structured Error Handling Integration Tests', () => {
     it('should maintain consistent error response structure across all error types', async () => {
       const errorScenarios = [
         {
-          setup: () => request(app.getHttpServer()).patch('/api/v1/shops/12345/suppliers').send({}),
-          description: 'missing operator header'
+          setup: () =>
+            request(app.getHttpServer())
+              .patch('/api/v1/shops/12345/suppliers')
+              .send({}),
+          description: 'missing operator header',
         },
         {
-          setup: () => request(app.getHttpServer()).patch('/api/v1/shops/12345/suppliers')
-            .set('ny-operator', 'test').send({ oldSupplierId: 100, newSupplierId: 200 }),
-          description: 'missing required field'
-        }
+          setup: () =>
+            request(app.getHttpServer())
+              .patch('/api/v1/shops/12345/suppliers')
+              .set('ny-operator', 'test')
+              .send({ oldSupplierId: 100, newSupplierId: 200 }),
+          description: 'missing required field',
+        },
       ];
 
       for (const scenario of errorScenarios) {
@@ -331,13 +395,20 @@ describe('Structured Error Handling Integration Tests', () => {
           success: false,
           error: {
             code: expect.any(String),
-            message: expect.any(String)
+            message: expect.any(String),
           },
-          timestamp: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/),
-          requestId: expect.stringMatching(/^req-\d{14}-[a-f0-9-]{36}$/)
+          timestamp: expect.stringMatching(
+            /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/,
+          ),
+          requestId: expect.stringMatching(/^req-\d{14}-[a-f0-9-]{36}$/),
         });
 
-        expect(Object.keys(response.body)).toEqual(['success', 'error', 'timestamp', 'requestId']);
+        expect(Object.keys(response.body)).toEqual([
+          'success',
+          'error',
+          'timestamp',
+          'requestId',
+        ]);
       }
     });
   });

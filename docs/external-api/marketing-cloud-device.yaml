@@ -1,0 +1,86 @@
+openapi: 3.0.0
+info:
+  title: Marketing Cloud Service
+  version: 1.0.0
+servers:
+  - url: http://marketing-cloud-service.qa.91dev.tw
+  - url: http://marketing-cloud-service-internal.91app.io
+
+paths:
+  /v1/shops/{shopId}/phones/{phone}/devices:
+    get:
+      summary: 查詢會員裝置清單 (開發中)
+      description: 依據商店 ID 與會員手機號碼，取得該會員登入過的所有 APP 裝置
+      parameters:
+        - name: shopId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: 商店 ID
+        - name: phone
+          in: path
+          required: true
+          schema:
+            type: string
+          description: 會員手機號碼
+      responses:
+        '200':
+          description: 成功取得裝置清單
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Device'
+        '400':
+          description: 輸入參數錯誤
+        '404':
+          description: 找不到符合的會員或裝置資料
+
+components:
+  schemas:
+    Device:
+      type: object
+      properties:
+        guid:
+          type: string
+          format: uuid
+          description: 裝置唯一識別碼
+        udid:
+          type: string
+          description: 裝置 UDID
+        token:
+          type: string
+          description: 推播 Token
+        shopId:
+          type: integer
+          description: 商店 ID
+        platformDef:
+          type: string
+          description: 平台定義 (iOS/Android)
+        memberId:
+          type: integer
+          description: 會員 ID
+        advertiseId:
+          type: string
+          description: 廣告追蹤 ID
+        appVersion:
+          type: string
+          description: App 版本
+        updatedDateTime:
+          type: string
+          format: date-time
+          description: 更新時間
+        createdDateTime:
+          type: string
+          format: date-time
+          description: 建立時間
+      required:
+        - guid
+        - token
+        - shopId
+        - platformDef
+        - memberId
+        - updatedDateTime
+        - createdDateTime

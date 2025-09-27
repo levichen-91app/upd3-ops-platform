@@ -10,7 +10,12 @@ async function bootstrap() {
   app.enableCors({
     origin: '*',
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'ny-operator', 'x-request-id'],
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      'ny-operator',
+      'x-request-id',
+    ],
   });
 
   // Configure global validation pipe
@@ -31,12 +36,15 @@ async function bootstrap() {
     .setDescription('Standardized API for supplier operations and management')
     .setVersion('1.0')
     .addTag('Suppliers', 'Supplier management operations')
-    .addApiKey({
-      type: 'apiKey',
-      name: 'ny-operator',
-      in: 'header',
-      description: 'Operator identification header'
-    }, 'operator-auth')
+    .addApiKey(
+      {
+        type: 'apiKey',
+        name: 'ny-operator',
+        in: 'header',
+        description: 'Operator identification header',
+      },
+      'operator-auth',
+    )
     .build();
 
   const document = SwaggerModule.createDocument(app, config);

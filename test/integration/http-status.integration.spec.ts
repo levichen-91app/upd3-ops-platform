@@ -54,7 +54,7 @@ describe('HTTP Status Code Standardization Integration Tests', () => {
       const testCases = [
         { market: 'TW', oldSupplierId: 100, newSupplierId: 200 },
         { market: 'HK', oldSupplierId: 300, newSupplierId: 400 },
-        { market: 'JP', oldSupplierId: 500, newSupplierId: 600 }
+        { market: 'JP', oldSupplierId: 500, newSupplierId: 600 },
       ];
 
       for (const testCase of testCases) {
@@ -76,7 +76,7 @@ describe('HTTP Status Code Standardization Integration Tests', () => {
         { oldSupplierId: 100, newSupplierId: 200 }, // Missing market
         { market: 'TW', newSupplierId: 200 }, // Missing oldSupplierId
         { market: 'TW', oldSupplierId: 100 }, // Missing newSupplierId
-        {} // Missing all fields
+        {}, // Missing all fields
       ];
 
       for (const requestPayload of invalidRequests) {
@@ -97,7 +97,7 @@ describe('HTTP Status Code Standardization Integration Tests', () => {
         { market: 'TW', oldSupplierId: 100, newSupplierId: 0 }, // Invalid newSupplierId
         { market: 'TW', oldSupplierId: 100, newSupplierId: -1 }, // Negative newSupplierId
         { market: 'TW', oldSupplierId: 'abc', newSupplierId: 200 }, // Non-numeric supplier ID
-        { market: 123, oldSupplierId: 100, newSupplierId: 200 } // Non-string market
+        { market: 123, oldSupplierId: 100, newSupplierId: 200 }, // Non-string market
       ];
 
       for (const requestPayload of invalidRequests) {
@@ -111,7 +111,7 @@ describe('HTTP Status Code Standardization Integration Tests', () => {
 
     it('should return 400 Bad Request for business logic violations', async () => {
       const businessLogicViolations = [
-        { market: 'TW', oldSupplierId: 100, newSupplierId: 100 } // Identical supplier IDs
+        { market: 'TW', oldSupplierId: 100, newSupplierId: 100 }, // Identical supplier IDs
       ];
 
       for (const requestPayload of businessLogicViolations) {
@@ -124,7 +124,11 @@ describe('HTTP Status Code Standardization Integration Tests', () => {
     });
 
     it('should return 400 for invalid shop IDs that fail business validation', async () => {
-      const validRequest = { market: 'TW', oldSupplierId: 100, newSupplierId: 200 };
+      const validRequest = {
+        market: 'TW',
+        oldSupplierId: 100,
+        newSupplierId: 200,
+      };
 
       // These pass ParseInt but fail business validation and return 400
       const businessInvalidIds = ['0', '-1'];
@@ -147,7 +151,11 @@ describe('HTTP Status Code Standardization Integration Tests', () => {
     });
 
     it('should return 400 Bad Request for unsupported Content-Type', async () => {
-      const validRequest = { market: 'TW', oldSupplierId: 100, newSupplierId: 200 };
+      const validRequest = {
+        market: 'TW',
+        oldSupplierId: 100,
+        newSupplierId: 200,
+      };
 
       await request(app.getHttpServer())
         .patch(`/api/v1/shops/${shopId}/suppliers`)
@@ -160,7 +168,11 @@ describe('HTTP Status Code Standardization Integration Tests', () => {
 
   describe('401 Unauthorized - Authentication Errors', () => {
     const shopId = 12345;
-    const validRequest = { market: 'TW', oldSupplierId: 100, newSupplierId: 200 };
+    const validRequest = {
+      market: 'TW',
+      oldSupplierId: 100,
+      newSupplierId: 200,
+    };
 
     it('should return 401 Unauthorized when ny-operator header is missing', async () => {
       await request(app.getHttpServer())
@@ -187,16 +199,22 @@ describe('HTTP Status Code Standardization Integration Tests', () => {
         success: false,
         error: {
           code: 'UNAUTHORIZED_ACCESS',
-          message: expect.stringMatching(/authentication|credential|unauthorized|missing|operator/i)
+          message: expect.stringMatching(
+            /authentication|credential|unauthorized|missing|operator/i,
+          ),
         },
         timestamp: expect.any(String),
-        requestId: expect.any(String)
+        requestId: expect.any(String),
       });
     });
   });
 
   describe('404 Not Found - Resource Not Found', () => {
-    const validRequest = { market: 'TW', oldSupplierId: 100, newSupplierId: 200 };
+    const validRequest = {
+      market: 'TW',
+      oldSupplierId: 100,
+      newSupplierId: 200,
+    };
     const operatorHeader = 'test-operator@91app.com';
 
     it('should return 404 Not Found for non-existent endpoints', async () => {
@@ -226,7 +244,11 @@ describe('HTTP Status Code Standardization Integration Tests', () => {
 
   describe('404 Not Found - Unsupported HTTP Methods', () => {
     const shopId = 12345;
-    const validRequest = { market: 'TW', oldSupplierId: 100, newSupplierId: 200 };
+    const validRequest = {
+      market: 'TW',
+      oldSupplierId: 100,
+      newSupplierId: 200,
+    };
     const operatorHeader = 'test-operator@91app.com';
 
     it('should return 404 for POST on supplier resource (method not supported)', async () => {
@@ -267,7 +289,11 @@ describe('HTTP Status Code Standardization Integration Tests', () => {
   describe('502 Bad Gateway - Upstream Service Errors', () => {
     const shopId = 12345;
     const operatorHeader = 'test-operator@91app.com';
-    const validRequest = { market: 'TW', oldSupplierId: 100, newSupplierId: 200 };
+    const validRequest = {
+      market: 'TW',
+      oldSupplierId: 100,
+      newSupplierId: 200,
+    };
 
     it('should return 502 Bad Gateway when Whale API is unavailable', async () => {
       testHelper.mockWhaleApiNetworkError();
@@ -281,12 +307,18 @@ describe('HTTP Status Code Standardization Integration Tests', () => {
       expect(response.body).toMatchObject({
         success: false,
         error: {
-          code: expect.stringMatching(/WHALE_API_UNAVAILABLE|EXTERNAL_SERVICE_ERROR|NETWORK_ERROR/),
-          message: expect.stringMatching(/service.*unavailable|network.*error|external.*error/i),
-          details: expect.any(Object)
+          code: expect.stringMatching(
+            /WHALE_API_UNAVAILABLE|EXTERNAL_SERVICE_ERROR|NETWORK_ERROR/,
+          ),
+          message: expect.stringMatching(
+            /service.*unavailable|network.*error|external.*error/i,
+          ),
+          details: expect.any(Object),
         },
-        timestamp: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/),
-        requestId: expect.stringMatching(/^req-\d{14}-[a-f0-9-]{36}$/)
+        timestamp: expect.stringMatching(
+          /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/,
+        ),
+        requestId: expect.stringMatching(/^req-\d{14}-[a-f0-9-]{36}$/),
       });
     });
 
@@ -330,7 +362,7 @@ describe('HTTP Status Code Standardization Integration Tests', () => {
       const validationErrors = [
         { market: '', oldSupplierId: 100, newSupplierId: 200 },
         { oldSupplierId: 100, newSupplierId: 200 },
-        { market: 'TW', oldSupplierId: -1, newSupplierId: 200 }
+        { market: 'TW', oldSupplierId: -1, newSupplierId: 200 },
       ];
 
       for (const errorRequest of validationErrors) {
@@ -343,12 +375,23 @@ describe('HTTP Status Code Standardization Integration Tests', () => {
     });
 
     it('should maintain consistent status codes for authentication errors', async () => {
-      const validRequest = { market: 'TW', oldSupplierId: 100, newSupplierId: 200 };
+      const validRequest = {
+        market: 'TW',
+        oldSupplierId: 100,
+        newSupplierId: 200,
+      };
 
       // All auth errors should return 401
       const authScenarios = [
-        () => request(app.getHttpServer()).patch(`/api/v1/shops/${shopId}/suppliers`).send(validRequest),
-        () => request(app.getHttpServer()).patch(`/api/v1/shops/${shopId}/suppliers`).set('ny-operator', '').send(validRequest)
+        () =>
+          request(app.getHttpServer())
+            .patch(`/api/v1/shops/${shopId}/suppliers`)
+            .send(validRequest),
+        () =>
+          request(app.getHttpServer())
+            .patch(`/api/v1/shops/${shopId}/suppliers`)
+            .set('ny-operator', '')
+            .send(validRequest),
       ];
 
       for (const scenario of authScenarios) {
@@ -361,35 +404,39 @@ describe('HTTP Status Code Standardization Integration Tests', () => {
       const scenarios = [
         {
           description: 'successful partial update',
-          request: () => request(app.getHttpServer())
-            .patch(`/api/v1/shops/${shopId}/suppliers`)
-            .set('ny-operator', operatorHeader)
-            .send({ market: 'TW', oldSupplierId: 100, newSupplierId: 200 }),
-          expectedStatus: 200
+          request: () =>
+            request(app.getHttpServer())
+              .patch(`/api/v1/shops/${shopId}/suppliers`)
+              .set('ny-operator', operatorHeader)
+              .send({ market: 'TW', oldSupplierId: 100, newSupplierId: 200 }),
+          expectedStatus: 200,
         },
         {
           description: 'client error - bad request',
-          request: () => request(app.getHttpServer())
-            .patch(`/api/v1/shops/${shopId}/suppliers`)
-            .set('ny-operator', operatorHeader)
-            .send({}),
-          expectedStatus: 400
+          request: () =>
+            request(app.getHttpServer())
+              .patch(`/api/v1/shops/${shopId}/suppliers`)
+              .set('ny-operator', operatorHeader)
+              .send({}),
+          expectedStatus: 400,
         },
         {
           description: 'client error - unauthorized',
-          request: () => request(app.getHttpServer())
-            .patch(`/api/v1/shops/${shopId}/suppliers`)
-            .send({ market: 'TW', oldSupplierId: 100, newSupplierId: 200 }),
-          expectedStatus: 401
+          request: () =>
+            request(app.getHttpServer())
+              .patch(`/api/v1/shops/${shopId}/suppliers`)
+              .send({ market: 'TW', oldSupplierId: 100, newSupplierId: 200 }),
+          expectedStatus: 401,
         },
         {
           description: 'client error - not found',
-          request: () => request(app.getHttpServer())
-            .patch('/api/v1/nonexistent')
-            .set('ny-operator', operatorHeader)
-            .send({ market: 'TW', oldSupplierId: 100, newSupplierId: 200 }),
-          expectedStatus: 404
-        }
+          request: () =>
+            request(app.getHttpServer())
+              .patch('/api/v1/nonexistent')
+              .set('ny-operator', operatorHeader)
+              .send({ market: 'TW', oldSupplierId: 100, newSupplierId: 200 }),
+          expectedStatus: 404,
+        },
       ];
 
       for (const scenario of scenarios) {

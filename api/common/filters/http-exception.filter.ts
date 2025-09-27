@@ -1,6 +1,17 @@
-import { Injectable, ExceptionFilter, Catch, ArgumentsHost, HttpException, HttpStatus, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  ExceptionFilter,
+  Catch,
+  ArgumentsHost,
+  HttpException,
+  HttpStatus,
+  Logger,
+} from '@nestjs/common';
 import { Response, Request } from 'express';
-import { ApiErrorResponse, ErrorObject } from '../interfaces/api-error-response.interface';
+import {
+  ApiErrorResponse,
+  ErrorObject,
+} from '../interfaces/api-error-response.interface';
 import { ErrorCode, ErrorCodeCategory } from '../enums/error-code.enum';
 import { RequestIdMiddleware } from '../middleware/request-id.middleware';
 
@@ -25,14 +36,22 @@ export class HttpExceptionFilter implements ExceptionFilter {
       const exceptionResponse = exception.getResponse();
 
       // Check if exception response has custom error structure
-      if (typeof exceptionResponse === 'object' && exceptionResponse !== null && 'code' in exceptionResponse) {
+      if (
+        typeof exceptionResponse === 'object' &&
+        exceptionResponse !== null &&
+        'code' in exceptionResponse
+      ) {
         const customError = exceptionResponse as any;
         errorCode = customError.code;
         message = customError.message;
         details = customError.details;
       }
       // Handle validation errors
-      else if (status === 400 && typeof exceptionResponse === 'object' && 'message' in exceptionResponse) {
+      else if (
+        status === 400 &&
+        typeof exceptionResponse === 'object' &&
+        'message' in exceptionResponse
+      ) {
         const messages = Array.isArray(exceptionResponse.message)
           ? exceptionResponse.message
           : [exceptionResponse.message];
@@ -50,14 +69,23 @@ export class HttpExceptionFilter implements ExceptionFilter {
       }
       // Handle other HTTP exceptions
       else {
-        errorCode = status >= 500 ? ErrorCode.INTERNAL_SERVER_ERROR : ErrorCode.VALIDATION_ERROR;
-        message = typeof exceptionResponse === 'string' ? exceptionResponse : exception.message;
+        errorCode =
+          status >= 500
+            ? ErrorCode.INTERNAL_SERVER_ERROR
+            : ErrorCode.VALIDATION_ERROR;
+        message =
+          typeof exceptionResponse === 'string'
+            ? exceptionResponse
+            : exception.message;
       }
     } else {
       // Handle non-HTTP exceptions
       status = HttpStatus.INTERNAL_SERVER_ERROR;
       errorCode = ErrorCode.INTERNAL_SERVER_ERROR;
-      message = exception instanceof Error ? exception.message : 'Internal server error';
+      message =
+        exception instanceof Error
+          ? exception.message
+          : 'Internal server error';
     }
 
     // Log the exception
@@ -74,7 +102,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
     // Create standardized error response
     const errorResponse = new ApiErrorResponse(
       new ErrorObject(errorCode, message, details),
-      requestId
+      requestId,
     );
 
     response.status(status).json(errorResponse);

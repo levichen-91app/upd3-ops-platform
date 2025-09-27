@@ -80,9 +80,7 @@ describe('SupplierUpdateRequestDto Validation', () => {
 
       expect(errors).toHaveLength(1);
       expect(errors[0].property).toBe('market');
-      expect(errors[0].constraints?.isNotEmpty).toContain(
-        'Market is required',
-      );
+      expect(errors[0].constraints?.isNotEmpty).toContain('Market is required');
     });
 
     it('should fail with invalid market format', async () => {

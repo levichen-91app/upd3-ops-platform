@@ -1,5 +1,23 @@
-import { Controller, Patch, Body, Param, Headers, ParseIntPipe, ValidationPipe, BadRequestException, UnauthorizedException } from '@nestjs/common';
-import { ApiOperation, ApiResponse, ApiParam, ApiHeader, ApiBody, ApiTags, ApiSecurity } from '@nestjs/swagger';
+import {
+  Controller,
+  Patch,
+  Body,
+  Param,
+  Headers,
+  ParseIntPipe,
+  ValidationPipe,
+  BadRequestException,
+  UnauthorizedException,
+} from '@nestjs/common';
+import {
+  ApiOperation,
+  ApiResponse,
+  ApiParam,
+  ApiHeader,
+  ApiBody,
+  ApiTags,
+  ApiSecurity,
+} from '@nestjs/swagger';
 import { SupplierUpdateRequestDto } from './dto/supplier-update-request.dto';
 import { SuppliersService } from './suppliers.service';
 import { ErrorCode } from '../../common/enums/error-code.enum';
@@ -14,7 +32,8 @@ export class SuppliersController {
   @ApiSecurity('operator-auth')
   @ApiOperation({
     summary: 'Update supplier ID for products',
-    description: 'Updates supplier ID for all products matching the specified criteria in a shop and market',
+    description:
+      'Updates supplier ID for all products matching the specified criteria in a shop and market',
   })
   @ApiParam({
     name: 'shopId',
@@ -49,7 +68,11 @@ export class SuppliersController {
           },
         },
         timestamp: { type: 'string', example: '2025-09-26T14:30:52.123Z' },
-        requestId: { type: 'string', example: 'req-20250926143052-a8b2c4d6e8f0-1234-5678-90ab-cdef12345678' },
+        requestId: {
+          type: 'string',
+          example:
+            'req-20250926143052-a8b2c4d6e8f0-1234-5678-90ab-cdef12345678',
+        },
       },
     },
   })
@@ -71,7 +94,8 @@ export class SuppliersController {
   async updateSupplierId(
     @Param('shopId', ParseIntPipe) shopId: number,
     @Headers('ny-operator') operator: string,
-    @Body(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true })) updateDto: SupplierUpdateRequestDto,
+    @Body(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
+    updateDto: SupplierUpdateRequestDto,
   ) {
     // Validate shopId is positive
     if (shopId <= 0) {
@@ -103,7 +127,11 @@ export class SuppliersController {
     }
 
     // Call service to perform the update
-    const result = await this.suppliersService.updateSupplierId(shopId, updateDto, operator);
+    const result = await this.suppliersService.updateSupplierId(
+      shopId,
+      updateDto,
+      operator,
+    );
 
     return {
       updatedCount: result.updatedCount,

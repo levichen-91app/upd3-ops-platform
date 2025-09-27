@@ -82,7 +82,9 @@ export class RequestContextFactory {
   /**
    * Sanitize headers to remove sensitive information
    */
-  private static sanitizeHeaders(headers: Record<string, any>): Record<string, string> {
+  private static sanitizeHeaders(
+    headers: Record<string, any>,
+  ): Record<string, string> {
     const sanitized: Record<string, string> = {};
     const allowedHeaders = [
       'content-type',
@@ -94,7 +96,10 @@ export class RequestContextFactory {
     ];
 
     for (const [key, value] of Object.entries(headers)) {
-      if (allowedHeaders.includes(key.toLowerCase()) && typeof value === 'string') {
+      if (
+        allowedHeaders.includes(key.toLowerCase()) &&
+        typeof value === 'string'
+      ) {
         sanitized[key] = value;
       }
     }
@@ -124,7 +129,7 @@ export class RequestContextFactory {
     const sensitiveFields = ['password', 'token', 'secret', 'key'];
 
     for (const [key, value] of Object.entries(body)) {
-      if (!sensitiveFields.some(field => key.toLowerCase().includes(field))) {
+      if (!sensitiveFields.some((field) => key.toLowerCase().includes(field))) {
         sanitized[key] = value;
       } else {
         sanitized[key] = '[REDACTED]';

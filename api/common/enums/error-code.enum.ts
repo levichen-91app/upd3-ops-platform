@@ -35,7 +35,9 @@ export class ErrorCodeCategory {
   /**
    * Get error category based on error code
    */
-  public static getCategory(errorCode: ErrorCode): 'validation' | 'business' | 'system' | 'unknown' {
+  public static getCategory(
+    errorCode: ErrorCode,
+  ): 'validation' | 'business' | 'system' | 'unknown' {
     const validationCodes = [
       ErrorCode.VALIDATION_ERROR,
       ErrorCode.MISSING_REQUIRED_FIELD,
@@ -86,7 +88,10 @@ export class ErrorCodeCategory {
         if (errorCode === ErrorCode.UNAUTHORIZED_ACCESS) {
           return 401; // Unauthorized
         }
-        if (errorCode === ErrorCode.WHALE_API_UNAVAILABLE || errorCode === ErrorCode.EXTERNAL_SERVICE_ERROR) {
+        if (
+          errorCode === ErrorCode.WHALE_API_UNAVAILABLE ||
+          errorCode === ErrorCode.EXTERNAL_SERVICE_ERROR
+        ) {
           return 502; // Bad Gateway
         }
         return 500; // Internal Server Error

@@ -114,7 +114,8 @@ export class LogEntryFactory {
     userAgent?: string,
     ip?: string,
   ): LogEntry {
-    const level: LogLevel = statusCode >= 500 ? 'error' : statusCode >= 400 ? 'warn' : 'info';
+    const level: LogLevel =
+      statusCode >= 500 ? 'error' : statusCode >= 400 ? 'warn' : 'info';
 
     return {
       timestamp: new Date().toISOString(),

@@ -67,7 +67,9 @@ describe('Performance Requirements Integration Tests', () => {
       }
 
       // Calculate statistics
-      const avgResponseTime = responseTimes.reduce((sum, time) => sum + time, 0) / responseTimes.length;
+      const avgResponseTime =
+        responseTimes.reduce((sum, time) => sum + time, 0) /
+        responseTimes.length;
       const maxResponseTime = Math.max(...responseTimes);
       const minResponseTime = Math.min(...responseTimes);
 
@@ -75,7 +77,7 @@ describe('Performance Requirements Integration Tests', () => {
         average: `${avgResponseTime.toFixed(2)}ms`,
         max: `${maxResponseTime}ms`,
         min: `${minResponseTime}ms`,
-        all: responseTimes.map(t => `${t}ms`)
+        all: responseTimes.map((t) => `${t}ms`),
       });
 
       // All requests should complete within reasonable time
@@ -86,7 +88,11 @@ describe('Performance Requirements Integration Tests', () => {
     });
 
     it('should respond quickly for validation errors', async () => {
-      const invalidRequest = { market: '', oldSupplierId: 100, newSupplierId: 200 };
+      const invalidRequest = {
+        market: '',
+        oldSupplierId: 100,
+        newSupplierId: 200,
+      };
 
       const startTime = Date.now();
 
@@ -156,11 +162,11 @@ describe('Performance Requirements Integration Tests', () => {
 
       console.log(`Sequential Requests (${numberOfRequests}):`, {
         totalTime: `${totalTime}ms`,
-        avgTimePerRequest: `${(totalTime / numberOfRequests).toFixed(2)}ms`
+        avgTimePerRequest: `${(totalTime / numberOfRequests).toFixed(2)}ms`,
       });
 
       // Each request should have unique requestIds
-      const requestIds = responses.map(res => res.body.requestId);
+      const requestIds = responses.map((res) => res.body.requestId);
       const uniqueRequestIds = new Set(requestIds);
       expect(uniqueRequestIds.size).toBe(numberOfRequests);
     });
@@ -177,7 +183,7 @@ describe('Performance Requirements Integration Tests', () => {
           .send({
             market: index % 2 === 0 ? 'TW' : 'HK',
             oldSupplierId: 100 + index,
-            newSupplierId: 200 + index
+            newSupplierId: 200 + index,
           });
 
         expect(response.status).toBe(200);
@@ -189,8 +195,10 @@ describe('Performance Requirements Integration Tests', () => {
         expect(response.body).toMatchObject({
           success: true,
           data: expect.any(Object),
-          timestamp: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/),
-          requestId: expect.stringMatching(/^req-\d{14}-[a-f0-9-]{36}$/)
+          timestamp: expect.stringMatching(
+            /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/,
+          ),
+          requestId: expect.stringMatching(/^req-\d{14}-[a-f0-9-]{36}$/),
         });
 
         // Verify request-specific data integrity
@@ -233,7 +241,7 @@ describe('Performance Requirements Integration Tests', () => {
       console.log('Memory Usage:', {
         initial: `${(initialMemory.heapUsed / 1024 / 1024).toFixed(2)}MB`,
         final: `${(finalMemory.heapUsed / 1024 / 1024).toFixed(2)}MB`,
-        increase: `${(memoryIncrease / 1024 / 1024).toFixed(2)}MB`
+        increase: `${(memoryIncrease / 1024 / 1024).toFixed(2)}MB`,
       });
 
       // Memory increase should be reasonable (less than 50MB for 20 requests)
@@ -250,7 +258,7 @@ describe('Performance Requirements Integration Tests', () => {
         { oldSupplierId: 100, newSupplierId: 200 }, // Missing market
         { market: '', oldSupplierId: 100, newSupplierId: 200 }, // Empty market
         { market: 'TW', oldSupplierId: 100, newSupplierId: 100 }, // Identical IDs
-        { market: 'TW', oldSupplierId: -1, newSupplierId: 200 } // Invalid ID
+        { market: 'TW', oldSupplierId: -1, newSupplierId: 200 }, // Invalid ID
       ];
 
       const errorResponseTimes: number[] = [];
@@ -269,16 +277,18 @@ describe('Performance Requirements Integration Tests', () => {
       }
 
       // All error responses should be fast
-      errorResponseTimes.forEach(time => {
+      errorResponseTimes.forEach((time) => {
         expect(time).toBeLessThan(1000);
       });
 
-      const avgErrorResponseTime = errorResponseTimes.reduce((sum, time) => sum + time, 0) / errorResponseTimes.length;
+      const avgErrorResponseTime =
+        errorResponseTimes.reduce((sum, time) => sum + time, 0) /
+        errorResponseTimes.length;
 
       console.log('Error Response Performance:', {
         average: `${avgErrorResponseTime.toFixed(2)}ms`,
         max: `${Math.max(...errorResponseTimes)}ms`,
-        all: errorResponseTimes.map(t => `${t}ms`)
+        all: errorResponseTimes.map((t) => `${t}ms`),
       });
     });
   });
@@ -309,15 +319,20 @@ describe('Performance Requirements Integration Tests', () => {
         responseTimes.push(endTime - startTime);
 
         // Small delay between requests to avoid overwhelming the system
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 100));
       }
 
       // Calculate performance metrics
-      const avgResponseTime = responseTimes.reduce((sum, time) => sum + time, 0) / responseTimes.length;
+      const avgResponseTime =
+        responseTimes.reduce((sum, time) => sum + time, 0) /
+        responseTimes.length;
       const maxResponseTime = Math.max(...responseTimes);
       const minResponseTime = Math.min(...responseTimes);
       const stdDev = Math.sqrt(
-        responseTimes.reduce((sum, time) => sum + Math.pow(time - avgResponseTime, 2), 0) / responseTimes.length
+        responseTimes.reduce(
+          (sum, time) => sum + Math.pow(time - avgResponseTime, 2),
+          0,
+        ) / responseTimes.length,
       );
 
       const performanceBaseline = {
@@ -326,8 +341,11 @@ describe('Performance Requirements Integration Tests', () => {
         max: maxResponseTime,
         min: minResponseTime,
         standardDeviation: Number(stdDev.toFixed(2)),
-        p95: responseTimes.sort((a, b) => a - b)[Math.ceil(numberOfSamples * 0.95) - 1] || maxResponseTime,
-        timestamp: new Date().toISOString()
+        p95:
+          responseTimes.sort((a, b) => a - b)[
+            Math.ceil(numberOfSamples * 0.95) - 1
+          ] || maxResponseTime,
+        timestamp: new Date().toISOString(),
       };
 
       console.log('Performance Baseline Established:', performanceBaseline);
@@ -339,7 +357,9 @@ describe('Performance Requirements Integration Tests', () => {
       // Future implementations should compare against this baseline
       // Performance should not exceed baseline * 1.1 (10% degradation limit)
       const maxAllowedResponseTime = performanceBaseline.average * 1.1;
-      console.log(`Future performance threshold: ${maxAllowedResponseTime.toFixed(2)}ms (110% of baseline)`);
+      console.log(
+        `Future performance threshold: ${maxAllowedResponseTime.toFixed(2)}ms (110% of baseline)`,
+      );
     });
   });
 });

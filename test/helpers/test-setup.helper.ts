@@ -20,18 +20,18 @@ export class TestSetupHelper {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     })
-    .overrideProvider(HttpService)
-    .useFactory({
-      factory: () => ({
-        post: jest.fn(),
-        get: jest.fn(),
-        put: jest.fn(),
-        delete: jest.fn(),
-        patch: jest.fn(),
-      }),
-      inject: [],
-    })
-    .compile();
+      .overrideProvider(HttpService)
+      .useFactory({
+        factory: () => ({
+          post: jest.fn(),
+          get: jest.fn(),
+          put: jest.fn(),
+          delete: jest.fn(),
+          patch: jest.fn(),
+        }),
+        inject: [],
+      })
+      .compile();
 
     this.app = moduleFixture.createNestApplication();
     this.httpService = moduleFixture.get<HttpService>(HttpService);
@@ -54,12 +54,15 @@ export class TestSetupHelper {
       .setDescription('Standardized API for supplier operations and management')
       .setVersion('1.0')
       .addTag('Suppliers', 'Supplier management operations')
-      .addApiKey({
-        type: 'apiKey',
-        name: 'ny-operator',
-        in: 'header',
-        description: 'Operator identification header'
-      }, 'operator-auth')
+      .addApiKey(
+        {
+          type: 'apiKey',
+          name: 'ny-operator',
+          in: 'header',
+          description: 'Operator identification header',
+        },
+        'operator-auth',
+      )
       .build();
 
     const document = SwaggerModule.createDocument(this.app, config);
@@ -88,7 +91,9 @@ export class TestSetupHelper {
   }
 
   mockWhaleApiError(error: any): void {
-    (this.httpService.post as jest.Mock).mockReturnValue(throwError(() => error));
+    (this.httpService.post as jest.Mock).mockReturnValue(
+      throwError(() => error),
+    );
   }
 
   mockWhaleApiNetworkError(): void {

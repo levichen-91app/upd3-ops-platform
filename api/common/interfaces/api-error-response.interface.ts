@@ -91,7 +91,11 @@ export class ApiErrorResponse {
   /**
    * Factory method for creating validation error responses
    */
-  public static validationError(message: string, details: any, requestId: string): ApiErrorResponse {
+  public static validationError(
+    message: string,
+    details: any,
+    requestId: string,
+  ): ApiErrorResponse {
     return new ApiErrorResponse(
       new ErrorObject('VALIDATION_ERROR', message, details),
       requestId,
@@ -101,7 +105,12 @@ export class ApiErrorResponse {
   /**
    * Factory method for creating business logic error responses
    */
-  public static businessError(code: string, message: string, details: any, requestId: string): ApiErrorResponse {
+  public static businessError(
+    code: string,
+    message: string,
+    details: any,
+    requestId: string,
+  ): ApiErrorResponse {
     return new ApiErrorResponse(
       new ErrorObject(code, message, details),
       requestId,
@@ -111,7 +120,12 @@ export class ApiErrorResponse {
   /**
    * Factory method for creating system error responses
    */
-  public static systemError(code: string, message: string, details: any, requestId: string): ApiErrorResponse {
+  public static systemError(
+    code: string,
+    message: string,
+    details: any,
+    requestId: string,
+  ): ApiErrorResponse {
     return new ApiErrorResponse(
       new ErrorObject(code, message, details),
       requestId,

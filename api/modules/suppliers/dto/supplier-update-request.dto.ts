@@ -1,5 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsInt, Min, IsNotEmpty, Matches, NotEquals } from 'class-validator';
+import {
+  IsString,
+  IsInt,
+  Min,
+  IsNotEmpty,
+  Matches,
+  NotEquals,
+} from 'class-validator';
 import { Transform } from 'class-transformer';
 
 export class SupplierUpdateRequestDto {
@@ -13,7 +20,9 @@ export class SupplierUpdateRequestDto {
   @IsString({ message: 'Market must be a string' })
   @IsNotEmpty({ message: 'Market is required' })
   @Matches(/^[A-Z]{2,4}$/, { message: 'Market must be 2-4 uppercase letters' })
-  @Transform(({ value }) => typeof value === 'string' ? value.trim().toUpperCase() : value)
+  @Transform(({ value }) =>
+    typeof value === 'string' ? value.trim().toUpperCase() : value,
+  )
   public readonly market: string;
 
   @ApiProperty({

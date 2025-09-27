@@ -43,7 +43,9 @@ describe('Supplier Update API Contract Tests', () => {
         expect(response.body).toMatchObject({
           success: true,
           data: expect.any(Object),
-          timestamp: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/),
+          timestamp: expect.stringMatching(
+            /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/,
+          ),
           requestId: expect.stringMatching(/^req-\d{14}-[a-f0-9-]{36}$/),
         });
 
@@ -86,11 +88,15 @@ describe('Supplier Update API Contract Tests', () => {
         expect(response.body).toMatchObject({
           success: false,
           error: {
-            code: expect.stringMatching(/^(VALIDATION_ERROR|MISSING_REQUIRED_FIELD)$/),
+            code: expect.stringMatching(
+              /^(VALIDATION_ERROR|MISSING_REQUIRED_FIELD)$/,
+            ),
             message: expect.any(String),
             details: expect.any(Object),
           },
-          timestamp: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/),
+          timestamp: expect.stringMatching(
+            /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/,
+          ),
           requestId: expect.stringMatching(/^req-\d{14}-[a-f0-9-]{36}$/),
         });
 
@@ -132,7 +138,9 @@ describe('Supplier Update API Contract Tests', () => {
             code: 'UNAUTHORIZED_ACCESS',
             message: expect.stringMatching(/authentication|missing|operator/i),
           },
-          timestamp: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/),
+          timestamp: expect.stringMatching(
+            /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/,
+          ),
           requestId: expect.stringMatching(/^req-\d{14}-[a-f0-9-]{36}$/),
         });
       });
@@ -140,21 +148,23 @@ describe('Supplier Update API Contract Tests', () => {
 
     describe('Request ID Uniqueness Contract', () => {
       it('should generate unique request IDs for concurrent requests', async () => {
-        const requests = Array(3).fill(null).map(() =>
-          request(app.getHttpServer())
-            .patch(`/api/v1/shops/${shopId}/suppliers`)
-            .set('ny-operator', operatorHeader)
-            .send(validRequest)
-        );
+        const requests = Array(3)
+          .fill(null)
+          .map(() =>
+            request(app.getHttpServer())
+              .patch(`/api/v1/shops/${shopId}/suppliers`)
+              .set('ny-operator', operatorHeader)
+              .send(validRequest),
+          );
 
         const responses = await Promise.all(requests);
-        const requestIds = responses.map(res => res.body.requestId);
+        const requestIds = responses.map((res) => res.body.requestId);
 
         // All request IDs should be unique
         expect(new Set(requestIds).size).toBe(requestIds.length);
 
         // All should match the expected format
-        requestIds.forEach(id => {
+        requestIds.forEach((id) => {
           expect(id).toMatch(/^req-\d{14}-[a-f0-9-]{36}$/);
         });
       });

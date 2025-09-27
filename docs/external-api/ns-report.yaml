@@ -1,0 +1,92 @@
+openapi: 3.0.0
+info:
+  title: Notification Status Report API
+  version: 1.0.0
+  description: >
+    查詢通知任務的狀態報告。<br>
+    - 需在 180 天內查詢。<br>
+    - 查詢時至少要輸入 `Recipients` 或 `NotificationJobIds`。<br>
+    - API 會先回傳一個 presigned URL，檔案會寫入 S3。<br>
+    - 如果等待超過 10 分鐘仍無法下載，請聯絡 Notification Service Team。
+
+servers:
+  - url: https://notify.qa.91dev.tw
+  - url: https://notify.91app.io
+
+paths:
+  /v3/GetNotificationStatusReport:
+    post:
+      summary: 取得通知狀態報告 (現有API)
+      description: >
+        依據 Notification Job Id 或 Recipient 查詢通知發送狀態，支援 SMS、Push、Line、Email。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GetNotificationStatusReportRequest'
+      responses:
+        '200':
+          description: |
+            成功取得 presigned URL，用於下載 TSV 格式的報告檔。  
+            TSV 欄位格式如下：  
+            - JobId  
+            - Platform  
+            - Recipient  
+            - Message  
+            - Payload  
+            - Status  
+            - ResCode  
+            - ResMsg  
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetNotificationStatusReportResponse'
+              example:
+                DownloadUrl: "https://s3xxxx"
+                ExpiredTime: 3600
+        '400':
+          description: 輸入參數錯誤 (Bad Request)
+
+components:
+  schemas:
+    GetNotificationStatusReportRequest:
+      type: object
+      required:
+        - NotificationType
+        - NotificationDate
+      properties:
+        NotificationType:
+          type: string
+          description: 通知類型
+          enum: [sms, push, line, email]
+        NotificationJobIds:
+          type: array
+          description: 通知任務 ID (需至少輸入一個 Job Id 或 Recipients)
+          items:
+            type: string
+        Recipients:
+          type: array
+          description: >
+            收件者資訊<br>
+            - SMS: 手機號碼 (E164 format)<br>
+            - Push: 裝置 token<br>
+            - Email: 電子郵件地址<br>
+            - LINE: 使用者 ID
+          items:
+            type: string
+        NotificationDate:
+          type: string
+          description: 通知任務的日期 (YYYY/MM/DD)
+          example: "2021/06/07"
+
+    GetNotificationStatusReportResponse:
+      type: object
+      properties:
+        DownloadUrl:
+          type: string
+          description: S3 presigned URL，用於下載 TSV 報告檔
+        ExpiredTime:
+          type: integer
+          description: presigned URL 的有效秒數
+          example: 3600

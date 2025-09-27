@@ -34,10 +34,85 @@ export interface EnvironmentApiConfig {
  */
 export interface ExternalApisConfig {
   whaleApi: EnvironmentApiConfig;
+  marketingCloudApi: EnvironmentApiConfig;
   // Future external APIs can be added here
   // paymentApi?: EnvironmentApiConfig;
   // notificationApi?: EnvironmentApiConfig;
 }
+
+/**
+ * Marketing Cloud API endpoints configuration
+ */
+const marketingCloudApiEndpoints: EnvironmentApiConfig = {
+  development: {
+    TW: {
+      url: 'http://marketing-cloud-service.qa.91dev.tw',
+      timeout: 5000,
+      retries: 0, // Transparent proxy - no retries
+    },
+    HK: {
+      url: 'http://marketing-cloud-service.qa1.hk.91dev.tw',
+      timeout: 5000,
+      retries: 0,
+    },
+    MY: {
+      url: 'http://marketing-cloud-service.qa1.my.91dev.tw',
+      timeout: 5000,
+      retries: 0,
+    },
+  },
+  staging: {
+    TW: {
+      url: 'http://marketing-cloud-service.qa.91dev.tw',
+      timeout: 5000,
+      retries: 0,
+    },
+    HK: {
+      url: 'http://marketing-cloud-service.qa1.hk.91dev.tw',
+      timeout: 5000,
+      retries: 0,
+    },
+    MY: {
+      url: 'http://marketing-cloud-service.qa1.my.91dev.tw',
+      timeout: 5000,
+      retries: 0,
+    },
+  },
+  production: {
+    TW: {
+      url: 'http://marketing-cloud-service.91app.io',
+      timeout: 5000,
+      retries: 0,
+    },
+    HK: {
+      url: 'http://marketing-cloud-service.hk.91app.io',
+      timeout: 5000,
+      retries: 0,
+    },
+    MY: {
+      url: 'http://marketing-cloud-service.my.91app.io',
+      timeout: 5000,
+      retries: 0,
+    },
+  },
+  test: {
+    TW: {
+      url: 'http://marketing-cloud-service.qa.91dev.tw',
+      timeout: 5000,
+      retries: 0,
+    },
+    HK: {
+      url: 'http://marketing-cloud-service.qa1.hk.91dev.tw',
+      timeout: 5000,
+      retries: 0,
+    },
+    MY: {
+      url: 'http://marketing-cloud-service.qa1.my.91dev.tw',
+      timeout: 5000,
+      retries: 0,
+    },
+  },
+};
 
 /**
  * Whale API endpoints configuration based on docs/external-whale-api.yaml
@@ -82,7 +157,7 @@ const whaleApiEndpoints: EnvironmentApiConfig = {
     TW: {
       url: 'http://whale-api-internal.91app.io/admin',
       timeout: 15000, // Higher timeout for production
-      retries: 5,     // More retries for production
+      retries: 5, // More retries for production
     },
     HK: {
       url: 'http://whale-api-internal.hk.91app.io/admin',
@@ -119,7 +194,8 @@ const whaleApiEndpoints: EnvironmentApiConfig = {
  * Get Whale API URL based on environment and market
  */
 function getWhaleApiUrl(): string {
-  const environment = (process.env.NODE_ENV || 'development') as keyof EnvironmentApiConfig;
+  const environment = (process.env.NODE_ENV ||
+    'development') as keyof EnvironmentApiConfig;
   const market = (process.env.MARKET || 'TW') as keyof MarketApiEndpoints;
 
   // Allow environment variable override
@@ -134,7 +210,9 @@ function getWhaleApiUrl(): string {
 
   const marketConfig = config[market];
   if (!marketConfig) {
-    throw new Error(`Unknown market: ${market} for environment: ${environment}`);
+    throw new Error(
+      `Unknown market: ${market} for environment: ${environment}`,
+    );
   }
 
   return marketConfig.url;
@@ -144,7 +222,8 @@ function getWhaleApiUrl(): string {
  * Get Whale API timeout based on environment and market
  */
 function getWhaleApiTimeout(): number {
-  const environment = (process.env.NODE_ENV || 'development') as keyof EnvironmentApiConfig;
+  const environment = (process.env.NODE_ENV ||
+    'development') as keyof EnvironmentApiConfig;
   const market = (process.env.MARKET || 'TW') as keyof MarketApiEndpoints;
 
   // Allow environment variable override
@@ -159,7 +238,8 @@ function getWhaleApiTimeout(): number {
  * Get Whale API retries based on environment and market
  */
 function getWhaleApiRetries(): number {
-  const environment = (process.env.NODE_ENV || 'development') as keyof EnvironmentApiConfig;
+  const environment = (process.env.NODE_ENV ||
+    'development') as keyof EnvironmentApiConfig;
   const market = (process.env.MARKET || 'TW') as keyof MarketApiEndpoints;
 
   // Allow environment variable override
@@ -171,16 +251,69 @@ function getWhaleApiRetries(): number {
 }
 
 /**
+ * Get Marketing Cloud API URL based on environment and market
+ */
+function getMarketingCloudApiUrl(): string {
+  const environment = (process.env.NODE_ENV ||
+    'development') as keyof EnvironmentApiConfig;
+  const market = (process.env.MARKET || 'TW') as keyof MarketApiEndpoints;
+
+  // Allow environment variable override
+  if (process.env.MARKETING_CLOUD_API_URL_OVERRIDE) {
+    return process.env.MARKETING_CLOUD_API_URL_OVERRIDE;
+  }
+
+  const config = marketingCloudApiEndpoints[environment];
+  if (!config) {
+    throw new Error(`Unknown environment: ${environment}`);
+  }
+
+  const marketConfig = config[market];
+  if (!marketConfig) {
+    throw new Error(
+      `Unknown market: ${market} for environment: ${environment}`,
+    );
+  }
+
+  return marketConfig.url;
+}
+
+/**
+ * Get Marketing Cloud API timeout based on environment and market
+ */
+function getMarketingCloudApiTimeout(): number {
+  const environment = (process.env.NODE_ENV ||
+    'development') as keyof EnvironmentApiConfig;
+  const market = (process.env.MARKET || 'TW') as keyof MarketApiEndpoints;
+
+  // Allow environment variable override
+  if (process.env.MARKETING_CLOUD_API_TIMEOUT) {
+    return parseInt(process.env.MARKETING_CLOUD_API_TIMEOUT, 10);
+  }
+
+  return marketingCloudApiEndpoints[environment]?.[market]?.timeout || 5000;
+}
+
+/**
  * External APIs configuration using NestJS registerAs pattern
  */
-export default registerAs('externalApis', (): ExternalApisConfig => ({
-  whaleApi: {
-    development: whaleApiEndpoints.development,
-    staging: whaleApiEndpoints.staging,
-    production: whaleApiEndpoints.production,
-    test: whaleApiEndpoints.test,
-  },
-}));
+export default registerAs(
+  'externalApis',
+  (): ExternalApisConfig => ({
+    whaleApi: {
+      development: whaleApiEndpoints.development,
+      staging: whaleApiEndpoints.staging,
+      production: whaleApiEndpoints.production,
+      test: whaleApiEndpoints.test,
+    },
+    marketingCloudApi: {
+      development: marketingCloudApiEndpoints.development,
+      staging: marketingCloudApiEndpoints.staging,
+      production: marketingCloudApiEndpoints.production,
+      test: marketingCloudApiEndpoints.test,
+    },
+  }),
+);
 
 /**
  * Current environment whale API configuration
@@ -189,4 +322,13 @@ export const currentWhaleApiConfig = {
   baseUrl: getWhaleApiUrl(),
   timeout: getWhaleApiTimeout(),
   retries: getWhaleApiRetries(),
+};
+
+/**
+ * Current environment Marketing Cloud API configuration
+ */
+export const currentMarketingCloudApiConfig = {
+  baseUrl: getMarketingCloudApiUrl(),
+  timeout: getMarketingCloudApiTimeout(),
+  retries: 0, // Transparent proxy - no retries
 };

@@ -32,12 +32,15 @@ describe('API Documentation Validation Integration Tests', () => {
       .setDescription('Standardized API for supplier operations and management')
       .setVersion('1.0')
       .addTag('Suppliers', 'Supplier management operations')
-      .addApiKey({
-        type: 'apiKey',
-        name: 'ny-operator',
-        in: 'header',
-        description: 'Operator identification header'
-      }, 'operator-auth')
+      .addApiKey(
+        {
+          type: 'apiKey',
+          name: 'ny-operator',
+          in: 'header',
+          description: 'Operator identification header',
+        },
+        'operator-auth',
+      )
       .build();
 
     const document = SwaggerModule.createDocument(app, config);
@@ -109,14 +112,16 @@ describe('API Documentation Validation Integration Tests', () => {
     });
 
     it('should document the PATCH /api/v1/shops/{shopId}/suppliers endpoint', async () => {
-      const supplierEndpoint = openApiSpec.paths['/api/v1/shops/{shopId}/suppliers'];
+      const supplierEndpoint =
+        openApiSpec.paths['/api/v1/shops/{shopId}/suppliers'];
 
       expect(supplierEndpoint).toBeTruthy();
       expect(supplierEndpoint.patch).toBeTruthy();
     });
 
     it('should have complete endpoint documentation with required fields', async () => {
-      const patchEndpoint = openApiSpec.paths['/api/v1/shops/{shopId}/suppliers']?.patch;
+      const patchEndpoint =
+        openApiSpec.paths['/api/v1/shops/{shopId}/suppliers']?.patch;
 
       expect(patchEndpoint).toHaveProperty('summary');
       expect(patchEndpoint).toHaveProperty('description');
@@ -130,7 +135,8 @@ describe('API Documentation Validation Integration Tests', () => {
     });
 
     it('should document path parameters correctly', async () => {
-      const patchEndpoint = openApiSpec.paths['/api/v1/shops/{shopId}/suppliers']?.patch;
+      const patchEndpoint =
+        openApiSpec.paths['/api/v1/shops/{shopId}/suppliers']?.patch;
       const parameters = patchEndpoint.parameters || [];
 
       // Should document shopId path parameter
@@ -142,11 +148,14 @@ describe('API Documentation Validation Integration Tests', () => {
     });
 
     it('should document header parameters correctly', async () => {
-      const patchEndpoint = openApiSpec.paths['/api/v1/shops/{shopId}/suppliers']?.patch;
+      const patchEndpoint =
+        openApiSpec.paths['/api/v1/shops/{shopId}/suppliers']?.patch;
       const parameters = patchEndpoint.parameters || [];
 
       // Should document ny-operator header
-      const operatorHeader = parameters.find((p: any) => p.name === 'ny-operator');
+      const operatorHeader = parameters.find(
+        (p: any) => p.name === 'ny-operator',
+      );
       expect(operatorHeader).toBeTruthy();
       expect(operatorHeader.in).toBe('header');
       expect(operatorHeader.required).toBe(true);
@@ -154,7 +163,8 @@ describe('API Documentation Validation Integration Tests', () => {
     });
 
     it('should document request body schema correctly', async () => {
-      const patchEndpoint = openApiSpec.paths['/api/v1/shops/{shopId}/suppliers']?.patch;
+      const patchEndpoint =
+        openApiSpec.paths['/api/v1/shops/{shopId}/suppliers']?.patch;
       const requestBody = patchEndpoint.requestBody;
 
       expect(requestBody).toBeTruthy();
@@ -168,7 +178,9 @@ describe('API Documentation Validation Integration Tests', () => {
 
       // OpenAPI uses references, so we need to check the components
       if (schema.$ref) {
-        expect(schema.$ref).toBe('#/components/schemas/SupplierUpdateRequestDto');
+        expect(schema.$ref).toBe(
+          '#/components/schemas/SupplierUpdateRequestDto',
+        );
 
         // Check the referenced schema in components
         const schemaName = schema.$ref.split('/').pop();
@@ -181,7 +193,7 @@ describe('API Documentation Validation Integration Tests', () => {
 
         // Verify required fields are documented
         expect(componentSchema.required).toEqual(
-          expect.arrayContaining(['market', 'oldSupplierId', 'newSupplierId'])
+          expect.arrayContaining(['market', 'oldSupplierId', 'newSupplierId']),
         );
       } else {
         // Fallback for direct schema
@@ -191,13 +203,14 @@ describe('API Documentation Validation Integration Tests', () => {
         expect(schema.properties).toHaveProperty('newSupplierId');
 
         expect(schema.required).toEqual(
-          expect.arrayContaining(['market', 'oldSupplierId', 'newSupplierId'])
+          expect.arrayContaining(['market', 'oldSupplierId', 'newSupplierId']),
         );
       }
     });
 
     it('should document all possible response status codes', async () => {
-      const patchEndpoint = openApiSpec.paths['/api/v1/shops/{shopId}/suppliers']?.patch;
+      const patchEndpoint =
+        openApiSpec.paths['/api/v1/shops/{shopId}/suppliers']?.patch;
       const responses = patchEndpoint.responses;
 
       // Should document success and error responses
@@ -208,7 +221,8 @@ describe('API Documentation Validation Integration Tests', () => {
     });
 
     it('should document response schemas correctly', async () => {
-      const patchEndpoint = openApiSpec.paths['/api/v1/shops/{shopId}/suppliers']?.patch;
+      const patchEndpoint =
+        openApiSpec.paths['/api/v1/shops/{shopId}/suppliers']?.patch;
       const responses = patchEndpoint.responses;
 
       // Check 200 response schema
@@ -256,7 +270,8 @@ describe('API Documentation Validation Integration Tests', () => {
     });
 
     it('should provide realistic examples for request bodies', async () => {
-      const patchEndpoint = openApiSpec.paths['/api/v1/shops/{shopId}/suppliers']?.patch;
+      const patchEndpoint =
+        openApiSpec.paths['/api/v1/shops/{shopId}/suppliers']?.patch;
       const requestBody = patchEndpoint.requestBody;
       const schema = requestBody.content['application/json'].schema;
 
@@ -271,20 +286,23 @@ describe('API Documentation Validation Integration Tests', () => {
 
       // Should have example values for all required fields
       if (actualSchema.example || actualSchema.properties?.market?.example) {
-        expect(actualSchema.example || {
-          market: actualSchema.properties?.market?.example,
-          oldSupplierId: actualSchema.properties?.oldSupplierId?.example,
-          newSupplierId: actualSchema.properties?.newSupplierId?.example
-        }).toMatchObject({
+        expect(
+          actualSchema.example || {
+            market: actualSchema.properties?.market?.example,
+            oldSupplierId: actualSchema.properties?.oldSupplierId?.example,
+            newSupplierId: actualSchema.properties?.newSupplierId?.example,
+          },
+        ).toMatchObject({
           market: expect.any(String),
           oldSupplierId: expect.any(Number),
-          newSupplierId: expect.any(Number)
+          newSupplierId: expect.any(Number),
         });
       }
     });
 
     it('should provide examples for successful responses', async () => {
-      const patchEndpoint = openApiSpec.paths['/api/v1/shops/{shopId}/suppliers']?.patch;
+      const patchEndpoint =
+        openApiSpec.paths['/api/v1/shops/{shopId}/suppliers']?.patch;
       const successResponse = patchEndpoint.responses['200'];
       const schema = successResponse.content['application/json'].schema;
 
@@ -298,13 +316,16 @@ describe('API Documentation Validation Integration Tests', () => {
     });
 
     it('should provide examples for error responses', async () => {
-      const patchEndpoint = openApiSpec.paths['/api/v1/shops/{shopId}/suppliers']?.patch;
+      const patchEndpoint =
+        openApiSpec.paths['/api/v1/shops/{shopId}/suppliers']?.patch;
       const errorResponse = patchEndpoint.responses['400'];
       const schema = errorResponse.content['application/json'].schema;
 
       // Should have meaningful error examples
       if (schema.example || schema.examples) {
-        const exampleData = schema.example || (schema.examples && Object.values(schema.examples)[0]);
+        const exampleData =
+          schema.example ||
+          (schema.examples && Object.values(schema.examples)[0]);
         if (exampleData) {
           expect(exampleData).toHaveProperty('success', false);
           expect(exampleData).toHaveProperty('error');
@@ -341,33 +362,46 @@ describe('API Documentation Validation Integration Tests', () => {
         expect(openApiSpec.components.securitySchemes).toBeTruthy();
 
         // Should document ny-operator header security
-        const headerSecurity = Object.values(openApiSpec.components.securitySchemes).find(
-          (scheme: any) => scheme.type === 'apiKey' && scheme.name === 'ny-operator'
+        const headerSecurity = Object.values(
+          openApiSpec.components.securitySchemes,
+        ).find(
+          (scheme: any) =>
+            scheme.type === 'apiKey' && scheme.name === 'ny-operator',
         );
         expect(headerSecurity).toBeTruthy();
       }
 
       // Endpoint should reference security requirements
-      const patchEndpoint = openApiSpec.paths['/api/v1/shops/{shopId}/suppliers']?.patch;
+      const patchEndpoint =
+        openApiSpec.paths['/api/v1/shops/{shopId}/suppliers']?.patch;
       expect(patchEndpoint.security || openApiSpec.security).toBeTruthy();
     });
 
     it('should use appropriate HTTP status code descriptions', async () => {
-      const patchEndpoint = openApiSpec.paths['/api/v1/shops/{shopId}/suppliers']?.patch;
+      const patchEndpoint =
+        openApiSpec.paths['/api/v1/shops/{shopId}/suppliers']?.patch;
       const responses = patchEndpoint.responses;
 
       // Verify meaningful descriptions for each status code
       expect(responses['200'].description).toContain('success');
-      expect(responses['400'].description).toMatch(/bad request|validation|invalid/i);
-      expect(responses['401'].description).toMatch(/unauthorized|authentication/i);
+      expect(responses['400'].description).toMatch(
+        /bad request|validation|invalid/i,
+      );
+      expect(responses['401'].description).toMatch(
+        /unauthorized|authentication/i,
+      );
       if (responses['502']) {
-        expect(responses['502'].description).toMatch(/gateway|upstream|service/i);
+        expect(responses['502'].description).toMatch(
+          /gateway|upstream|service/i,
+        );
       }
     });
 
     it('should document all data types and constraints correctly', async () => {
-      const patchEndpoint = openApiSpec.paths['/api/v1/shops/{shopId}/suppliers']?.patch;
-      const requestSchema = patchEndpoint.requestBody.content['application/json'].schema;
+      const patchEndpoint =
+        openApiSpec.paths['/api/v1/shops/{shopId}/suppliers']?.patch;
+      const requestSchema =
+        patchEndpoint.requestBody.content['application/json'].schema;
 
       // Handle schema references
       let actualSchema;
@@ -388,10 +422,14 @@ describe('API Documentation Validation Integration Tests', () => {
         expect(actualSchema.properties.market.pattern).toBeTruthy();
       }
       if (actualSchema.properties.oldSupplierId.minimum) {
-        expect(actualSchema.properties.oldSupplierId.minimum).toBeGreaterThan(0);
+        expect(actualSchema.properties.oldSupplierId.minimum).toBeGreaterThan(
+          0,
+        );
       }
       if (actualSchema.properties.newSupplierId.minimum) {
-        expect(actualSchema.properties.newSupplierId.minimum).toBeGreaterThan(0);
+        expect(actualSchema.properties.newSupplierId.minimum).toBeGreaterThan(
+          0,
+        );
       }
     });
   });
@@ -409,21 +447,15 @@ describe('API Documentation Validation Integration Tests', () => {
       const endpoints = ['/api-docs', '/api-json'];
 
       for (const endpoint of endpoints) {
-        await request(app.getHttpServer())
-          .get(endpoint)
-          .expect(200);
+        await request(app.getHttpServer()).get(endpoint).expect(200);
       }
     });
 
     it('should serve documentation without authentication requirements', async () => {
       // Documentation endpoints should be publicly accessible
-      await request(app.getHttpServer())
-        .get('/api-docs')
-        .expect(200);
+      await request(app.getHttpServer()).get('/api-docs').expect(200);
 
-      await request(app.getHttpServer())
-        .get('/api-json')
-        .expect(200);
+      await request(app.getHttpServer()).get('/api-json').expect(200);
     });
   });
 
@@ -440,8 +472,10 @@ describe('API Documentation Validation Integration Tests', () => {
     it('should accurately document actual API behavior for successful requests', async () => {
       // This test would require mocking external service
       // For now, we validate that the documented schema exists for successful responses
-      const patchEndpoint = openApiSpec.paths['/api/v1/shops/{shopId}/suppliers']?.patch;
-      const successResponseSchema = patchEndpoint.responses['200'].content['application/json'].schema;
+      const patchEndpoint =
+        openApiSpec.paths['/api/v1/shops/{shopId}/suppliers']?.patch;
+      const successResponseSchema =
+        patchEndpoint.responses['200'].content['application/json'].schema;
 
       // Validate documented success response structure
       expect(successResponseSchema).toBeTruthy();
@@ -466,8 +500,10 @@ describe('API Documentation Validation Integration Tests', () => {
         .expect(400);
 
       // Compare with documented error schema
-      const patchEndpoint = openApiSpec.paths['/api/v1/shops/{shopId}/suppliers']?.patch;
-      const errorResponseSchema = patchEndpoint.responses['400'].content['application/json'].schema;
+      const patchEndpoint =
+        openApiSpec.paths['/api/v1/shops/{shopId}/suppliers']?.patch;
+      const errorResponseSchema =
+        patchEndpoint.responses['400'].content['application/json'].schema;
 
       // Actual error response should match documented structure
       const actualResponse = apiResponse.body;

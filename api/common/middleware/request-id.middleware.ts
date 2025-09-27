@@ -13,7 +13,9 @@ export class RequestIdMiddleware implements NestMiddleware {
 
   public use(req: Request, res: Response, next: NextFunction): void {
     // Check if request ID already exists (from client or upstream proxy)
-    let requestId = req.headers[RequestIdMiddleware.REQUEST_ID_HEADER] as string;
+    let requestId = req.headers[
+      RequestIdMiddleware.REQUEST_ID_HEADER
+    ] as string;
 
     // Generate new request ID if none exists or invalid format
     if (!requestId || !this.isValidRequestId(requestId)) {
@@ -58,7 +60,8 @@ export class RequestIdMiddleware implements NestMiddleware {
    * Validate request ID format: req-{14-digit-timestamp}-{36-character-uuid}
    */
   private isValidRequestId(requestId: string): boolean {
-    const pattern = /^req-\d{14}-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/;
+    const pattern =
+      /^req-\d{14}-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/;
     return pattern.test(requestId);
   }
 

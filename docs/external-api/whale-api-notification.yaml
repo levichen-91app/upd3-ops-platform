@@ -1,0 +1,393 @@
+openapi: 3.0.3
+info:
+  title: Whale Notification API
+  description: API for managing notification history in the Whale system
+  version: 1.0.0
+  contact:
+    name: Whale Team
+servers:
+  - url: https://whale-api-internal.91app.io
+    description: Production server
+  - url: http://whale-api-internal.qa.91dev.tw
+    description: QA server
+
+paths:
+  /api/v1/notifications/{notificationId}:
+    get:
+      tags:
+        - Notifications
+      summary: Get Notification Details (現有API)
+      description: Get detailed information about a specific notification by ID
+      operationId: getNotification
+      parameters:
+        - name: notificationId
+          in: path
+          required: true
+          description: Notification ID
+          schema:
+            type: integer
+            format: int64
+          example: 12345
+      responses:
+        '200':
+          description: Success - Returns notification details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+              example:
+                code: "Success"
+                message: null
+                data:
+                  id: 12345
+                  channel: "Email"
+                  bookDatetime: "2024-01-15T10:30:00Z"
+                  sentDatetime: "2024-01-15T10:35:00Z"
+                  ncId: "a4070188-050d-47f7-ab24-2523145408cf"
+                  ncExtId: 67890
+                  listingId: "987654321"
+                  executionId: "exec-123456"
+                  taskId: "task-789012"
+                  status: "Success"
+                  isSettled: true
+                  originalAudienceCount: 1000
+                  filteredAudienceCount: 950
+                  sentAudienceCount: 900
+                  receivedAudienceCount: 850
+                  sentFailedCount: 50
+                  promotionValueSum: 50000
+                  report:
+                    Total: 1000
+                    Sent: 900
+                    Success: 850
+                    Fail: 50
+                    NoUser: 100
+                  actionResult:
+                    success: true
+                    message: "Notification sent successfully"
+                  storyId: 123
+                  executionHistoryId: 456
+                  createdAt: "2024-01-15T10:00:00Z"
+                  updatedAt: "2024-01-15T10:35:00Z"
+                  story:
+                    id: 123
+                    name: "Welcome Email Campaign"
+                    notificationSetting:
+                      enabled: true
+                      frequency: "daily"
+                    promotionSetting:
+                      discount: 10
+                      validUntil: "2024-02-15T23:59:59Z"
+                    flowId: "flow-123"
+                    audienceId: "audience-456"
+                  detail:
+                    id: 789
+                    failureReason: "Invalid email address"
+        '404':
+          description: Notification not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: "NOT_FOUND"
+                message: "Not found"
+                data: null
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: "INTERNAL_SERVER_ERROR"
+                message: "Internal server error"
+                data: null
+
+components:
+  schemas:
+    SuccessResponse:
+      type: object
+      properties:
+        code:
+          type: string
+          description: Response code
+          example: "Success"
+        message:
+          type: string
+          nullable: true
+          description: Response message
+          example: null
+        data:
+          $ref: '#/components/schemas/NotificationHistory'
+      required:
+        - code
+        - data
+
+    ErrorResponse:
+      type: object
+      properties:
+        code:
+          type: string
+          description: Error code
+          example: "NOT_FOUND"
+        message:
+          type: string
+          description: Error message
+          example: "Not found"
+        data:
+          type: object
+          nullable: true
+          description: Error data
+          example: null
+      required:
+        - code
+        - message
+
+    NotificationHistory:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Notification ID
+          example: 12345
+        channel:
+          type: string
+          description: Notification channel
+          example: "Email"
+        bookDatetime:
+          type: string
+          format: date-time
+          description: Scheduled datetime
+          example: "2024-01-15T10:30:00Z"
+        sentDatetime:
+          type: string
+          format: date-time
+          nullable: true
+          description: Actual sent datetime
+          example: "2024-01-15T10:35:00Z"
+        ncId:
+          type: string
+          description: Notification Center ID
+          example: "a4070188-050d-47f7-ab24-2523145408cf"
+        ncExtId:
+          type: integer
+          description: Notification Center Extension ID
+          example: 67890
+        listingId:
+          type: string
+          nullable: true
+          description: Listing ID
+          example: "987654321"
+        executionId:
+          type: string
+          nullable: true
+          description: Execution ID
+          example: "exec-123456"
+        taskId:
+          type: string
+          nullable: true
+          description: Task ID
+          example: "task-789012"
+        status:
+          type: string
+          enum:
+            - Scheduled
+            - Booked
+            - Sent
+            - Error
+            - Success
+            - Fail
+            - PartialFail
+            - NoUser
+          description: Notification status
+          example: "Success"
+        isSettled:
+          type: boolean
+          description: Whether the notification is settled
+          example: true
+        originalAudienceCount:
+          type: integer
+          description: Total audience count before filtering
+          example: 1000
+        filteredAudienceCount:
+          type: integer
+          description: Audience count after filtering (excluding unbound users)
+          example: 950
+        sentAudienceCount:
+          type: integer
+          description: Actual sent audience count
+          example: 900
+        receivedAudienceCount:
+          type: integer
+          description: Actually received audience count
+          example: 850
+        sentFailedCount:
+          type: integer
+          description: Failed sent count (virtual field from report.Fail)
+          example: 50
+        promotionValueSum:
+          type: integer
+          nullable: true
+          description: Sum of promotion values
+          example: 50000
+        report:
+          $ref: '#/components/schemas/Report'
+        redoFrom:
+          type: integer
+          nullable: true
+          description: Redo from notification ID
+          example: null
+        actionResult:
+          $ref: '#/components/schemas/ActionResult'
+        storyId:
+          type: integer
+          description: Story ID
+          example: 123
+        executionHistoryId:
+          type: integer
+          description: Execution History ID
+          example: 456
+        createdAt:
+          type: string
+          format: date-time
+          description: Created datetime
+          example: "2024-01-15T10:00:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          description: Updated datetime
+          example: "2024-01-15T10:35:00Z"
+        story:
+          $ref: '#/components/schemas/Story'
+        detail:
+          $ref: '#/components/schemas/NotificationHistoryDetail'
+      required:
+        - id
+        - channel
+        - bookDatetime
+        - ncId
+        - ncExtId
+        - status
+        - isSettled
+        - originalAudienceCount
+        - filteredAudienceCount
+        - sentAudienceCount
+        - receivedAudienceCount
+        - report
+        - storyId
+        - executionHistoryId
+        - createdAt
+        - updatedAt
+
+    Report:
+      type: object
+      properties:
+        Total:
+          type: integer
+          description: Total count
+          example: 1000
+        Sent:
+          type: integer
+          description: Sent count
+          example: 900
+        Success:
+          type: integer
+          description: Success count
+          example: 850
+        Fail:
+          type: integer
+          description: Fail count
+          example: 50
+        NoUser:
+          type: integer
+          description: No user count
+          example: 100
+      required:
+        - Total
+        - Sent
+        - Success
+        - Fail
+        - NoUser
+
+    ActionResult:
+      type: object
+      nullable: true
+      properties:
+        success:
+          type: boolean
+          description: Action success status
+          example: true
+        message:
+          type: string
+          description: Action result message
+          example: "Notification sent successfully"
+      required:
+        - success
+        - message
+
+    Story:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Story ID
+          example: 123
+        name:
+          type: string
+          description: Story name
+          example: "Welcome Email Campaign"
+        notificationSetting:
+          type: object
+          properties:
+            enabled:
+              type: boolean
+              description: Whether notification is enabled
+              example: true
+            frequency:
+              type: string
+              description: Notification frequency
+              example: "daily"
+        promotionSetting:
+          type: object
+          properties:
+            discount:
+              type: integer
+              description: Discount percentage
+              example: 10
+            validUntil:
+              type: string
+              format: date-time
+              description: Promotion valid until
+              example: "2024-02-15T23:59:59Z"
+        flowId:
+          type: string
+          description: Flow ID
+          example: "flow-123"
+        audienceId:
+          type: string
+          description: Audience ID
+          example: "audience-456"
+      required:
+        - id
+        - name
+
+    NotificationHistoryDetail:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Detail ID
+          example: 789
+        failureReason:
+          type: string
+          description: Failure reason
+          example: "Invalid email address"
+      required:
+        - id
+        - failureReason
+
+tags:
+  - name: Notifications
+    description: Notification management operations

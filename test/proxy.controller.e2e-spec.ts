@@ -93,7 +93,10 @@ describe('ProxyController (e2e)', () => {
         .send(requestBody)
         .expect(400);
 
-      expect(response.body).toHaveProperty('errorCode', 'MISSING_REQUIRED_HEADER');
+      expect(response.body).toHaveProperty(
+        'errorCode',
+        'MISSING_REQUIRED_HEADER',
+      );
       expect(response.body).toHaveProperty('message');
       expect(response.body.message).toContain('ny-operator');
     });
@@ -189,7 +192,9 @@ describe('ProxyController (e2e)', () => {
           data: { error: 'Invalid supplier ID' },
         },
       };
-      jest.spyOn(httpService, 'post').mockReturnValue(throwError(() => mockError));
+      jest
+        .spyOn(httpService, 'post')
+        .mockReturnValue(throwError(() => mockError));
 
       const response = await request(app.getHttpServer())
         .post('/proxy/whale/update-supplier-id')
@@ -215,7 +220,9 @@ describe('ProxyController (e2e)', () => {
           data: { error: 'Internal server error' },
         },
       };
-      jest.spyOn(httpService, 'post').mockReturnValue(throwError(() => mockError));
+      jest
+        .spyOn(httpService, 'post')
+        .mockReturnValue(throwError(() => mockError));
 
       const response = await request(app.getHttpServer())
         .post('/proxy/whale/update-supplier-id')
@@ -239,7 +246,9 @@ describe('ProxyController (e2e)', () => {
         code: 'ECONNABORTED',
         message: 'timeout of 5000ms exceeded',
       };
-      jest.spyOn(httpService, 'post').mockReturnValue(throwError(() => mockError));
+      jest
+        .spyOn(httpService, 'post')
+        .mockReturnValue(throwError(() => mockError));
 
       const response = await request(app.getHttpServer())
         .post('/proxy/whale/update-supplier-id')
