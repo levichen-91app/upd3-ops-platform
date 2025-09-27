@@ -42,6 +42,13 @@ export class MarketingCloudService {
     const requestId = this.generateRequestId();
     const maskedPhone = maskPhoneNumber(phone);
 
+    // Check if mock mode is enabled
+    const mockMode = process.env.MARKETING_CLOUD_MOCK_MODE === 'true';
+
+    if (mockMode) {
+      return this.getMockDevicesData(shopId, phone, operator, requestId, maskedPhone);
+    }
+
     this.logger.log(
       createSafeLogMessage('Starting Marketing Cloud API request', {
         shopId,
@@ -347,5 +354,94 @@ export class MarketingCloudService {
     return url.replace(/phones\/(\d{10})/g, (match, phone) => {
       return `phones/${maskPhoneNumber(phone)}`;
     });
+  }
+
+  /**
+   * Generate mock device data for F2E integration
+   */
+  private async getMockDevicesData(
+    shopId: number,
+    phone: string,
+    operator: string,
+    requestId: string,
+    maskedPhone: string,
+  ): Promise<MemberDevicesData> {
+    this.logger.log(
+      createSafeLogMessage('Using Mock Marketing Cloud API data', {
+        shopId,
+        phone: maskedPhone,
+        operator,
+        requestId,
+        mode: 'MOCK',
+      }),
+    );
+
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    // Generate mock devices based on phone number for consistency
+    const devices: Device[] = [];
+    const phoneLastDigit = parseInt(phone.slice(-1), 10);
+
+    // Generate 1-3 devices based on phone number
+    const deviceCount = (phoneLastDigit % 3) + 1;
+
+    for (let i = 0; i < deviceCount; i++) {
+      const platforms = ['iOS', 'Android'];
+      const platform = platforms[i % platforms.length];
+
+      devices.push({
+        guid: `mock-${shopId}-${phone}-device-${i + 1}-${Date.now()}`,
+        udid: `MOCK${platform.toUpperCase()}${i + 1}${phoneLastDigit}`,
+        token: `mock_push_token_${platform}_${i + 1}_${phoneLastDigit}_${requestId.slice(-8)}`,
+        shopId,
+        platformDef: platform,
+        memberId: 100000 + (phoneLastDigit * 1000) + i,
+        advertiseId: `mock-ad-${phoneLastDigit}${i}-1234-5678-9012-${requestId.slice(-12)}`,
+        appVersion: `${2 + i}.${phoneLastDigit}.${i}`,
+        updatedDateTime: new Date(Date.now() - (i * 24 * 60 * 60 * 1000)).toISOString(),
+        createdDateTime: new Date(Date.now() - (30 + i * 10) * 24 * 60 * 60 * 1000).toISOString(),
+      });
+    }
+
+    // Special cases for testing different scenarios
+    if (phone.endsWith('000')) {
+      // Return empty array for phones ending in 000
+      return { shopId, phone, devices: [], totalCount: 0 };
+    }
+
+    if (phone.endsWith('404')) {
+      // Simulate member not found
+      throw new NotFoundException(
+        'Member not found or has no registered devices',
+        {
+          cause: new Error('Mock 404 scenario'),
+          description: `No devices found for member with phone ${maskedPhone} in shop ${shopId}`,
+        },
+      );
+    }
+
+    const result: MemberDevicesData = {
+      shopId,
+      phone,
+      devices,
+      totalCount: devices.length,
+    };
+
+    this.logger.log(
+      createSafeLogMessage(
+        'Mock Marketing Cloud API request completed successfully',
+        {
+          shopId,
+          phone: maskedPhone,
+          deviceCount: devices.length,
+          operator,
+          requestId,
+          mode: 'MOCK',
+        },
+      ),
+    );
+
+    return result;
   }
 }

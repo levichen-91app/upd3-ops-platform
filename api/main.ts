@@ -30,12 +30,23 @@ async function bootstrap() {
     }),
   );
 
+  // Check if mock mode is enabled
+  const mockMode = process.env.MARKETING_CLOUD_MOCK_MODE === 'true';
+  const mockIndicator = mockMode ? ' [MOCK MODE]' : '';
+
   // Configure Swagger documentation
   const config = new DocumentBuilder()
-    .setTitle('UPD3 Operations Platform API')
-    .setDescription('Standardized API for supplier operations and management')
+    .setTitle(`UPD3 Operations Platform API${mockIndicator}`)
+    .setDescription(
+      `Standardized API for supplier operations and management${
+        mockMode
+          ? '\n\n🎯 **MOCK MODE ENABLED** - Marketing Cloud API will return mock data for development and testing purposes.\n\n**Test Scenarios:**\n- Normal phone numbers: Returns 1-3 mock devices\n- Phone ending with 000: Returns empty device list\n- Phone ending with 404: Returns 404 Not Found error'
+          : ''
+      }`
+    )
     .setVersion('1.0')
     .addTag('Suppliers', 'Supplier management operations')
+    .addTag('Marketing Cloud', 'Marketing Cloud Device API integration')
     .addApiKey(
       {
         type: 'apiKey',
