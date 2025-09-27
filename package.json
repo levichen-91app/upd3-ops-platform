@@ -89,6 +89,7 @@
     ],
     "coverageDirectory": "coverage",
     "testEnvironment": "node",
+    "setupFilesAfterEnv": ["<rootDir>/api/test-setup.ts"],
     "moduleNameMapper": {
       "^@/(.*)$": "<rootDir>/api/$1"
     }
