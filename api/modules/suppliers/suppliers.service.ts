@@ -1,9 +1,10 @@
-import { Injectable, BadGatewayException, Logger } from '@nestjs/common';
+import { Injectable, BadGatewayException, Logger, Inject } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
-import { ConfigService } from '@nestjs/config';
+import type { ConfigType } from '@nestjs/config';
 import { SupplierUpdateRequestDto } from './dto/supplier-update-request.dto';
 import { ErrorCode } from '../../common/enums/error-code.enum';
 import { firstValueFrom } from 'rxjs';
+import externalApisConfig from '../../config/external-apis.config';
 
 export interface SupplierUpdateResult {
   updatedCount: number;
@@ -12,15 +13,35 @@ export interface SupplierUpdateResult {
 @Injectable()
 export class SuppliersService {
   private readonly logger = new Logger(SuppliersService.name);
-  private readonly whaleApiUrl: string;
+  private readonly whaleApiConfig: {
+    baseUrl: string;
+    timeout: number;
+    retries: number;
+  };
 
   constructor(
     private readonly httpService: HttpService,
-    private readonly configService: ConfigService,
+    @Inject(externalApisConfig.KEY)
+    private readonly apisConfig: ConfigType<typeof externalApisConfig>,
   ) {
-    this.whaleApiUrl =
-      this.configService.get<string>('WHALE_API_URL') ||
-      'http://whale-api-internal.qa.91dev.tw/admin';
+    const environment = (process.env.NODE_ENV || 'development') as 'development' | 'staging' | 'production' | 'test';
+    const market = (process.env.MARKET || 'TW') as 'TW' | 'HK' | 'MY';
+
+    // Get configuration for current environment and market
+    const envConfig = this.apisConfig.whaleApi[environment];
+    const marketConfig = envConfig[market];
+
+    this.whaleApiConfig = {
+      baseUrl: process.env.WHALE_API_URL_OVERRIDE || marketConfig.url,
+      timeout: process.env.WHALE_API_TIMEOUT ? parseInt(process.env.WHALE_API_TIMEOUT) : marketConfig.timeout || 10000,
+      retries: process.env.WHALE_API_RETRIES ? parseInt(process.env.WHALE_API_RETRIES) : marketConfig.retries || 3,
+    };
+
+    this.logger.log(`Whale API configured for ${environment}/${market}`, {
+      baseUrl: this.whaleApiConfig.baseUrl,
+      timeout: this.whaleApiConfig.timeout,
+      retries: this.whaleApiConfig.retries,
+    });
   }
 
   async updateSupplierId(
@@ -40,7 +61,7 @@ export class SuppliersService {
       // Call Whale API to perform the actual update
       const response = await firstValueFrom(
         this.httpService.post(
-          `${this.whaleApiUrl}/update-supplier-id`,
+          `${this.whaleApiConfig.baseUrl}/update-supplier-id`,
           {
             shopId,
             market: updateDto.market,
@@ -48,7 +69,7 @@ export class SuppliersService {
             newSupplierId: updateDto.newSupplierId,
           },
           {
-            timeout: 10000,
+            timeout: this.whaleApiConfig.timeout,
             headers: {
               'Content-Type': 'application/json',
               'User-Agent': 'upd3-ops-platform/1.0',
@@ -98,7 +119,7 @@ export class SuppliersService {
           details: {
             service: 'whale-api',
             errorCode: errorCode,
-            timeout: 10000,
+            timeout: this.whaleApiConfig.timeout,
           },
         });
       }

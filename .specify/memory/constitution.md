@@ -302,6 +302,63 @@ interface ApiErrorResponse {
 - 日誌記錄: 使用 nestjs-pino 進行結構化 (JSON) 日誌記錄，確保包含 requestId 以便追蹤。\
 - API 標準: 嚴格遵循 [API 設計規範](../../api-spec.md) 中的所有標準和最佳實踐。
 
+#### **6.1 配置管理標準**
+
+採用 NestJS 官方推薦的配置管理最佳實踐：
+
+**配置檔案結構:**
+```
+api/config/
+├── index.ts                   # 導出所有配置
+├── app.config.ts             # 應用基本配置
+├── database.config.ts        # 資料庫配置
+├── external-apis.config.ts   # 外部 API 配置
+└── validation.schema.ts      # 環境變數驗證
+```
+
+**使用 registerAs 模式:**
+```typescript
+// api/config/external-apis.config.ts
+import { registerAs } from '@nestjs/config';
+
+export default registerAs('externalApis', () => ({
+  whaleApi: {
+    baseUrl: getWhaleApiUrl(),
+    timeout: parseInt(process.env.WHALE_API_TIMEOUT || '10000'),
+    retries: parseInt(process.env.WHALE_API_RETRIES || '3'),
+  },
+}));
+```
+
+**Service 中使用強型別配置:**
+```typescript
+// Service 中注入配置
+import { ConfigType } from '@nestjs/config';
+import externalApisConfig from '../config/external-apis.config';
+
+@Injectable()
+export class SuppliersService {
+  constructor(
+    @Inject(externalApisConfig.KEY)
+    private readonly apisConfig: ConfigType<typeof externalApisConfig>,
+  ) {
+    this.whaleApiUrl = this.apisConfig.whaleApi.baseUrl;
+  }
+}
+```
+
+**環境變數驗證:**
+- 使用 Joi 驗證環境變數
+- 設定預設值和型別檢查
+- 支援多環境配置 (.env, .env.development, .env.production)
+
+**配置管理原則:**
+- 所有外部服務 URL 必須透過配置檔案管理
+- 支援多環境 (development, staging, production)
+- 支援多市場 (TW, HK, MY, SG) 部署
+- 提供強型別支援和依賴注入
+- 環境變數覆蓋機制
+
 ---
 
 ### **7. 開發檢查清單**

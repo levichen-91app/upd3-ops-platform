@@ -1,3 +1,10 @@
-export default () => ({
-  port: process.env.PORT ? parseInt(process.env.PORT, 10) : 3000,
-});
+import appConfig from './app.config';
+import externalApisConfig from './external-apis.config';
+
+/**
+ * Main configuration export - combines all configuration modules
+ */
+export default [
+  appConfig,
+  externalApisConfig,
+];

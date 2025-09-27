@@ -6,13 +6,24 @@ import { RequestIdMiddleware } from './common/middleware/request-id.middleware';
 import { LoggingMiddleware } from './common/middleware/logging.middleware';
 import { ResponseFormatInterceptor } from './common/interceptors/response-format.interceptor';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
-import configuration from './config/configuration';
+import configurations from './config/configuration';
+import { validationSchema } from './config/validation.schema';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [configuration],
+      load: configurations,
+      validationSchema,
+      validationOptions: {
+        allowUnknown: true,
+        abortEarly: false,
+      },
+      envFilePath: [
+        '.env.local',
+        `.env.${process.env.NODE_ENV || 'development'}`,
+        '.env',
+      ],
     }),
     SuppliersModule,
   ],
