@@ -134,6 +134,51 @@ export class TestSetupHelper {
     this.mockWhaleApiError(serverError);
   }
 
+  // Notification History API Mock Methods
+  mockWhaleApiNotificationHistorySuccess(notificationData: any): void {
+    const mockResponse: AxiosResponse = {
+      data: notificationData,
+      status: 200,
+      statusText: 'OK',
+      headers: {},
+      config: {} as any,
+    };
+
+    (this.httpService.get as jest.Mock).mockReturnValue(of(mockResponse));
+  }
+
+  mockWhaleApiNotificationNotFound(): void {
+    const notFoundError = {
+      response: {
+        status: 404,
+        data: { error: 'Notification not found' },
+      },
+      message: 'Request failed with status code 404',
+    };
+    this.mockWhaleApiNotificationError(notFoundError);
+  }
+
+  mockWhaleApiServiceUnavailable(): void {
+    const serviceError = {
+      response: {
+        status: 502,
+        data: { error: 'Service temporarily unavailable' },
+      },
+      message: 'Request failed with status code 502',
+    };
+    this.mockWhaleApiNotificationError(serviceError);
+  }
+
+  mockWhaleApiNotificationError(error: any): void {
+    (this.httpService.get as jest.Mock).mockReturnValue(
+      throwError(() => error),
+    );
+  }
+
+  private mockWhaleApiNotificationErrorInternal(error: any): void {
+    this.mockWhaleApiNotificationError(error);
+  }
+
   getHttpServiceMock(): HttpService {
     return this.httpService;
   }

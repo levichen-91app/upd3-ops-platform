@@ -89,7 +89,7 @@
     ],
     "coverageDirectory": "coverage",
     "testEnvironment": "node",
-    "moduleNameMapping": {
+    "moduleNameMapper": {
       "^@/(.*)$": "<rootDir>/api/$1"
     }
   }
