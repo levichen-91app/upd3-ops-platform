@@ -1,6 +1,8 @@
 import { Injectable, NestMiddleware } from '@nestjs/common';
 import { Request, Response, NextFunction } from 'express';
 import { v4 as uuidv4 } from 'uuid';
+import { RequestContextService } from '../services/request-context.service';
+import { RequestContextFactory } from '../interfaces/request-context.interface';
 
 /**
  * Middleware to generate unique request IDs for tracing and logging
@@ -27,6 +29,10 @@ export class RequestIdMiddleware implements NestMiddleware {
 
     // Add request ID to response headers for client tracking
     res.set(RequestIdMiddleware.REQUEST_ID_HEADER, requestId);
+
+    // Create and set request context for the entire request lifecycle
+    const requestContext = RequestContextFactory.fromExpressRequest(req, requestId);
+    RequestContextService.setContext(requestContext);
 
     next();
   }
