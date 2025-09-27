@@ -1,22 +1,6 @@
 import { registerAs } from '@nestjs/config';
 
 /**
- * Unified mock mode detection utility
- * Supports both global MOCK_MODE and service-specific mock modes
- */
-export const isMockModeEnabled = (serviceName?: string): boolean => {
-  // Check global mock mode
-  const globalMockMode = process.env.MOCK_MODE === 'true';
-
-  // Check service-specific mock mode (e.g., WHALE_API_MOCK_MODE, MARKETING_CLOUD_MOCK_MODE)
-  const specificMockMode = serviceName
-    ? process.env[`${serviceName.toUpperCase()}_MOCK_MODE`] === 'true'
-    : false;
-
-  return globalMockMode || specificMockMode;
-};
-
-/**
  * External API endpoint configuration interface
  */
 export interface ApiEndpoint {
