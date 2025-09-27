@@ -1,0 +1,288 @@
+openapi: 3.0.3
+info:
+  title: Notification Detail API Contract
+  version: 1.0.0
+  description: API contract for notification detail endpoint
+
+paths:
+  /api/v1/notification-status/detail/{shopId}/{ncId}:
+    get:
+      summary: Get notification detail
+      description: Retrieve detailed information for a specific notification
+      parameters:
+        - name: shopId
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+          example: 12345
+        - name: ncId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          example: "a4070188-050d-47f7-ab24-2523145408cf"
+        - name: ny-operator
+          in: header
+          required: true
+          schema:
+            type: string
+            minLength: 1
+          example: "john.doe"
+      responses:
+        '200':
+          description: Success - notification detail retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+              examples:
+                with_data:
+                  summary: Notification exists
+                  value:
+                    success: true
+                    data:
+                      NCId: "a4070188-050d-47f7-ab24-2523145408cf"
+                      NSId: "d68e720f-62ed-4955-802b-8e3f04c56a19"
+                      Status: "Completed"
+                      ChannelType: "Push"
+                      CreateDateTime: "2025-09-15T01:58:31.117"
+                      Report:
+                        Total: 1
+                        NoUserData: 0
+                        InBlackList: 0
+                        DontWantToReceiveThisMessageType: 0
+                        Sent: 1
+                        Fail: 0
+                        DidNotSend: 0
+                        Cancel: 0
+                        NoTokenData: 0
+                        Received: 0
+                      ShortMessageReportLink: null
+                    timestamp: "2025-01-27T10:30:00Z"
+                    requestId: "req-detail-123456"
+                null_data:
+                  summary: Notification not found
+                  value:
+                    success: true
+                    data: null
+                    timestamp: "2025-01-27T10:30:00Z"
+                    requestId: "req-detail-123456"
+        '400':
+          description: Bad Request - validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                validation_error:
+                  summary: Parameter validation failed
+                  value:
+                    success: false
+                    error:
+                      code: "VALIDATION_ERROR"
+                      message: "輸入參數驗證失敗"
+                      details: "shopId must be greater than 0"
+                    timestamp: "2025-01-27T10:30:00Z"
+                    requestId: "req-detail-123456"
+                missing_header:
+                  summary: Missing ny-operator header
+                  value:
+                    success: false
+                    error:
+                      code: "VALIDATION_ERROR"
+                      message: "Missing required header"
+                      details: "ny-operator header is required"
+                    timestamp: "2025-01-27T10:30:00Z"
+                    requestId: "req-detail-123456"
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                external_api_error:
+                  summary: External API error
+                  value:
+                    success: false
+                    error:
+                      code: "EXTERNAL_API_ERROR"
+                      message: "外部API調用失敗"
+                      details:
+                        service: "NC Detail API"
+                        statusCode: 500
+                        error: "Internal Server Error"
+                    timestamp: "2025-01-27T10:30:00Z"
+                    requestId: "req-detail-123456"
+                timeout_error:
+                  summary: Request timeout
+                  value:
+                    success: false
+                    error:
+                      code: "TIMEOUT_ERROR"
+                      message: "請求處理超時"
+                      details:
+                        service: "NC Detail API"
+                        timeoutMs: 10000
+                    timestamp: "2025-01-27T10:30:00Z"
+                    requestId: "req-detail-123456"
+
+components:
+  schemas:
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          enum: [true]
+        data:
+          oneOf:
+            - $ref: '#/components/schemas/NotificationDetail'
+            - type: 'null'
+        timestamp:
+          type: string
+          format: date-time
+        requestId:
+          type: string
+      required:
+        - success
+        - data
+        - timestamp
+        - requestId
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          enum: [false]
+        error:
+          $ref: '#/components/schemas/ErrorDetail'
+        timestamp:
+          type: string
+          format: date-time
+        requestId:
+          type: string
+      required:
+        - success
+        - error
+        - timestamp
+        - requestId
+
+    ErrorDetail:
+      type: object
+      properties:
+        code:
+          type: string
+          enum:
+            - "VALIDATION_ERROR"
+            - "EXTERNAL_API_ERROR"
+            - "TIMEOUT_ERROR"
+            - "DATA_FORMAT_ERROR"
+            - "INTERNAL_SERVER_ERROR"
+        message:
+          type: string
+        details:
+          description: Additional error information
+      required:
+        - code
+        - message
+
+    NotificationDetail:
+      type: object
+      properties:
+        NCId:
+          type: string
+          format: uuid
+        NSId:
+          type: string
+          format: uuid
+        Status:
+          type: string
+          enum: ["Scheduled", "Processing", "Completed", "Failed", "Cancelled"]
+        ChannelType:
+          type: string
+          enum: ["Push", "Email", "SMS"]
+        CreateDateTime:
+          type: string
+          format: date-time
+        Report:
+          $ref: '#/components/schemas/Report'
+        ShortMessageReportLink:
+          type: string
+          nullable: true
+      required:
+        - NCId
+        - NSId
+        - Status
+        - ChannelType
+        - CreateDateTime
+        - Report
+
+    Report:
+      type: object
+      properties:
+        # Base fields (all channel types)
+        Total:
+          type: integer
+          minimum: 0
+        NoUserData:
+          type: integer
+          minimum: 0
+        InBlackList:
+          type: integer
+          minimum: 0
+        DontWantToReceiveThisMessageType:
+          type: integer
+          minimum: 0
+        Sent:
+          type: integer
+          minimum: 0
+        Fail:
+          type: integer
+          minimum: 0
+        DidNotSend:
+          type: integer
+          minimum: 0
+        Cancel:
+          type: integer
+          minimum: 0
+        # Push-specific fields
+        NoTokenData:
+          type: integer
+          minimum: 0
+        Received:
+          type: integer
+          minimum: 0
+        # Email-specific fields
+        EmailIsEmpty:
+          type: integer
+          minimum: 0
+        # SMS-specific fields
+        CellPhoneIsEmpty:
+          type: integer
+          minimum: 0
+        Success:
+          type: integer
+          minimum: 0
+        Declined:
+          type: integer
+          minimum: 0
+        CellPhoneIsNotTW:
+          type: integer
+          minimum: 0
+        CellPhoneIsNotMY:
+          type: integer
+          minimum: 0
+      required:
+        - Total
+        - NoUserData
+        - InBlackList
+        - DontWantToReceiveThisMessageType
+        - Sent
+        - Fail
+        - DidNotSend
+        - Cancel

@@ -1,9 +1,7 @@
 import { Injectable, Logger, Inject } from '@nestjs/common';
 import { MemberDevicesData } from './dto/member-devices-response.dto';
-import {
-  IMarketingCloudApiService,
-  MARKETING_CLOUD_API_SERVICE_TOKEN,
-} from './interfaces/marketing-cloud-api.interface';
+import type { IMarketingCloudApiService } from './interfaces/marketing-cloud-api.interface';
+import { MARKETING_CLOUD_API_SERVICE_TOKEN } from './interfaces/marketing-cloud-api.interface';
 import {
   maskPhoneNumber,
   createSafeLogMessage,

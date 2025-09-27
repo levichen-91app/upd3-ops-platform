@@ -1,9 +1,7 @@
 import { Injectable, Logger, Inject } from '@nestjs/common';
 import { SupplierUpdateRequestDto } from './dto/supplier-update-request.dto';
-import {
-  IWhaleApiService,
-  WHALE_API_SERVICE_TOKEN
-} from './interfaces/whale-api.interface';
+import type { IWhaleApiService } from './interfaces/whale-api.interface';
+import { WHALE_API_SERVICE_TOKEN } from './interfaces/whale-api.interface';
 
 export interface SupplierUpdateResult {
   updatedCount: number;
