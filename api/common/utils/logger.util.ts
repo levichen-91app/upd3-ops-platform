@@ -140,15 +140,12 @@ export class LoggerUtil {
     url: string,
     additionalData?: Record<string, any>,
   ): LogData {
-    return this.withRequestContext(
-      `External API call: ${apiName}`,
-      {
-        apiName,
-        apiMethod: method,
-        apiUrl: url,
-        ...additionalData,
-      },
-    );
+    return this.withRequestContext(`External API call: ${apiName}`, {
+      apiName,
+      apiMethod: method,
+      apiUrl: url,
+      ...additionalData,
+    });
   }
 
   /**

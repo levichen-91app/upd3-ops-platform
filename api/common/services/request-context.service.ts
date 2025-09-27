@@ -8,7 +8,8 @@ import { RequestContext } from '../interfaces/request-context.interface';
  */
 @Injectable()
 export class RequestContextService {
-  private static readonly contextStore = new AsyncLocalStorage<RequestContext>();
+  private static readonly contextStore =
+    new AsyncLocalStorage<RequestContext>();
 
   /**
    * Set the request context for the current async context

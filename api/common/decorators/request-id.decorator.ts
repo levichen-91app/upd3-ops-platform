@@ -62,7 +62,10 @@ export const RequestContext = createParamDecorator(
  * ```
  */
 export const RequestContextProperty = createParamDecorator(
-  (property: keyof import('../interfaces/request-context.interface').RequestContext, ctx: ExecutionContext) => {
+  (
+    property: keyof import('../interfaces/request-context.interface').RequestContext,
+    ctx: ExecutionContext,
+  ) => {
     const context = RequestContextService.getCurrentContext();
     return context ? context[property] : undefined;
   },

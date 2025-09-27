@@ -31,7 +31,10 @@ export class RequestIdMiddleware implements NestMiddleware {
     res.set(RequestIdMiddleware.REQUEST_ID_HEADER, requestId);
 
     // Create and set request context for the entire request lifecycle
-    const requestContext = RequestContextFactory.fromExpressRequest(req, requestId);
+    const requestContext = RequestContextFactory.fromExpressRequest(
+      req,
+      requestId,
+    );
     RequestContextService.setContext(requestContext);
 
     next();
