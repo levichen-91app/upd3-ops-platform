@@ -17,6 +17,7 @@ import {
   sanitizeDevices,
   createSafeLogMessage,
 } from '../../common/utils/privacy.util';
+import { isMockModeEnabled } from '../../config/external-apis.config';
 
 /**
  * Marketing Cloud Service
@@ -42,8 +43,8 @@ export class MarketingCloudService {
     const requestId = this.generateRequestId();
     const maskedPhone = maskPhoneNumber(phone);
 
-    // Check if mock mode is enabled
-    const mockMode = process.env.MARKETING_CLOUD_MOCK_MODE === 'true';
+    // Check if mock mode is enabled (supports both global MOCK_MODE and MARKETING_CLOUD_MOCK_MODE)
+    const mockMode = isMockModeEnabled('marketing_cloud');
 
     if (mockMode) {
       return this.getMockDevicesData(shopId, phone, operator, requestId, maskedPhone);

@@ -9,7 +9,7 @@ import type { ConfigType } from '@nestjs/config';
 import { SupplierUpdateRequestDto } from './dto/supplier-update-request.dto';
 import { ErrorCode } from '../../common/enums/error-code.enum';
 import { firstValueFrom } from 'rxjs';
-import externalApisConfig from '../../config/external-apis.config';
+import externalApisConfig, { isMockModeEnabled } from '../../config/external-apis.config';
 
 export interface SupplierUpdateResult {
   updatedCount: number;
@@ -69,6 +69,13 @@ export class SuppliersService {
       newSupplierId: updateDto.newSupplierId,
       operator,
     });
+
+    // Check if mock mode is enabled (supports both global MOCK_MODE and WHALE_API_MOCK_MODE)
+    const mockMode = isMockModeEnabled('whale_api');
+
+    if (mockMode) {
+      return this.getMockUpdateResult(shopId, updateDto, operator);
+    }
 
     try {
       // Call Whale API to perform the actual update
@@ -152,5 +159,55 @@ export class SuppliersService {
       // Re-throw other errors as-is
       throw error;
     }
+  }
+
+  /**
+   * Generate mock update result for F2E integration
+   */
+  private async getMockUpdateResult(
+    shopId: number,
+    updateDto: SupplierUpdateRequestDto,
+    operator: string,
+  ): Promise<SupplierUpdateResult> {
+    this.logger.log('Using Mock Whale API data', {
+      shopId,
+      market: updateDto.market,
+      oldSupplierId: updateDto.oldSupplierId,
+      newSupplierId: updateDto.newSupplierId,
+      operator,
+      mode: 'MOCK',
+    });
+
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 200));
+
+    // Generate mock result based on input data for consistency
+    let mockUpdatedCount = 0;
+
+    // Generate predictable mock results based on shopId
+    if (shopId === 404) {
+      // Special case: simulate shop not found or no records to update
+      mockUpdatedCount = 0;
+    } else if (shopId % 10 === 0) {
+      // Shops ending in 0: simulate large update (100-500 records)
+      mockUpdatedCount = 100 + (shopId % 400);
+    } else {
+      // Normal cases: simulate small updates (1-50 records)
+      mockUpdatedCount = 1 + (shopId % 50);
+    }
+
+    const result: SupplierUpdateResult = {
+      updatedCount: mockUpdatedCount,
+    };
+
+    this.logger.log('Mock Whale API request completed successfully', {
+      shopId,
+      market: updateDto.market,
+      updatedCount: mockUpdatedCount,
+      operator,
+      mode: 'MOCK',
+    });
+
+    return result;
   }
 }
