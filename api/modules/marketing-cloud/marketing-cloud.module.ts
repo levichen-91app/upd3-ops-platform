@@ -2,7 +2,6 @@ import { Module } from '@nestjs/common';
 import { HttpModule } from '@nestjs/axios';
 import { ConfigModule } from '@nestjs/config';
 import { MarketingCloudController } from './marketing-cloud.controller';
-import { MarketingCloudService } from './marketing-cloud.service';
 import { MarketingCloudApiService } from './services/marketing-cloud-api.service';
 import { MARKETING_CLOUD_API_SERVICE_TOKEN } from './interfaces/marketing-cloud-api.interface';
 import externalApisConfig from '../../config/external-apis.config';
@@ -28,12 +27,11 @@ import externalApisConfig from '../../config/external-apis.config';
   ],
   controllers: [MarketingCloudController],
   providers: [
-    MarketingCloudService,
     {
       provide: MARKETING_CLOUD_API_SERVICE_TOKEN,
       useClass: MarketingCloudApiService,
     },
   ],
-  exports: [MarketingCloudService], // Export service for potential use in other modules
+  exports: [], // No services to export
 })
 export class MarketingCloudModule {}
