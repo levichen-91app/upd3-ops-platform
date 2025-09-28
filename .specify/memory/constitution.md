@@ -31,6 +31,7 @@
 
 ## 3. 系統架構與專案結構
 
+
 ### 3.1 Monorepo 架構
 
 ```
@@ -38,11 +39,10 @@
 ├── .specify/ # 規格驅動開發的相關文件
 ├── specs/{feature-id}/ # 各功能規格文件目錄
 ├── api/ # ✅ 所有後端程式碼 (NestJS 專案)
-│ ├── src/
-│ │ ├── modules/
-│ │ ├── common/
-│ │ ├── config/
-│ │ └── ...
+│ ├── modules/
+│ ├── common/
+│ ├── config/
+│ ├── ...
 │ ├── package.json
 │ └── tsconfig.json
 └── src/ # 前端 React 專案
