@@ -44,6 +44,10 @@ describe('SuppliersController', () => {
       newSupplierId: 200,
     };
 
+    const mockRequest = {
+      requestId: 'req-20250928143052-a8b2c4d6-dd70-4edd-9f86-a2cfc0e8be22',
+    } as any;
+
     it('should successfully update supplier ID', async () => {
       const serviceResult = { updatedCount: 5 };
       (mockSuppliersService.updateSupplierId as jest.Mock).mockResolvedValue(
@@ -54,6 +58,7 @@ describe('SuppliersController', () => {
         validShopId,
         validOperator,
         validUpdateDto,
+        mockRequest,
       );
 
       expect(result).toEqual({
@@ -66,12 +71,13 @@ describe('SuppliersController', () => {
         validShopId,
         validUpdateDto,
         validOperator,
+        mockRequest.requestId,
       );
     });
 
     it('should throw BadRequestException when shopId is zero', async () => {
       await expect(
-        controller.updateSupplierId(0, validOperator, validUpdateDto),
+        controller.updateSupplierId(0, validOperator, validUpdateDto, mockRequest),
       ).rejects.toThrow(
         new BadRequestException({
           code: ErrorCode.VALIDATION_ERROR,
@@ -85,7 +91,7 @@ describe('SuppliersController', () => {
 
     it('should throw BadRequestException when shopId is negative', async () => {
       await expect(
-        controller.updateSupplierId(-1, validOperator, validUpdateDto),
+        controller.updateSupplierId(-1, validOperator, validUpdateDto, mockRequest),
       ).rejects.toThrow(
         new BadRequestException({
           code: ErrorCode.VALIDATION_ERROR,
@@ -99,7 +105,7 @@ describe('SuppliersController', () => {
 
     it('should throw UnauthorizedException when operator header is missing', async () => {
       await expect(
-        controller.updateSupplierId(validShopId, '', validUpdateDto),
+        controller.updateSupplierId(validShopId, '', validUpdateDto, mockRequest),
       ).rejects.toThrow(
         new UnauthorizedException({
           code: ErrorCode.UNAUTHORIZED_ACCESS,
@@ -112,7 +118,7 @@ describe('SuppliersController', () => {
 
     it('should throw UnauthorizedException when operator header contains only spaces', async () => {
       await expect(
-        controller.updateSupplierId(validShopId, '   ', validUpdateDto),
+        controller.updateSupplierId(validShopId, '   ', validUpdateDto, mockRequest),
       ).rejects.toThrow(
         new UnauthorizedException({
           code: ErrorCode.UNAUTHORIZED_ACCESS,
@@ -131,7 +137,7 @@ describe('SuppliersController', () => {
       };
 
       await expect(
-        controller.updateSupplierId(validShopId, validOperator, identicalDto),
+        controller.updateSupplierId(validShopId, validOperator, identicalDto, mockRequest),
       ).rejects.toThrow(
         new BadRequestException({
           code: ErrorCode.SUPPLIER_IDS_IDENTICAL,
@@ -161,6 +167,7 @@ describe('SuppliersController', () => {
         validShopId,
         validOperator,
         hkDto,
+        mockRequest,
       );
 
       expect(result).toEqual({
@@ -181,6 +188,7 @@ describe('SuppliersController', () => {
         validShopId,
         validOperator,
         validUpdateDto,
+        mockRequest,
       );
 
       expect(result).toEqual({
@@ -198,13 +206,14 @@ describe('SuppliersController', () => {
       );
 
       await expect(
-        controller.updateSupplierId(validShopId, validOperator, validUpdateDto),
+        controller.updateSupplierId(validShopId, validOperator, validUpdateDto, mockRequest),
       ).rejects.toThrow('Service error');
 
       expect(mockSuppliersService.updateSupplierId).toHaveBeenCalledWith(
         validShopId,
         validUpdateDto,
         validOperator,
+        mockRequest.requestId,
       );
     });
   });

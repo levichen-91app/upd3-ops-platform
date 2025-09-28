@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
-import { NotificationStatusModule } from '../notification-status.module';
+import { AppModule } from '../../../app.module';
 import { MARKETING_CLOUD_SERVICE_TOKEN } from '../interfaces/marketing-cloud.interface';
 import { NC_DETAIL_SERVICE_TOKEN } from '../interfaces/nc-detail.interface';
 
@@ -19,7 +19,7 @@ describe('Devices Not Found Scenarios (e2e)', () => {
     };
 
     const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [NotificationStatusModule],
+      imports: [AppModule],
     })
       .overrideProvider(MARKETING_CLOUD_SERVICE_TOKEN)
       .useValue(mockMarketingCloudService)
@@ -59,7 +59,7 @@ describe('Devices Not Found Scenarios (e2e)', () => {
         },
       },
       timestamp: expect.any(String),
-      requestId: expect.stringMatching(/^req-(devices|error)-[0-9]+-?[a-zA-Z0-9]*$/),
+      requestId: expect.stringMatching(/^req-\d{14}-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/),
     });
   });
 
@@ -132,7 +132,7 @@ describe('Devices Not Found Scenarios (e2e)', () => {
       .expect(404);
 
     expect(response.body.requestId).toBeDefined();
-    expect(response.body.requestId).toMatch(/^req-(devices|error)-[0-9]+-?[a-zA-Z0-9]*$/);
+    expect(response.body.requestId).toMatch(/^req-\d{14}-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/);
     expect(response.body.timestamp).toBeDefined();
     expect(new Date(response.body.timestamp)).toBeInstanceOf(Date);
   });

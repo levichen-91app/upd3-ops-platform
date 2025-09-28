@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
-import { NotificationStatusModule } from '../notification-status.module';
+import { AppModule } from '../../../app.module';
 import { WHALE_API_SERVICE_TOKEN } from '../interfaces/whale-api.interface';
 
 describe('Notification History External API Error Tests', () => {
@@ -14,7 +14,7 @@ describe('Notification History External API Error Tests', () => {
     };
 
     const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [NotificationStatusModule],
+      imports: [AppModule],
     })
       .overrideProvider(WHALE_API_SERVICE_TOKEN)
       .useValue(mockWhaleApiService)
@@ -43,7 +43,7 @@ describe('Notification History External API Error Tests', () => {
     expect(response.body.error.code).toBe('EXTERNAL_API_ERROR');
     expect(response.body.error.message).toContain('外部服務調用失敗');
     expect(response.body.error.details.service).toBe('Whale API');
-    expect(response.body.requestId).toMatch(/^req-error-/);
+    expect(response.body.requestId).toMatch(/^req-\d{14}-[0-9a-f-]{36}/);
   });
 
   it('should return 500 when Whale API times out', async () => {

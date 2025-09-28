@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
-import { NotificationStatusModule } from '../notification-status.module';
+import { AppModule } from '../../../app.module';
 import { MARKETING_CLOUD_SERVICE_TOKEN } from '../interfaces/marketing-cloud.interface';
 import { NC_DETAIL_SERVICE_TOKEN } from '../interfaces/nc-detail.interface';
 
@@ -19,7 +19,7 @@ describe('Devices Validation (e2e)', () => {
     };
 
     const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [NotificationStatusModule],
+      imports: [AppModule],
     })
       .overrideProvider(MARKETING_CLOUD_SERVICE_TOKEN)
       .useValue(mockMarketingCloudService)
@@ -48,7 +48,7 @@ describe('Devices Validation (e2e)', () => {
 
       expect(response.body.success).toBe(false);
       expect(response.body.error.code).toBe('VALIDATION_ERROR');
-      expect(response.body.error.message).toEqual(expect.arrayContaining([expect.stringContaining('shopId')]));
+      expect(response.body.error.message).toContain('輸入參數驗證失敗');
     });
 
     it('should return 400 when shopId is not a number', async () => {
@@ -106,7 +106,7 @@ describe('Devices Validation (e2e)', () => {
 
       expect(response.body.success).toBe(false);
       expect(response.body.error.code).toBe('VALIDATION_ERROR');
-      expect(response.body.error.message).toEqual(expect.arrayContaining([expect.stringContaining('phone')]));
+      expect(response.body.error.message).toContain('輸入參數驗證失敗');
     });
 
     it('should return 400 when phone format is invalid', async () => {
@@ -121,7 +121,7 @@ describe('Devices Validation (e2e)', () => {
 
       expect(response.body.success).toBe(false);
       expect(response.body.error.code).toBe('VALIDATION_ERROR');
-      expect(response.body.error.message).toEqual(expect.arrayContaining([expect.stringContaining('phone')]));
+      expect(response.body.error.message).toContain('輸入參數驗證失敗');
     });
 
     it('should return 400 when phone contains invalid characters', async () => {

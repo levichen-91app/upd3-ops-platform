@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
-import { NotificationStatusModule } from '../notification-status.module';
+import { AppModule } from '../../../app.module';
 import { WHALE_API_SERVICE_TOKEN } from '../interfaces/whale-api.interface';
 
 describe('Notification History Validation Tests', () => {
@@ -14,7 +14,7 @@ describe('Notification History Validation Tests', () => {
     };
 
     const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [NotificationStatusModule],
+      imports: [AppModule],
     })
       .overrideProvider(WHALE_API_SERVICE_TOKEN)
       .useValue(mockWhaleApiService)
@@ -37,7 +37,7 @@ describe('Notification History Validation Tests', () => {
     expect(response.body.success).toBe(false);
     expect(response.body.error.code).toBe('VALIDATION_ERROR');
     expect(response.body.error.message).toBe('通知ID必須為正整數');
-    expect(response.body.requestId).toMatch(/^req-error-/);
+    expect(response.body.requestId).toMatch(/^req-\d{14}-[0-9a-f-]{36}/);
     expect(mockWhaleApiService.getNotificationHistory).not.toHaveBeenCalled();
   });
 
@@ -133,6 +133,6 @@ describe('Notification History Validation Tests', () => {
     expect(response.body.error.message).toBeDefined();
     expect(response.body.error.details).toBeDefined();
     expect(response.body.timestamp).toBeDefined();
-    expect(response.body.requestId).toMatch(/^req-error-/);
+    expect(response.body.requestId).toMatch(/^req-\d{14}-[0-9a-f-]{36}/);
   });
 });

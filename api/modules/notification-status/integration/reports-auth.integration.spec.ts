@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
-import { NotificationStatusModule } from '../notification-status.module';
+import { AppModule } from '../../../app.module';
 import { NS_REPORT_SERVICE_TOKEN } from '../services/ns-report.service.interface';
 
 /**
@@ -23,7 +23,7 @@ describe('Reports Authentication Integration', () => {
 
   beforeAll(async () => {
     moduleFixture = await Test.createTestingModule({
-      imports: [NotificationStatusModule],
+      imports: [AppModule],
     })
       .overrideProvider(NS_REPORT_SERVICE_TOKEN)
       .useValue(mockNSReportService)
@@ -126,8 +126,8 @@ describe('Reports Authentication Integration', () => {
         .expect(401);
 
       // Assert: Both responses have unique request IDs
-      expect(response1.body.requestId).toMatch(/^req-error-\d+$/);
-      expect(response2.body.requestId).toMatch(/^req-error-\d+$/);
+      expect(response1.body.requestId).toMatch(/^req-\d{14}-[0-9a-f-]{36}\d+$/);
+      expect(response2.body.requestId).toMatch(/^req-\d{14}-[0-9a-f-]{36}\d+$/);
       expect(response1.body.requestId).not.toBe(response2.body.requestId);
     });
 

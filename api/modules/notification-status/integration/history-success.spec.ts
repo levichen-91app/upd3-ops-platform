@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
-import { NotificationStatusModule } from '../notification-status.module';
+import { AppModule } from '../../../app.module';
 import { WHALE_API_SERVICE_TOKEN } from '../interfaces/whale-api.interface';
 
 describe('Notification History Success Scenarios', () => {
@@ -14,7 +14,7 @@ describe('Notification History Success Scenarios', () => {
     };
 
     const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [NotificationStatusModule],
+      imports: [AppModule],
     })
       .overrideProvider(WHALE_API_SERVICE_TOKEN)
       .useValue(mockWhaleApiService)
@@ -68,7 +68,7 @@ describe('Notification History Success Scenarios', () => {
     expect(response.body.data).toHaveProperty('id', notificationId);
     expect(response.body.data.channel).toBe('Push');
     expect(response.body.data.status).toBe('Success');
-    expect(response.body.requestId).toMatch(/^req-history-/);
+    expect(response.body.requestId).toMatch(/^req-\d{14}-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/);
     expect(mockWhaleApiService.getNotificationHistory).toHaveBeenCalledWith(notificationId);
   });
 

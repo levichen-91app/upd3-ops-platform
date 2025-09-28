@@ -12,7 +12,6 @@ import { NC_DETAIL_SERVICE_TOKEN } from './interfaces/nc-detail.interface';
 import { MARKETING_CLOUD_SERVICE_TOKEN } from './interfaces/marketing-cloud.interface';
 import { WHALE_API_SERVICE_TOKEN } from './interfaces/whale-api.interface';
 import { NS_REPORT_SERVICE_TOKEN } from './services/ns-report.service.interface';
-import { RequestIdService } from '../../common/services/request-id.service';
 import ncApiConfig from '../../config/nc-api.config';
 import marketingCloudConfig from '../../config/marketing-cloud.config';
 import whaleApiConfig from '../../config/whale-api.config';
@@ -30,7 +29,6 @@ import nsReportConfig from '../../config/ns-report.config';
   providers: [
     NotificationStatusService,
     NotificationStatusReportsService,
-    RequestIdService,
     {
       provide: NC_DETAIL_SERVICE_TOKEN,
       useClass: ExternalNcDetailService,
@@ -51,7 +49,6 @@ import nsReportConfig from '../../config/ns-report.config';
   exports: [
     NotificationStatusService,
     NotificationStatusReportsService,
-    RequestIdService,
     NC_DETAIL_SERVICE_TOKEN,
     MARKETING_CLOUD_SERVICE_TOKEN,
     WHALE_API_SERVICE_TOKEN,

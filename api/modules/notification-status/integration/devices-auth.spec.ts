@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
-import { NotificationStatusModule } from '../notification-status.module';
+import { AppModule } from '../../../app.module';
 import { MARKETING_CLOUD_SERVICE_TOKEN } from '../interfaces/marketing-cloud.interface';
 import { NC_DETAIL_SERVICE_TOKEN } from '../interfaces/nc-detail.interface';
 
@@ -19,7 +19,7 @@ describe('Devices Authentication (e2e)', () => {
     };
 
     const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [NotificationStatusModule],
+      imports: [AppModule],
     })
       .overrideProvider(MARKETING_CLOUD_SERVICE_TOKEN)
       .useValue(mockMarketingCloudService)
@@ -190,7 +190,7 @@ describe('Devices Authentication (e2e)', () => {
         .expect(401);
 
       expect(response.body.requestId).toBeDefined();
-      expect(response.body.requestId).toMatch(/^req-error-[0-9]+$/);
+      expect(response.body.requestId).toMatch(/^req-\d{14}-[0-9a-f-]{36}$/);
       expect(response.body.timestamp).toBeDefined();
       expect(new Date(response.body.timestamp)).toBeInstanceOf(Date);
     });
@@ -240,7 +240,7 @@ describe('Devices Authentication (e2e)', () => {
         })
         .expect(200);
 
-      expect(response.body.requestId).toMatch(/^req-devices-[0-9]+-[a-zA-Z0-9]+$/);
+      expect(response.body.requestId).toMatch(/^req-\d{14}-[0-9a-f-]{36}$/);
     });
   });
 

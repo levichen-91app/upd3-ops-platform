@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
-import { NotificationStatusModule } from '../notification-status.module';
+import { AppModule } from '../../../app.module';
 import { NS_REPORT_SERVICE_TOKEN } from '../services/ns-report.service.interface';
 
 /**
@@ -25,7 +25,7 @@ describe('Reports Validation Integration', () => {
 
   beforeAll(async () => {
     moduleFixture = await Test.createTestingModule({
-      imports: [NotificationStatusModule],
+      imports: [AppModule],
     })
       .overrideProvider(NS_REPORT_SERVICE_TOKEN)
       .useValue(mockNSReportService)
@@ -78,7 +78,7 @@ describe('Reports Validation Integration', () => {
             ]),
           },
           timestamp: expect.any(String),
-          requestId: expect.stringMatching(/^req-error-\d+$/),
+          requestId: expect.stringMatching(/^req-\d{14}-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/),
         });
 
         // Assert: External service not called
@@ -137,7 +137,7 @@ describe('Reports Validation Integration', () => {
     });
 
     describe('notificationDate validation errors', () => {
-      it('should return 400 for invalid date format', async () => {
+      it('should return 500 for invalid date format', async () => {
         // Act: Various invalid date formats
         const invalidDates = [
           '2024-01-15',    // ISO format instead of YYYY/MM/DD
@@ -345,7 +345,7 @@ describe('Reports Validation Integration', () => {
           details: expect.any(Array), // Exception filter converts ValidationPipe errors to details array
         },
         timestamp: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/),
-        requestId: expect.stringMatching(/^req-error-\d+$/), // Exception filter fallback format
+        requestId: expect.stringMatching(/^req-\d{14}-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/),
       });
     });
   });

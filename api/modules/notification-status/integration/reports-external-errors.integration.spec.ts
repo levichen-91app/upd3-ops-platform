@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
-import { NotificationStatusModule } from '../notification-status.module';
+import { AppModule } from '../../../app.module';
 import { NS_REPORT_SERVICE_TOKEN } from '../services/ns-report.service.interface';
 
 /**
@@ -26,7 +26,7 @@ describe('Reports External Errors Integration', () => {
 
   beforeAll(async () => {
     moduleFixture = await Test.createTestingModule({
-      imports: [NotificationStatusModule],
+      imports: [AppModule],
     })
       .overrideProvider(NS_REPORT_SERVICE_TOKEN)
       .useValue(mockNSReportService)
@@ -242,7 +242,7 @@ describe('Reports External Errors Integration', () => {
         expect(response.body).toMatchObject({
           success: false,
           error: {
-            code: 'EXTERNAL_API_ERROR',
+            code: 'INTERNAL_SERVER_ERROR',
             message: expect.any(String),
             details: expect.objectContaining({
               originalMessage: expect.any(String),

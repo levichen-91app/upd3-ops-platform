@@ -49,40 +49,34 @@ describe('NotificationStatusController - Reports', () => {
       notificationType: 'push',
     };
 
+    const mockRequest = {
+      requestId: 'req-20250928143052-a8b2c4d6-dd70-4edd-9f86-a2cfc0e8be22',
+    } as any;
+
     it('should successfully return report data from service', async () => {
-      // Arrange: Mock service response (no real URLs)
+      // Arrange: Mock service response (raw data)
       const mockServiceResponse = {
-        success: true,
-        data: {
-          downloadUrl: 'mock-download-url',
-          expiredTime: 3600,
-        },
-        requestId: 'req-reports-1234567890-abc123',
-        timestamp: '2024-01-15T10:30:00.000Z',
+        downloadUrl: 'mock-download-url',
+        expiredTime: 3600,
       };
       mockReportsService.getStatusReport.mockResolvedValue(mockServiceResponse);
 
       // Act
-      const result = await controller.getStatusReports(validRequest);
+      const result = await controller.getStatusReports(validRequest, mockRequest);
 
-      // Assert: Service called correctly
-      expect(mockReportsService.getStatusReport).toHaveBeenCalledWith(validRequest);
+      // Assert: Service called correctly with requestId
+      expect(mockReportsService.getStatusReport).toHaveBeenCalledWith(validRequest, mockRequest.requestId);
       expect(mockReportsService.getStatusReport).toHaveBeenCalledTimes(1);
 
-      // Assert: Response passed through correctly
+      // Assert: Raw data response passed through correctly
       expect(result).toEqual(mockServiceResponse);
     });
 
     it('should handle all supported notification types', async () => {
-      // Arrange: Mock response (no real URLs)
+      // Arrange: Mock response (raw data)
       const mockResponse = {
-        success: true,
-        data: {
-          downloadUrl: 'mock-type-test-url',
-          expiredTime: 1800,
-        },
-        requestId: 'req-reports-test-123',
-        timestamp: '2024-01-15T10:30:00.000Z',
+        downloadUrl: 'mock-type-url',
+        expiredTime: 1800,
       };
       mockReportsService.getStatusReport.mockResolvedValue(mockResponse);
 
@@ -91,10 +85,10 @@ describe('NotificationStatusController - Reports', () => {
       // Act & Assert: Test each notification type
       for (const notificationType of supportedTypes) {
         const request = { ...validRequest, notificationType };
-        const result = await controller.getStatusReports(request);
+        const result = await controller.getStatusReports(request, mockRequest);
 
         // Assert
-        expect(mockReportsService.getStatusReport).toHaveBeenCalledWith(request);
+        expect(mockReportsService.getStatusReport).toHaveBeenCalledWith(request, mockRequest.requestId);
         expect(result).toEqual(mockResponse);
 
         jest.clearAllMocks();
@@ -108,26 +102,21 @@ describe('NotificationStatusController - Reports', () => {
       mockReportsService.getStatusReport.mockRejectedValue(serviceError);
 
       // Act & Assert: Error should be propagated
-      await expect(controller.getStatusReports(validRequest)).rejects.toThrow('External NS Report API failed');
+      await expect(controller.getStatusReports(validRequest, mockRequest)).rejects.toThrow('External NS Report API failed');
 
       // Assert: Service was called
-      expect(mockReportsService.getStatusReport).toHaveBeenCalledWith(validRequest);
+      expect(mockReportsService.getStatusReport).toHaveBeenCalledWith(validRequest, mockRequest.requestId);
     });
 
     it('should handle concurrent requests independently', async () => {
-      // Arrange: Mock different responses (no real URLs)
+      // Arrange: Mock different responses (raw data)
       const mockResponse1 = {
-        success: true,
-        data: { downloadUrl: 'mock-report1-url', expiredTime: 3600 },
-        requestId: 'req-reports-1111-aaa',
-        timestamp: '2024-01-15T10:30:00.000Z',
+        downloadUrl: 'mock-report1-url',
+        expiredTime: 3600
       };
-
       const mockResponse2 = {
-        success: true,
-        data: { downloadUrl: 'mock-report2-url', expiredTime: 1800 },
-        requestId: 'req-reports-2222-bbb',
-        timestamp: '2024-01-15T10:30:01.000Z',
+        downloadUrl: 'mock-report2-url',
+        expiredTime: 7200
       };
 
       mockReportsService.getStatusReport
@@ -136,8 +125,8 @@ describe('NotificationStatusController - Reports', () => {
 
       // Act: Concurrent requests
       const [result1, result2] = await Promise.all([
-        controller.getStatusReports(validRequest),
-        controller.getStatusReports(validRequest),
+        controller.getStatusReports(validRequest, mockRequest),
+        controller.getStatusReports(validRequest, mockRequest),
       ]);
 
       // Assert: Different responses returned

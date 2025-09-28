@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
-import { NotificationStatusModule } from '../notification-status.module';
+import { AppModule } from '../../../app.module';
 import { WHALE_API_SERVICE_TOKEN } from '../interfaces/whale-api.interface';
 
 describe('Notification History Not Found Tests', () => {
@@ -14,7 +14,7 @@ describe('Notification History Not Found Tests', () => {
     };
 
     const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [NotificationStatusModule],
+      imports: [AppModule],
     })
       .overrideProvider(WHALE_API_SERVICE_TOKEN)
       .useValue(mockWhaleApiService)
@@ -41,7 +41,7 @@ describe('Notification History Not Found Tests', () => {
     expect(response.body.error.code).toBe('NOTIFICATION_NOT_FOUND');
     expect(response.body.error.message).toBe('找不到指定的通知');
     expect(response.body.error.details.notificationId).toBe(notificationId);
-    expect(response.body.requestId).toMatch(/^req-error-/);
+    expect(response.body.requestId).toMatch(/^req-\d{14}-[0-9a-f-]{36}/);
     expect(mockWhaleApiService.getNotificationHistory).toHaveBeenCalledWith(notificationId);
   });
 

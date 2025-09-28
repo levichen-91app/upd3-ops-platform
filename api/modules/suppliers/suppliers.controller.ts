@@ -8,7 +8,9 @@ import {
   ValidationPipe,
   BadRequestException,
   UnauthorizedException,
+  Req,
 } from '@nestjs/common';
+import { Request } from 'express';
 import {
   ApiOperation,
   ApiResponse,
@@ -22,6 +24,7 @@ import { SupplierUpdateRequestDto } from './dto/supplier-update-request.dto';
 import { SuppliersService } from './suppliers.service';
 import { ErrorCode } from '../../common/enums/error-code.enum';
 import { ApiErrorResponse } from '../../common/interfaces/api-error-response.interface';
+import { RequestIdMiddleware } from '../../common/middleware/request-id.middleware';
 
 @ApiTags('Suppliers')
 @Controller('api/v1/shops/:shopId/suppliers')
@@ -96,6 +99,7 @@ export class SuppliersController {
     @Headers('ny-operator') operator: string,
     @Body(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
     updateDto: SupplierUpdateRequestDto,
+    @Req() request: Request,
   ) {
     // Validate shopId is positive
     if (shopId <= 0) {
@@ -126,11 +130,14 @@ export class SuppliersController {
       });
     }
 
+    const requestId = RequestIdMiddleware.getRequestId(request);
+
     // Call service to perform the update
     const result = await this.suppliersService.updateSupplierId(
       shopId,
       updateDto,
       operator,
+      requestId,
     );
 
     return {

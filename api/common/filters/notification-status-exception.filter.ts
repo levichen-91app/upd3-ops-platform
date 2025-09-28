@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { ApiErrorResponseDto } from '../../modules/notification-status/dto/notification-detail-response.dto';
+import { RequestIdMiddleware } from '../middleware/request-id.middleware';
 
 @Catch()
 export class NotificationStatusExceptionFilter implements ExceptionFilter {
@@ -99,8 +100,8 @@ export class NotificationStatusExceptionFilter implements ExceptionFilter {
       }
     }
 
-    // Generate request ID if not present
-    const requestId = (request as any).requestId || `req-error-${Date.now()}`;
+    // Get request ID from middleware (unified format)
+    const requestId = RequestIdMiddleware.getRequestId(request);
     const timestamp = new Date().toISOString();
 
     // Extract operator for logging

@@ -265,55 +265,193 @@ export default registerAs('api', () => ({
 
 ---
 
-### 4.4 規範四：Request ID 統一生成
+### 4.4 規範四：Request ID 統一追蹤機制
 
 #### 條文
 
-所有 Request ID 必須使用統一的生成器，確保格式一致且可追蹤。
+所有 HTTP 請求必須使用統一的 Request ID 進行追蹤，確保格式一致、全域唯一且便於日誌分析和問題排查。
 
-#### 實作步驟
+#### 實作原則
 
-**步驟一：建立 Request ID 服務**
+**4.4.1 統一使用 HTTP 層級 Request ID**
+
+採用單一 Request ID 機制，避免多層 ID 造成的複雜性和混淆。每個 HTTP 請求對應一個唯一的 Request ID，涵蓋整個請求-回應生命週期。
+
+**4.4.2 彈性的 Request ID 來源**
+
+支援雙向 Request ID 機制：
+- **Client 提供優先**：支援微服務間追蹤和調試場景
+- **Server 自動生成**：確保每個請求都有唯一標識
+
+#### 技術實作規範
+
+**步驟一：Middleware 層統一處理**
 
 ```typescript
-// api/common/services/request-id.service.ts
-import { Injectable } from '@nestjs/common';
-
+// api/common/middleware/request-id.middleware.ts
 @Injectable()
-export class RequestIdService {
-  generateRequestId(prefix: 'devices' | 'error'): string {
-    const timestamp = Date.now();
-    const randomId = Math.random().toString(36).substring(2);
-    return `req-${prefix}-${timestamp}-${randomId}`;
+export class RequestIdMiddleware implements NestMiddleware {
+  private static readonly REQUEST_ID_HEADER = 'x-request-id';
+
+  public use(req: Request, res: Response, next: NextFunction): void {
+    // 優先使用 client 提供的 Request ID
+    let requestId = req.headers['x-request-id'] as string;
+
+    // 驗證格式，無效則重新生成
+    if (!requestId || !this.isValidRequestId(requestId)) {
+      requestId = this.generateRequestId();
+    }
+
+    // 存儲到 request 對象供後續使用
+    req.requestId = requestId;
+
+    // 添加到 response header 供 client 追蹤
+    res.set('x-request-id', requestId);
+
+    next();
   }
 
-  validateRequestId(requestId: string): boolean {
-    return REQUEST_ID_PATTERN.test(requestId);
+  private generateRequestId(): string {
+    const timestamp = this.generateTimestamp(); // yyyymmddhhmmss
+    const uuid = uuidv4();
+    return `req-${timestamp}-${uuid}`;
+  }
+
+  private isValidRequestId(requestId: string): boolean {
+    const pattern = /^req-\d{14}-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/;
+    return pattern.test(requestId);
   }
 }
 ```
 
-**步驟二：在 Interceptor 中使用**
+**步驟二：Controller 層標準用法**
 
 ```typescript
-// api/common/interceptors/request-id.interceptor.ts
-@Injectable()
-export class RequestIdInterceptor implements NestInterceptor {
-  constructor(private readonly requestIdService: RequestIdService) {}
+@Controller('example')
+export class ExampleController {
+  @Get('items')
+  async getItems(
+    @Query() query: QueryDto,
+    @Headers('ny-operator') operator: string,
+    @Req() request: Request, // 注入 request 對象
+  ) {
+    // 取得統一的 Request ID
+    const requestId = RequestIdMiddleware.getRequestId(request);
 
-  intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
-    const request = context.switchToHttp().getRequest();
-    request.requestId = this.requestIdService.generateRequestId('devices');
-    return next.handle();
+    // 傳遞給 Service 層進行業務處理
+    return this.exampleService.getItems(query, requestId);
   }
 }
 ```
+
+**步驟三：Service 層使用 Request ID**
+
+```typescript
+@Injectable()
+export class ExampleService {
+  private readonly logger = new Logger(ExampleService.name);
+
+  async getItems(query: QueryDto, requestId: string) {
+    // 使用 Request ID 進行日誌追蹤
+    this.logger.log(`Processing items query - requestId: ${requestId}`, {
+      query,
+      requestId,
+    });
+
+    // 業務處理邏輯...
+    const result = await this.processItems(query);
+
+    this.logger.log(`Items query completed - requestId: ${requestId}`, {
+      resultCount: result.length,
+      requestId,
+    });
+
+    // Request ID 會由 ResponseFormatInterceptor 自動加入回應
+    return result;
+  }
+}
+```
+
+#### Request ID 格式規範
+
+**標準格式**
+```
+req-{yyyymmddhhmmss}-{uuid-v4}
+```
+
+**格式說明**
+- **前綴**: `req-` (固定)
+- **時間戳**: `yyyymmddhhmmss` (14位數字，精確到秒)
+- **分隔符**: `-` (連接符)
+- **唯一標識**: UUID v4 格式 (36字符)
+
+**格式範例**
+```
+req-20250928143052-a8b2c4d6-dd70-4edd-9f86-a2cfc0e8be22
+```
+
+#### 使用場景
+
+**場景一：外部 Client 調用 (Server 生成)**
+```bash
+# Client 請求 (無 x-request-id)
+curl -H "ny-operator: test" /api/v1/items
+
+# Server 回應
+{
+  "success": true,
+  "data": [...],
+  "timestamp": "2025-09-28T14:30:52.123Z",
+  "requestId": "req-20250928143052-a8b2c4d6-dd70-4edd-9f86-a2cfc0e8be22"
+}
+```
+
+**場景二：微服務間調用 (Client 提供)**
+```typescript
+// Service A 調用 Service B
+const upstreamRequestId = RequestIdMiddleware.getRequestId(request);
+
+const response = await this.httpService.get('/api/v1/downstream', {
+  headers: {
+    'x-request-id': upstreamRequestId, // 傳遞上游 Request ID
+    'ny-operator': operator,
+  }
+});
+```
+
+#### 常數管理
+
+```typescript
+// api/constants/request-id.constants.ts
+export const REQUEST_ID_CONSTANTS = {
+  HEADER_NAME: 'x-request-id',
+  PROPERTY_NAME: 'requestId',
+  PATTERN: /^req-\d{14}-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/,
+  PREFIX: 'req-',
+} as const;
+```
+
+#### 禁止事項
+
+**❌ 嚴禁的做法**
+- **禁止自行生成 Request ID**：不得在 Service 層手動產生 Request ID
+- **禁止格式不一致**：所有 Request ID 必須符合統一格式規範
+- **禁止重複 ID 邏輯**：不得存在多套 Request ID 生成機制
+- **禁止硬編碼常數**：Header 名稱、格式等必須使用統一常數
 
 #### 理由
 
-- **可追蹤性**：統一格式便於日誌分析
-- **可測試性**：生成邏輯可以被測試
-- **可重用性**：多個模組可以共用
+**技術優勢**
+- **架構簡化**：單一追蹤機制，避免多層 ID 複雜性
+- **全域一致**：所有模組使用相同的 Request ID 格式
+- **自動化處理**：Middleware 和 Interceptor 自動處理，減少手動操作
+- **標準兼容**：符合 HTTP `x-request-id` 標準慣例
+
+**業務價值**
+- **問題排查**：統一 ID 便於跨服務日誌關聯和錯誤追蹤
+- **性能監控**：清晰的請求生命週期追蹤
+- **調試友好**：支援自定義 Request ID 進行特定追蹤
+- **合規需求**：滿足審計和監控要求
 
 ---
 

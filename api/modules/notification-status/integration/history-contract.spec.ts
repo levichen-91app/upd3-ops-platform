@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
-import { NotificationStatusModule } from '../notification-status.module';
+import { AppModule } from '../../../app.module';
 import { WHALE_API_SERVICE_TOKEN } from '../interfaces/whale-api.interface';
 
 describe('Notification History Contract Tests', () => {
@@ -14,7 +14,7 @@ describe('Notification History Contract Tests', () => {
     };
 
     const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [NotificationStatusModule],
+      imports: [AppModule],
     })
       .overrideProvider(WHALE_API_SERVICE_TOKEN)
       .useValue(mockWhaleApiService)
@@ -70,7 +70,7 @@ describe('Notification History Contract Tests', () => {
       expect(response.body).toHaveProperty('data');
       expect(response.body).toHaveProperty('timestamp');
       expect(response.body).toHaveProperty('requestId');
-      expect(response.body.requestId).toMatch(/^req-history-/);
+      expect(response.body.requestId).toMatch(/^req-\d{14}-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/);
 
       // Validate data structure
       const { data } = response.body;

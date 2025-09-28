@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
-import { NotificationStatusModule } from '../notification-status.module';
+import { AppModule } from '../../../app.module';
 import { MARKETING_CLOUD_SERVICE_TOKEN } from '../interfaces/marketing-cloud.interface';
 import { NC_DETAIL_SERVICE_TOKEN } from '../interfaces/nc-detail.interface';
 
@@ -19,7 +19,7 @@ describe('Devices External API Errors (e2e)', () => {
     };
 
     const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [NotificationStatusModule],
+      imports: [AppModule],
     })
       .overrideProvider(MARKETING_CLOUD_SERVICE_TOKEN)
       .useValue(mockMarketingCloudService)

@@ -6,6 +6,7 @@ import {
   Param,
   Headers,
   Query,
+  Req,
   UseFilters,
   UseGuards,
   ValidationPipe,
@@ -16,6 +17,7 @@ import {
   InternalServerErrorException,
   UnauthorizedException,
 } from '@nestjs/common';
+import { Request } from 'express';
 import {
   ApiTags,
   ApiOperation,
@@ -48,6 +50,7 @@ import { StatusReportRequestDto } from './dto/status-report-request.dto';
 import { StatusReportResponseDto, StatusReportErrorResponseDto } from './dto/status-report-response.dto';
 import { NyOperatorGuard } from './guards/ny-operator.guard';
 import { NotificationStatusExceptionFilter } from '../../common/filters/notification-status-exception.filter';
+import { RequestIdMiddleware } from '../../common/middleware/request-id.middleware';
 import { NY_OPERATOR_HEADER } from '../../constants/headers.constants';
 
 @ApiTags('Notification Status')
@@ -101,6 +104,7 @@ export class NotificationStatusController {
     @Param('shopId') shopId: string,
     @Param('ncId') ncId: string,
     @Headers('ny-operator') nyOperator: string,
+    @Req() request: Request,
   ): Promise<NotificationDetail | null> {
     // Validate ny-operator header
     if (!nyOperator || nyOperator.trim() === '') {
@@ -137,10 +141,13 @@ export class NotificationStatusController {
       });
     }
 
+    const requestId = RequestIdMiddleware.getRequestId(request);
+
     return await this.notificationStatusService.getNotificationDetail(
       queryDto.shopId,
       queryDto.ncId,
       queryDto.nyOperator,
+      requestId,
     );
   }
 
@@ -191,10 +198,14 @@ export class NotificationStatusController {
   })
   async getDevices(
     @Query() queryDto: DeviceQueryRequestDto,
+    @Req() request: Request,
   ): Promise<DeviceQueryResponseDto> {
+    const requestId = RequestIdMiddleware.getRequestId(request);
+
     const result = await this.notificationStatusService.getDevices(
       queryDto.shopId,
       queryDto.phone,
+      requestId,
     );
     return result;
   }
@@ -240,6 +251,7 @@ export class NotificationStatusController {
   })
   async getNotificationHistory(
     @Param('notificationId') notificationIdParam: string,
+    @Req() request: Request,
   ): Promise<NotificationHistoryResponse> {
     // Validate parameter format first (reject decimals, non-numeric strings)
     if (!/^\d+$/.test(notificationIdParam)) {
@@ -261,7 +273,9 @@ export class NotificationStatusController {
       });
     }
 
-    return await this.notificationStatusService.getNotificationHistory(notificationId);
+    const requestId = RequestIdMiddleware.getRequestId(request);
+
+    return await this.notificationStatusService.getNotificationHistory(notificationId, requestId);
   }
 
   @Post('reports')
@@ -295,9 +309,12 @@ export class NotificationStatusController {
   })
   async getStatusReports(
     @Body() requestDto: StatusReportRequestDto,
-  ): Promise<StatusReportResponseDto> {
+    @Req() request: Request,
+  ): Promise<{ downloadUrl: string; expiredTime: number }> {
     // NyOperatorGuard 已驗證 ny-operator header
+    const requestId = RequestIdMiddleware.getRequestId(request);
+
     // 直接調用服務層處理業務邏輯
-    return await this.reportsService.getStatusReport(requestDto);
+    return await this.reportsService.getStatusReport(requestDto, requestId);
   }
 }

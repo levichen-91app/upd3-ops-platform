@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
-import { NotificationStatusModule } from '../notification-status.module';
+import { AppModule } from '../../../app.module';
 import { NS_REPORT_SERVICE_TOKEN } from '../services/ns-report.service.interface';
 
 /**
@@ -24,7 +24,7 @@ describe('Reports Success Integration', () => {
 
   beforeAll(async () => {
     moduleFixture = await Test.createTestingModule({
-      imports: [NotificationStatusModule],
+      imports: [AppModule],
     })
       .overrideProvider(NS_REPORT_SERVICE_TOKEN)
       .useValue(mockNSReportService)

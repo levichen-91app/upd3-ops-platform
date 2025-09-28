@@ -35,8 +35,8 @@ export class NotificationStatusService {
     shopId: number,
     ncId: string,
     operator: string,
+    requestId: string,
   ): Promise<NotificationDetail | null> {
-    const requestId = this.generateRequestId();
 
     this.logger.log(
       `Processing notification detail request - shopId: ${shopId}, ncId: ${ncId}, operator: ${operator}, requestId: ${requestId}`,
@@ -63,8 +63,8 @@ export class NotificationStatusService {
   async getDevices(
     shopId: number,
     phone: string,
+    requestId: string,
   ): Promise<DeviceQueryResponseDto> {
-    const requestId = this.generateDeviceRequestId();
     const timestamp = new Date().toISOString();
 
     this.logger.log(
@@ -119,20 +119,8 @@ export class NotificationStatusService {
     }
   }
 
-  private generateRequestId(): string {
-    const timestamp = Date.now();
-    const uuid = uuidv4().split('-')[0];
-    return `req-detail-${timestamp}-${uuid}`;
-  }
 
-  private generateDeviceRequestId(): string {
-    const timestamp = Date.now();
-    const uuid = uuidv4().split('-')[0];
-    return `req-devices-${timestamp}-${uuid}`;
-  }
-
-  async getNotificationHistory(notificationId: number): Promise<NotificationHistoryResponse> {
-    const requestId = this.generateHistoryRequestId();
+  async getNotificationHistory(notificationId: number, requestId: string): Promise<NotificationHistoryResponse> {
     const timestamp = new Date().toISOString();
 
     this.logger.log(`Processing notification history request - notificationId: ${notificationId}, requestId: ${requestId}`);
@@ -211,9 +199,4 @@ export class NotificationStatusService {
     }
   }
 
-  private generateHistoryRequestId(): string {
-    const timestamp = Date.now();
-    const uuid = uuidv4().split('-')[0];
-    return `req-history-${timestamp}-${uuid}`;
-  }
 }

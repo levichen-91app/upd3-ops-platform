@@ -40,6 +40,8 @@ describe('NotificationStatusService - History Method Only', () => {
   });
 
   describe('getNotificationHistory', () => {
+    const testRequestId = 'req-20250928143052-a8b2c4d6-dd70-4edd-9f86-a2cfc0e8be22';
+
     it('should successfully retrieve and transform notification history', async () => {
       const notificationId = 12345;
       const mockWhaleResponse = {
@@ -71,14 +73,14 @@ describe('NotificationStatusService - History Method Only', () => {
 
       mockWhaleApiService.getNotificationHistory.mockResolvedValue(mockWhaleResponse);
 
-      const result = await service.getNotificationHistory(notificationId);
+      const result = await service.getNotificationHistory(notificationId, testRequestId);
 
       expect(result.success).toBe(true);
       expect(result.data.id).toBe(notificationId);
       expect(result.data.channel).toBe('Push');
       expect(result.data.status).toBe(NotificationStatus.SUCCESS);
       expect(result.data.report.Total).toBe(1000);
-      expect(result.requestId).toMatch(/^req-history-/);
+      expect(result.requestId).toBe(testRequestId);
       expect(result.timestamp).toBeDefined();
       expect(mockWhaleApiService.getNotificationHistory).toHaveBeenCalledWith(notificationId);
     });
@@ -123,7 +125,7 @@ describe('NotificationStatusService - History Method Only', () => {
 
         mockWhaleApiService.getNotificationHistory.mockResolvedValue(mockResponse);
 
-        const result = await service.getNotificationHistory(notificationId);
+        const result = await service.getNotificationHistory(notificationId, testRequestId);
 
         expect(result.data.status).toBe(mapping.expectedStatus);
       }
@@ -133,9 +135,9 @@ describe('NotificationStatusService - History Method Only', () => {
       const notificationId = 99999;
       mockWhaleApiService.getNotificationHistory.mockResolvedValue(null);
 
-      await expect(service.getNotificationHistory(notificationId)).rejects.toThrow(NotFoundException);
+      await expect(service.getNotificationHistory(notificationId, testRequestId)).rejects.toThrow(NotFoundException);
 
-      const error = await service.getNotificationHistory(notificationId).catch(e => e);
+      const error = await service.getNotificationHistory(notificationId, testRequestId).catch(e => e);
       expect(error.getResponse()).toEqual({
         code: 'NOTIFICATION_NOT_FOUND',
         message: '找不到指定的通知',
@@ -153,7 +155,7 @@ describe('NotificationStatusService - History Method Only', () => {
 
       mockWhaleApiService.getNotificationHistory.mockResolvedValue(mockResponse);
 
-      await expect(service.getNotificationHistory(notificationId)).rejects.toThrow(NotFoundException);
+      await expect(service.getNotificationHistory(notificationId, testRequestId)).rejects.toThrow(NotFoundException);
     });
 
     it('should throw TIMEOUT_ERROR for timeout exceptions', async () => {
@@ -162,7 +164,7 @@ describe('NotificationStatusService - History Method Only', () => {
 
       mockWhaleApiService.getNotificationHistory.mockRejectedValue(timeoutError);
 
-      await expect(service.getNotificationHistory(notificationId)).rejects.toThrow('TIMEOUT_ERROR');
+      await expect(service.getNotificationHistory(notificationId, testRequestId)).rejects.toThrow('TIMEOUT_ERROR');
     });
 
     it('should throw EXTERNAL_API_ERROR for axios HTTP errors', async () => {
@@ -173,7 +175,7 @@ describe('NotificationStatusService - History Method Only', () => {
 
       mockWhaleApiService.getNotificationHistory.mockRejectedValue(axiosError);
 
-      await expect(service.getNotificationHistory(notificationId)).rejects.toThrow('EXTERNAL_API_ERROR');
+      await expect(service.getNotificationHistory(notificationId, testRequestId)).rejects.toThrow('EXTERNAL_API_ERROR');
     });
 
     it('should throw EXTERNAL_API_ERROR for connection errors', async () => {
@@ -182,7 +184,7 @@ describe('NotificationStatusService - History Method Only', () => {
 
       mockWhaleApiService.getNotificationHistory.mockRejectedValue(connectionError);
 
-      await expect(service.getNotificationHistory(notificationId)).rejects.toThrow('EXTERNAL_API_ERROR');
+      await expect(service.getNotificationHistory(notificationId, testRequestId)).rejects.toThrow('EXTERNAL_API_ERROR');
     });
 
     it('should throw EXTERNAL_API_ERROR for DNS errors', async () => {
@@ -191,7 +193,7 @@ describe('NotificationStatusService - History Method Only', () => {
 
       mockWhaleApiService.getNotificationHistory.mockRejectedValue(dnsError);
 
-      await expect(service.getNotificationHistory(notificationId)).rejects.toThrow('EXTERNAL_API_ERROR');
+      await expect(service.getNotificationHistory(notificationId, testRequestId)).rejects.toThrow('EXTERNAL_API_ERROR');
     });
 
     it('should re-throw NotFoundException without modification', async () => {
@@ -204,7 +206,7 @@ describe('NotificationStatusService - History Method Only', () => {
 
       mockWhaleApiService.getNotificationHistory.mockRejectedValue(notFoundException);
 
-      await expect(service.getNotificationHistory(notificationId)).rejects.toThrow(NotFoundException);
+      await expect(service.getNotificationHistory(notificationId, testRequestId)).rejects.toThrow(NotFoundException);
     });
 
     it('should treat unknown errors as EXTERNAL_API_ERROR', async () => {
@@ -213,7 +215,7 @@ describe('NotificationStatusService - History Method Only', () => {
 
       mockWhaleApiService.getNotificationHistory.mockRejectedValue(unknownError);
 
-      await expect(service.getNotificationHistory(notificationId)).rejects.toThrow('EXTERNAL_API_ERROR');
+      await expect(service.getNotificationHistory(notificationId, testRequestId)).rejects.toThrow('EXTERNAL_API_ERROR');
     });
 
     it('should generate unique request IDs', async () => {
@@ -247,12 +249,15 @@ describe('NotificationStatusService - History Method Only', () => {
 
       mockWhaleApiService.getNotificationHistory.mockResolvedValue(mockResponse);
 
-      const result1 = await service.getNotificationHistory(notificationId);
-      const result2 = await service.getNotificationHistory(notificationId);
+      const requestId1 = 'req-20250928143052-a8b2c4d6-dd70-4edd-9f86-a2cfc0e8be22';
+      const requestId2 = 'req-20250928143053-b9c3d5e7-ee81-5fee-a097-b3dfd1f9cf33';
 
+      const result1 = await service.getNotificationHistory(notificationId, requestId1);
+      const result2 = await service.getNotificationHistory(notificationId, requestId2);
+
+      expect(result1.requestId).toBe(requestId1);
+      expect(result2.requestId).toBe(requestId2);
       expect(result1.requestId).not.toBe(result2.requestId);
-      expect(result1.requestId).toMatch(/^req-history-\d+-[a-f0-9]+$/);
-      expect(result2.requestId).toMatch(/^req-history-\d+-[a-f0-9]+$/);
     });
 
     it('should handle null sentDatetime correctly', async () => {
@@ -286,7 +291,7 @@ describe('NotificationStatusService - History Method Only', () => {
 
       mockWhaleApiService.getNotificationHistory.mockResolvedValue(mockResponse);
 
-      const result = await service.getNotificationHistory(notificationId);
+      const result = await service.getNotificationHistory(notificationId, testRequestId);
 
       expect(result.success).toBe(true);
       expect(result.data.sentDatetime).toBeNull();

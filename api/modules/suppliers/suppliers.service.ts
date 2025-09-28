@@ -20,14 +20,19 @@ export class SuppliersService {
     shopId: number,
     updateDto: SupplierUpdateRequestDto,
     operator: string,
+    requestId: string,
   ): Promise<SupplierUpdateResult> {
-    this.logger.log(`Processing supplier ID update for shop ${shopId}`, {
-      shopId,
-      market: updateDto.market,
-      oldSupplierId: updateDto.oldSupplierId,
-      newSupplierId: updateDto.newSupplierId,
-      operator,
-    });
+    this.logger.log(
+      `Processing supplier ID update for shop ${shopId} - requestId: ${requestId}`,
+      {
+        shopId,
+        market: updateDto.market,
+        oldSupplierId: updateDto.oldSupplierId,
+        newSupplierId: updateDto.newSupplierId,
+        operator,
+        requestId,
+      },
+    );
 
     // Delegate to the whale API service
     const result = await this.whaleApiService.updateSupplierId(
@@ -36,9 +41,10 @@ export class SuppliersService {
       operator,
     );
 
-    this.logger.log(`Supplier ID update completed`, {
+    this.logger.log(`Supplier ID update completed - requestId: ${requestId}`, {
       shopId,
       updatedCount: result.updatedCount,
+      requestId,
     });
 
     return {

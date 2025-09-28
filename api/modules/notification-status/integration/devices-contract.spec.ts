@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
-import { NotificationStatusModule } from '../notification-status.module';
+import { AppModule } from '../../../app.module';
 import { MARKETING_CLOUD_SERVICE_TOKEN } from '../interfaces/marketing-cloud.interface';
 import { NC_DETAIL_SERVICE_TOKEN } from '../interfaces/nc-detail.interface';
 
@@ -19,7 +19,7 @@ describe('Devices API Contract (e2e)', () => {
     };
 
     const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [NotificationStatusModule],
+      imports: [AppModule],
     })
       .overrideProvider(MARKETING_CLOUD_SERVICE_TOKEN)
       .useValue(mockMarketingCloudService)
@@ -66,7 +66,7 @@ describe('Devices API Contract (e2e)', () => {
         success: true,
         data: expect.any(Array),
         timestamp: expect.any(String),
-        requestId: expect.stringMatching(/^req-devices-[0-9]+-[a-zA-Z0-9]+$/),
+        requestId: expect.stringMatching(/^req-\d{14}-[0-9a-f-]{36}$/),
       });
 
       expect(response.body.data[0]).toMatchObject({
@@ -173,7 +173,7 @@ describe('Devices API Contract (e2e)', () => {
           },
         },
         timestamp: expect.any(String),
-        requestId: expect.stringMatching(/^req-(devices|error)-[0-9]+-?[a-zA-Z0-9]*$/),
+        requestId: expect.stringMatching(/^req-\d{14}-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/),
       });
     });
 
@@ -194,7 +194,7 @@ describe('Devices API Contract (e2e)', () => {
           message: expect.any(Array),
         },
         timestamp: expect.any(String),
-        requestId: expect.stringMatching(/^req-error-[0-9]+$/),
+        requestId: expect.stringMatching(/^req-\d{14}-[0-9a-f-]{36}$/),
       });
     });
 
@@ -214,7 +214,7 @@ describe('Devices API Contract (e2e)', () => {
           message: expect.any(String),
         },
         timestamp: expect.any(String),
-        requestId: expect.stringMatching(/^req-error-[0-9]+$/),
+        requestId: expect.stringMatching(/^req-\d{14}-[0-9a-f-]{36}$/),
       });
     });
 
@@ -239,7 +239,7 @@ describe('Devices API Contract (e2e)', () => {
           message: expect.any(String),
         },
         timestamp: expect.any(String),
-        requestId: expect.stringMatching(/^req-(devices|error)-[0-9]+-?[a-zA-Z0-9]*$/),
+        requestId: expect.stringMatching(/^req-\d{14}-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/),
       });
     });
   });
@@ -295,8 +295,8 @@ describe('Devices API Contract (e2e)', () => {
       ]);
 
       expect(responses[0].body.requestId).not.toBe(responses[1].body.requestId);
-      expect(responses[0].body.requestId).toMatch(/^req-(devices|error)-[0-9]+-?[a-zA-Z0-9]*$/);
-      expect(responses[1].body.requestId).toMatch(/^req-(devices|error)-[0-9]+-?[a-zA-Z0-9]*$/);
+      expect(responses[0].body.requestId).toMatch(/^req-\d{14}-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/);
+      expect(responses[1].body.requestId).toMatch(/^req-\d{14}-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/);
     });
 
     it('should maintain request ID format consistency across different response types', async () => {
@@ -330,8 +330,8 @@ describe('Devices API Contract (e2e)', () => {
         .expect(404);
 
       // Both should follow the same pattern
-      expect(successResponse.body.requestId).toMatch(/^req-devices-[0-9]+-[a-zA-Z0-9]+$/);
-      expect(notFoundResponse.body.requestId).toMatch(/^req-(devices|error)-[0-9]+-?[a-zA-Z0-9]*$/);
+      expect(successResponse.body.requestId).toMatch(/^req-\d{14}-[0-9a-f-]{36}$/);
+      expect(notFoundResponse.body.requestId).toMatch(/^req-\d{14}-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/);
     });
   });
 
