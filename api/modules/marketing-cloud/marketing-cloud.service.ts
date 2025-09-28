@@ -63,5 +63,4 @@ export class MarketingCloudService {
 
     return result;
   }
-
 }

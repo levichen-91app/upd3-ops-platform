@@ -8,7 +8,10 @@ import { HttpService } from '@nestjs/axios';
 import type { ConfigType } from '@nestjs/config';
 import { firstValueFrom } from 'rxjs';
 import { SupplierUpdateRequestDto } from '../dto/supplier-update-request.dto';
-import { IWhaleApiService, WhaleApiUpdateResponse } from '../interfaces/whale-api.interface';
+import {
+  IWhaleApiService,
+  WhaleApiUpdateResponse,
+} from '../interfaces/whale-api.interface';
 import { ErrorCode } from '../../../common/enums/error-code.enum';
 import externalApisConfig from '../../../config/external-apis.config';
 
@@ -59,13 +62,16 @@ export class WhaleApiService implements IWhaleApiService {
     updateDto: SupplierUpdateRequestDto,
     operator: string,
   ): Promise<WhaleApiUpdateResponse> {
-    this.logger.log(`Calling Whale API to update supplier ID for shop ${shopId}`, {
-      shopId,
-      market: updateDto.market,
-      oldSupplierId: updateDto.oldSupplierId,
-      newSupplierId: updateDto.newSupplierId,
-      operator,
-    });
+    this.logger.log(
+      `Calling Whale API to update supplier ID for shop ${shopId}`,
+      {
+        shopId,
+        market: updateDto.market,
+        oldSupplierId: updateDto.oldSupplierId,
+        newSupplierId: updateDto.newSupplierId,
+        operator,
+      },
+    );
 
     try {
       const response = await firstValueFrom(

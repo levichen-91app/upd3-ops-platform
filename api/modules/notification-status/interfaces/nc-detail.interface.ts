@@ -35,7 +35,10 @@ export interface NotificationReport {
 }
 
 export interface INcDetailService {
-  getNotificationDetail(shopId: number, ncId: string): Promise<NotificationDetail | null>;
+  getNotificationDetail(
+    shopId: number,
+    ncId: string,
+  ): Promise<NotificationDetail | null>;
 }
 
 export const NC_DETAIL_SERVICE_TOKEN = 'INcDetailService';

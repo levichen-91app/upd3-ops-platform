@@ -29,15 +29,18 @@ export class HttpRetryService {
           errors.pipe(
             scan((retryCount, error) => {
               this.logger.warn(
-                `HTTP request failed (attempt ${retryCount + 1}/${finalConfig.maxRetries}): ${error.message}`
+                `HTTP request failed (attempt ${retryCount + 1}/${finalConfig.maxRetries}): ${error.message}`,
               );
 
               // Check if error is retryable
-              const isRetryable = this.isRetryableError(error, finalConfig.retryableErrors);
+              const isRetryable = this.isRetryableError(
+                error,
+                finalConfig.retryableErrors,
+              );
 
               if (!isRetryable || retryCount >= finalConfig.maxRetries - 1) {
                 this.logger.error(
-                  `HTTP request failed permanently after ${retryCount + 1} attempts: ${error.message}`
+                  `HTTP request failed permanently after ${retryCount + 1} attempts: ${error.message}`,
                 );
                 throw error;
               }
@@ -45,9 +48,11 @@ export class HttpRetryService {
               return retryCount + 1;
             }, 0),
             takeWhile((retryCount) => retryCount < finalConfig.maxRetries),
-            mergeMap((retryCount: number) => timer(this.calculateDelay(retryCount, finalConfig)))
-          )
-        )
+            mergeMap((retryCount: number) =>
+              timer(this.calculateDelay(retryCount, finalConfig)),
+            ),
+          ),
+        ),
       );
   }
 
@@ -80,7 +85,7 @@ export class HttpRetryService {
 
   async executeWithRetry<T>(
     operation: () => Promise<T>,
-    config: Partial<RetryConfig> = {}
+    config: Partial<RetryConfig> = {},
   ): Promise<T> {
     const finalConfig = { ...this.defaultConfig, ...config };
     let lastError: any;
@@ -92,21 +97,25 @@ export class HttpRetryService {
         lastError = error;
 
         if (!this.isRetryableError(error, finalConfig.retryableErrors)) {
-          this.logger.error(`Non-retryable error on attempt ${attempt + 1}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+          this.logger.error(
+            `Non-retryable error on attempt ${attempt + 1}: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          );
           throw error;
         }
 
         if (attempt < finalConfig.maxRetries - 1) {
           const delayMs = this.calculateDelay(attempt, finalConfig);
           this.logger.warn(
-            `Retrying operation after ${delayMs}ms (attempt ${attempt + 1}/${finalConfig.maxRetries})`
+            `Retrying operation after ${delayMs}ms (attempt ${attempt + 1}/${finalConfig.maxRetries})`,
           );
-          await new Promise(resolve => setTimeout(resolve, delayMs));
+          await new Promise((resolve) => setTimeout(resolve, delayMs));
         }
       }
     }
 
-    this.logger.error(`Operation failed after ${finalConfig.maxRetries} attempts`);
+    this.logger.error(
+      `Operation failed after ${finalConfig.maxRetries} attempts`,
+    );
     throw lastError;
   }
 }

@@ -57,7 +57,9 @@ describe('Notification Detail API Contract Tests', () => {
       };
 
       const mockNcDetailService = app.get(NC_DETAIL_SERVICE_TOKEN);
-      (mockNcDetailService.getNotificationDetail as jest.Mock).mockResolvedValue(mockData);
+      (
+        mockNcDetailService.getNotificationDetail as jest.Mock
+      ).mockResolvedValue(mockData);
 
       const response = await request(app.getHttpServer())
         .get(`/api/v1/notification-status/detail/${validShopId}/${validNcId}`)
@@ -75,10 +77,14 @@ describe('Notification Detail API Contract Tests', () => {
       const nonExistentNcId = 'b4070188-050d-47f7-ab24-2523145408cf';
 
       const mockNcDetailService = app.get(NC_DETAIL_SERVICE_TOKEN);
-      (mockNcDetailService.getNotificationDetail as jest.Mock).mockResolvedValue(null);
+      (
+        mockNcDetailService.getNotificationDetail as jest.Mock
+      ).mockResolvedValue(null);
 
       const response = await request(app.getHttpServer())
-        .get(`/api/v1/notification-status/detail/${validShopId}/${nonExistentNcId}`)
+        .get(
+          `/api/v1/notification-status/detail/${validShopId}/${nonExistentNcId}`,
+        )
         .set('ny-operator', validOperator)
         .expect(200);
 

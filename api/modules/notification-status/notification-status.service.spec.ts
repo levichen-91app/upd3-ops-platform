@@ -1,25 +1,44 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotificationStatusService } from './notification-status.service';
-import { INcDetailService, NC_DETAIL_SERVICE_TOKEN } from './interfaces/nc-detail.interface';
+import {
+  INcDetailService,
+  NC_DETAIL_SERVICE_TOKEN,
+} from './interfaces/nc-detail.interface';
+import {
+  IMarketingCloudService,
+  MARKETING_CLOUD_SERVICE_TOKEN,
+} from './interfaces/marketing-cloud.interface';
 
 describe('NotificationStatusService', () => {
   let service: NotificationStatusService;
   let mockNcDetailService: INcDetailService;
+  let mockMarketingCloudService: IMarketingCloudService;
 
   beforeEach(async () => {
-    const mockService = {
+    const mockNcService = {
       getNotificationDetail: jest.fn(),
+    };
+
+    const mockMarketingService = {
+      getDevices: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         NotificationStatusService,
-        { provide: NC_DETAIL_SERVICE_TOKEN, useValue: mockService },
+        { provide: NC_DETAIL_SERVICE_TOKEN, useValue: mockNcService },
+        {
+          provide: MARKETING_CLOUD_SERVICE_TOKEN,
+          useValue: mockMarketingService,
+        },
       ],
     }).compile();
 
     service = module.get<NotificationStatusService>(NotificationStatusService);
     mockNcDetailService = module.get<INcDetailService>(NC_DETAIL_SERVICE_TOKEN);
+    mockMarketingCloudService = module.get<IMarketingCloudService>(
+      MARKETING_CLOUD_SERVICE_TOKEN,
+    );
   });
 
   it('should be defined', () => {
@@ -53,48 +72,87 @@ describe('NotificationStatusService', () => {
         ShortMessageReportLink: null,
       };
 
-      (mockNcDetailService.getNotificationDetail as jest.Mock).mockResolvedValue(mockData);
+      (
+        mockNcDetailService.getNotificationDetail as jest.Mock
+      ).mockResolvedValue(mockData);
 
-      const result = await service.getNotificationDetail(shopId, ncId, operator);
+      const result = await service.getNotificationDetail(
+        shopId,
+        ncId,
+        operator,
+      );
 
       expect(result).toEqual(mockData);
-      expect(mockNcDetailService.getNotificationDetail).toHaveBeenCalledWith(shopId, ncId);
+      expect(mockNcDetailService.getNotificationDetail).toHaveBeenCalledWith(
+        shopId,
+        ncId,
+      );
     });
 
     it('should return null data when notification does not exist', async () => {
-      (mockNcDetailService.getNotificationDetail as jest.Mock).mockResolvedValue(null);
+      (
+        mockNcDetailService.getNotificationDetail as jest.Mock
+      ).mockResolvedValue(null);
 
-      const result = await service.getNotificationDetail(shopId, ncId, operator);
+      const result = await service.getNotificationDetail(
+        shopId,
+        ncId,
+        operator,
+      );
 
       expect(result).toBeNull();
     });
 
     it('should handle external API errors appropriately', async () => {
       const error = new Error('External API failed');
-      (mockNcDetailService.getNotificationDetail as jest.Mock).mockRejectedValue(error);
+      (
+        mockNcDetailService.getNotificationDetail as jest.Mock
+      ).mockRejectedValue(error);
 
-      await expect(service.getNotificationDetail(shopId, ncId, operator))
-        .rejects.toThrow('External API failed');
+      await expect(
+        service.getNotificationDetail(shopId, ncId, operator),
+      ).rejects.toThrow('External API failed');
 
-      expect(mockNcDetailService.getNotificationDetail).toHaveBeenCalledWith(shopId, ncId);
+      expect(mockNcDetailService.getNotificationDetail).toHaveBeenCalledWith(
+        shopId,
+        ncId,
+      );
     });
 
     it('should generate unique requestId for each call', async () => {
-      (mockNcDetailService.getNotificationDetail as jest.Mock).mockResolvedValue(null);
+      (
+        mockNcDetailService.getNotificationDetail as jest.Mock
+      ).mockResolvedValue(null);
 
-      const result1 = await service.getNotificationDetail(shopId, ncId, operator);
-      const result2 = await service.getNotificationDetail(shopId, ncId, operator);
+      const result1 = await service.getNotificationDetail(
+        shopId,
+        ncId,
+        operator,
+      );
+      const result2 = await service.getNotificationDetail(
+        shopId,
+        ncId,
+        operator,
+      );
 
       // Since service now only returns data, we test that both calls complete successfully
       expect(result1).toBeNull();
       expect(result2).toBeNull();
-      expect(mockNcDetailService.getNotificationDetail).toHaveBeenCalledTimes(2);
+      expect(mockNcDetailService.getNotificationDetail).toHaveBeenCalledTimes(
+        2,
+      );
     });
 
     it('should include operator information in the response context', async () => {
-      (mockNcDetailService.getNotificationDetail as jest.Mock).mockResolvedValue(null);
+      (
+        mockNcDetailService.getNotificationDetail as jest.Mock
+      ).mockResolvedValue(null);
 
-      const result = await service.getNotificationDetail(shopId, ncId, operator);
+      const result = await service.getNotificationDetail(
+        shopId,
+        ncId,
+        operator,
+      );
 
       // This test verifies that operator tracking works (logs are handled by interceptor)
       expect(result).toBeNull();

@@ -1,5 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
-import type { NotificationDetail, NotificationReport } from '../interfaces/nc-detail.interface';
+import type {
+  NotificationDetail,
+  NotificationReport,
+} from '../interfaces/nc-detail.interface';
 
 export class NotificationReportDto {
   @ApiProperty({ description: '總筆數', example: 1000 })
@@ -26,28 +29,60 @@ export class NotificationReportDto {
   @ApiProperty({ description: '取消', example: 20 })
   Cancel!: number;
 
-  @ApiProperty({ description: '沒有Token資料 (Push專用)', example: 0, required: false })
+  @ApiProperty({
+    description: '沒有Token資料 (Push專用)',
+    example: 0,
+    required: false,
+  })
   NoTokenData?: number;
 
-  @ApiProperty({ description: 'NS收到 (Push/SMS專用)', example: 0, required: false })
+  @ApiProperty({
+    description: 'NS收到 (Push/SMS專用)',
+    example: 0,
+    required: false,
+  })
   Received?: number;
 
-  @ApiProperty({ description: 'Email是空值 (Email專用)', example: 0, required: false })
+  @ApiProperty({
+    description: 'Email是空值 (Email專用)',
+    example: 0,
+    required: false,
+  })
   EmailIsEmpty?: number;
 
-  @ApiProperty({ description: '手機是空值 (SMS專用)', example: 0, required: false })
+  @ApiProperty({
+    description: '手機是空值 (SMS專用)',
+    example: 0,
+    required: false,
+  })
   CellPhoneIsEmpty?: number;
 
-  @ApiProperty({ description: '客戶確實收到 (SMS專用)', example: 0, required: false })
+  @ApiProperty({
+    description: '客戶確實收到 (SMS專用)',
+    example: 0,
+    required: false,
+  })
   Success?: number;
 
-  @ApiProperty({ description: '供應商取消遞送 (SMS專用)', example: 0, required: false })
+  @ApiProperty({
+    description: '供應商取消遞送 (SMS專用)',
+    example: 0,
+    required: false,
+  })
   Declined?: number;
 
-  @ApiProperty({ description: '非TW電話 (SMS專用)', example: 0, required: false })
+  @ApiProperty({
+    description: '非TW電話 (SMS專用)',
+    example: 0,
+    required: false,
+  })
   CellPhoneIsNotTW?: number;
 
-  @ApiProperty({ description: '非MY電話 (SMS專用)', example: 0, required: false })
+  @ApiProperty({
+    description: '非MY電話 (SMS專用)',
+    example: 0,
+    required: false,
+  })
   CellPhoneIsNotMY?: number;
 }
 

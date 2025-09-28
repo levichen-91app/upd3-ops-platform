@@ -1,4 +1,8 @@
-import { createParamDecorator, ExecutionContext, BadRequestException } from '@nestjs/common';
+import {
+  createParamDecorator,
+  ExecutionContext,
+  BadRequestException,
+} from '@nestjs/common';
 import { Request } from 'express';
 
 export const OperatorHeader = createParamDecorator(

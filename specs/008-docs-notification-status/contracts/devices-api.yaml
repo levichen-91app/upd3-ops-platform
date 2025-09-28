@@ -1,0 +1,286 @@
+openapi: 3.0.3
+info:
+  title: Notification Status Devices API
+  description: REST API for querying customer device information for notification troubleshooting
+  version: 1.0.0
+  contact:
+    name: UPD3 Ops Platform Team
+
+servers:
+  - url: /api/v1
+    description: API v1
+
+security:
+  - NyOperatorAuth: []
+
+paths:
+  /notification-status/devices:
+    get:
+      tags:
+        - Notification Status
+      summary: Query customer device information
+      description: |
+        Retrieve all registered devices for a specific customer identified by shop ID and phone number.
+        Used by operations teams to investigate notification delivery issues.
+      operationId: getDevices
+      parameters:
+        - name: ny-operator
+          in: header
+          required: true
+          schema:
+            type: string
+          description: Operations team authentication header
+          example: "operations-team"
+        - name: shopId
+          in: query
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+          description: Shop identifier
+          example: 12345
+        - name: phone
+          in: query
+          required: true
+          schema:
+            type: string
+            pattern: '^[0-9+\-\s()]+$'
+            minLength: 8
+            maxLength: 15
+          description: Customer phone number
+          example: "0912345678"
+      responses:
+        '200':
+          description: Successfully retrieved device list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceQueryResponse'
+              example:
+                success: true
+                data:
+                  - guid: "123e4567-e89b-12d3-a456-426614174000"
+                    udid: "device_udid_123"
+                    token: "device_token_123"
+                    shopId: 12345
+                    platformDef: "iOS"
+                    memberId: 67890
+                    advertiseId: "ad_id_123"
+                    appVersion: "1.2.3"
+                    createdDateTime: "2024-01-15T10:00:00Z"
+                    updatedDateTime: "2024-01-15T10:30:00Z"
+                timestamp: "2024-01-15T10:35:00Z"
+                requestId: "req-devices-123456"
+        '400':
+          description: Parameter validation failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                error:
+                  code: "VALIDATION_ERROR"
+                  message: "Input parameter validation failed"
+                  details: "shopId must be greater than 0"
+                timestamp: "2024-01-15T10:35:00Z"
+                requestId: "req-devices-123456"
+        '401':
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                error:
+                  code: "UNAUTHORIZED"
+                  message: "ny-operator header required"
+                timestamp: "2024-01-15T10:35:00Z"
+                requestId: "req-devices-123456"
+        '404':
+          description: No devices found for customer
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                error:
+                  code: "DEVICE_NOT_FOUND"
+                  message: "No devices found for the specified customer"
+                  details:
+                    shopId: 12345
+                    phone: "0912345678"
+                timestamp: "2024-01-15T10:35:00Z"
+                requestId: "req-devices-123456"
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                external_api_error:
+                  summary: External API failure
+                  value:
+                    success: false
+                    error:
+                      code: "EXTERNAL_API_ERROR"
+                      message: "Marketing Cloud service unavailable"
+                      details:
+                        service: "Marketing Cloud Device API"
+                        statusCode: 500
+                        retryable: false
+                    timestamp: "2024-01-15T10:35:00Z"
+                    requestId: "req-devices-123456"
+                timeout_error:
+                  summary: Request timeout
+                  value:
+                    success: false
+                    error:
+                      code: "TIMEOUT_ERROR"
+                      message: "Request processing timeout"
+                      details:
+                        timeoutMs: 10000
+                        retryable: false
+                    timestamp: "2024-01-15T10:35:00Z"
+                    requestId: "req-devices-123456"
+
+components:
+  securitySchemes:
+    NyOperatorAuth:
+      type: apiKey
+      in: header
+      name: ny-operator
+      description: Required authentication header for operations team access. Must be present in all requests.
+
+  schemas:
+    Device:
+      type: object
+      required:
+        - guid
+        - udid
+        - token
+        - shopId
+        - platformDef
+        - memberId
+        - createdDateTime
+        - updatedDateTime
+      properties:
+        guid:
+          type: string
+          format: uuid
+          description: Device unique identifier
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        udid:
+          type: string
+          description: Device UDID
+          example: "device_udid_123"
+        token:
+          type: string
+          description: Push notification token
+          example: "device_token_123"
+        shopId:
+          type: integer
+          minimum: 1
+          description: Associated shop ID
+          example: 12345
+        platformDef:
+          type: string
+          enum: ["iOS", "Android"]
+          description: Device platform
+          example: "iOS"
+        memberId:
+          type: integer
+          minimum: 1
+          description: Associated member ID
+          example: 67890
+        advertiseId:
+          type: string
+          description: Advertising tracking ID
+          example: "ad_id_123"
+        appVersion:
+          type: string
+          description: Application version
+          example: "1.2.3"
+        createdDateTime:
+          type: string
+          format: date-time
+          description: Device registration time
+          example: "2024-01-15T10:00:00Z"
+        updatedDateTime:
+          type: string
+          format: date-time
+          description: Last update time
+          example: "2024-01-15T10:30:00Z"
+
+    DeviceQueryResponse:
+      type: object
+      required:
+        - success
+        - data
+        - timestamp
+        - requestId
+      properties:
+        success:
+          type: boolean
+          enum: [true]
+          description: Success indicator
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Device'
+          description: List of customer devices (may be empty)
+        timestamp:
+          type: string
+          format: date-time
+          description: Response generation time
+          example: "2024-01-15T10:35:00Z"
+        requestId:
+          type: string
+          description: Request tracking ID
+          pattern: '^req-devices-[a-zA-Z0-9]+$'
+          example: "req-devices-123456"
+
+    ErrorResponse:
+      type: object
+      required:
+        - success
+        - error
+        - timestamp
+        - requestId
+      properties:
+        success:
+          type: boolean
+          enum: [false]
+          description: Fixed false for errors
+        error:
+          type: object
+          required:
+            - code
+            - message
+          properties:
+            code:
+              type: string
+              enum:
+                - "VALIDATION_ERROR"
+                - "DEVICE_NOT_FOUND"
+                - "EXTERNAL_API_ERROR"
+                - "TIMEOUT_ERROR"
+                - "RATE_LIMIT_ERROR"
+                - "INTERNAL_SERVER_ERROR"
+                - "UNAUTHORIZED"
+              description: Standard error code
+            message:
+              type: string
+              description: User-friendly error message
+            details:
+              description: Additional error context (optional)
+        timestamp:
+          type: string
+          format: date-time
+          description: Error occurrence time
+        requestId:
+          type: string
+          description: Request tracking ID

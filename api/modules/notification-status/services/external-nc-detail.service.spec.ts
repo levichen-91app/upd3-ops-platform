@@ -86,7 +86,7 @@ describe('ExternalNcDetailService', () => {
       expect(result).toEqual(mockResponseData.Data);
       expect(httpService.get).toHaveBeenCalledWith(
         `http://test-nc-api.example.com/api/v1/notifications/detail/${shopId}/${ncId}`,
-        { timeout: 10000 }
+        { timeout: 10000 },
       );
     });
 
@@ -123,8 +123,9 @@ describe('ExternalNcDetailService', () => {
 
       (httpService.get as jest.Mock).mockReturnValue(throwError(() => error));
 
-      await expect(service.getNotificationDetail(shopId, 'invalid-uuid'))
-        .rejects.toThrow();
+      await expect(
+        service.getNotificationDetail(shopId, 'invalid-uuid'),
+      ).rejects.toThrow();
     });
 
     it('should throw error when API returns 500 status', async () => {
@@ -137,8 +138,9 @@ describe('ExternalNcDetailService', () => {
 
       (httpService.get as jest.Mock).mockReturnValue(throwError(() => error));
 
-      await expect(service.getNotificationDetail(shopId, ncId))
-        .rejects.toThrow();
+      await expect(
+        service.getNotificationDetail(shopId, ncId),
+      ).rejects.toThrow();
     });
 
     it('should throw error when API request times out', async () => {
@@ -147,10 +149,13 @@ describe('ExternalNcDetailService', () => {
         message: 'timeout of 10000ms exceeded',
       };
 
-      (httpService.get as jest.Mock).mockReturnValue(throwError(() => timeoutError));
+      (httpService.get as jest.Mock).mockReturnValue(
+        throwError(() => timeoutError),
+      );
 
-      await expect(service.getNotificationDetail(shopId, ncId))
-        .rejects.toThrow();
+      await expect(
+        service.getNotificationDetail(shopId, ncId),
+      ).rejects.toThrow();
     });
 
     it('should handle malformed response data', async () => {
@@ -164,8 +169,9 @@ describe('ExternalNcDetailService', () => {
 
       (httpService.get as jest.Mock).mockReturnValue(of(mockResponse));
 
-      await expect(service.getNotificationDetail(shopId, ncId))
-        .rejects.toThrow();
+      await expect(
+        service.getNotificationDetail(shopId, ncId),
+      ).rejects.toThrow();
     });
   });
 });

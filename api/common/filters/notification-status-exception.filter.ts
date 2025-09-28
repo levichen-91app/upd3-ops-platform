@@ -33,8 +33,15 @@ export class NotificationStatusExceptionFilter implements ExceptionFilter {
         message = responseObj.message || exception.message;
         details = responseObj.details;
 
-        if (status === HttpStatus.BAD_REQUEST) {
+        // Set error code based on status or custom code
+        if (responseObj.code) {
+          errorCode = responseObj.code;
+        } else if (status === HttpStatus.BAD_REQUEST) {
           errorCode = 'VALIDATION_ERROR';
+        } else if (status === HttpStatus.NOT_FOUND) {
+          errorCode = 'DEVICE_NOT_FOUND';
+        } else if (status === HttpStatus.UNAUTHORIZED) {
+          errorCode = 'UNAUTHORIZED';
         }
       } else {
         message = exception.message;
@@ -98,7 +105,7 @@ export class NotificationStatusExceptionFilter implements ExceptionFilter {
         operator,
         requestId,
         timestamp,
-      }
+      },
     );
 
     // Build standardized error response

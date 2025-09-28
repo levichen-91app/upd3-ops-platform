@@ -63,9 +63,9 @@ describe('MarketingCloudController', () => {
         totalCount: 1,
       };
 
-      (mockMarketingCloudService.getMemberDevices as jest.Mock).mockResolvedValue(
-        mockServiceResponse,
-      );
+      (
+        mockMarketingCloudService.getMemberDevices as jest.Mock
+      ).mockResolvedValue(mockServiceResponse);
 
       const result = await controller.getMemberDevices(
         validShopId,
@@ -96,9 +96,9 @@ describe('MarketingCloudController', () => {
         totalCount: 0,
       };
 
-      (mockMarketingCloudService.getMemberDevices as jest.Mock).mockResolvedValue(
-        mockServiceResponse,
-      );
+      (
+        mockMarketingCloudService.getMemberDevices as jest.Mock
+      ).mockResolvedValue(mockServiceResponse);
 
       const result = await controller.getMemberDevices(
         validShopId,
@@ -183,7 +183,11 @@ describe('MarketingCloudController', () => {
 
     it('should throw BadRequestException when phone contains URL encoded characters', async () => {
       await expect(
-        controller.getMemberDevices(validShopId, '0912%20345678', validOperator),
+        controller.getMemberDevices(
+          validShopId,
+          '0912%20345678',
+          validOperator,
+        ),
       ).rejects.toThrow(
         new BadRequestException('Phone number contains invalid characters'),
       );
@@ -193,7 +197,11 @@ describe('MarketingCloudController', () => {
 
     it('should throw BadRequestException when phone contains plus sign', async () => {
       await expect(
-        controller.getMemberDevices(validShopId, '+886912345678', validOperator),
+        controller.getMemberDevices(
+          validShopId,
+          '+886912345678',
+          validOperator,
+        ),
       ).rejects.toThrow(
         new BadRequestException('Phone number contains invalid characters'),
       );
@@ -210,9 +218,9 @@ describe('MarketingCloudController', () => {
         totalCount: 1,
       };
 
-      (mockMarketingCloudService.getMemberDevices as jest.Mock).mockResolvedValue(
-        mockServiceResponse,
-      );
+      (
+        mockMarketingCloudService.getMemberDevices as jest.Mock
+      ).mockResolvedValue(mockServiceResponse);
 
       const result = await controller.getMemberDevices(
         largeShopId,
@@ -237,9 +245,9 @@ describe('MarketingCloudController', () => {
         totalCount: 0,
       };
 
-      (mockMarketingCloudService.getMemberDevices as jest.Mock).mockResolvedValue(
-        mockServiceResponse,
-      );
+      (
+        mockMarketingCloudService.getMemberDevices as jest.Mock
+      ).mockResolvedValue(mockServiceResponse);
 
       for (const phone of phoneNumbers) {
         mockServiceResponse.phone = phone;
@@ -258,14 +266,16 @@ describe('MarketingCloudController', () => {
         );
       }
 
-      expect(mockMarketingCloudService.getMemberDevices).toHaveBeenCalledTimes(phoneNumbers.length);
+      expect(mockMarketingCloudService.getMemberDevices).toHaveBeenCalledTimes(
+        phoneNumbers.length,
+      );
     });
 
     it('should propagate service errors', async () => {
       const error = new Error('Service error');
-      (mockMarketingCloudService.getMemberDevices as jest.Mock).mockRejectedValue(
-        error,
-      );
+      (
+        mockMarketingCloudService.getMemberDevices as jest.Mock
+      ).mockRejectedValue(error);
 
       await expect(
         controller.getMemberDevices(validShopId, validPhone, validOperator),
@@ -286,9 +296,9 @@ describe('MarketingCloudController', () => {
         totalCount: 0,
       };
 
-      (mockMarketingCloudService.getMemberDevices as jest.Mock).mockResolvedValue(
-        mockServiceResponse,
-      );
+      (
+        mockMarketingCloudService.getMemberDevices as jest.Mock
+      ).mockResolvedValue(mockServiceResponse);
 
       const result1 = await controller.getMemberDevices(
         validShopId,

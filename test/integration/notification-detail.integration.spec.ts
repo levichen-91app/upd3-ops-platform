@@ -30,7 +30,9 @@ describe('Notification Detail Integration Tests', () => {
 
     app = moduleFixture.createNestApplication();
     // 手動註冊全域 ResponseFormatInterceptor
-    const { ResponseFormatInterceptor } = require('../../api/common/interceptors/response-format.interceptor');
+    const {
+      ResponseFormatInterceptor,
+    } = require('../../api/common/interceptors/response-format.interceptor');
     app.useGlobalInterceptors(new ResponseFormatInterceptor());
     await app.init();
   });
@@ -68,18 +70,20 @@ describe('Notification Detail Integration Tests', () => {
       };
 
       const mockNcDetailService = app.get(NC_DETAIL_SERVICE_TOKEN);
-      (mockNcDetailService.getNotificationDetail as jest.Mock).mockResolvedValue(mockResponse);
+      (
+        mockNcDetailService.getNotificationDetail as jest.Mock
+      ).mockResolvedValue(mockResponse);
 
       const response = await request(app.getHttpServer())
         .get(`/api/v1/notification-status/detail/${validShopId}/${validNcId}`)
         .set('ny-operator', validOperator)
         .expect(200);
 
-  // 檢查回應是否包含預期的資料 (格式由全域 interceptor 處理)
-  expect(response.body.success).toBe(true);
-  expect(response.body.data).toEqual(mockResponse);
-  expect(typeof response.body.timestamp).toBe('string');
-  expect(typeof response.body.requestId).toBe('string');
+      // 檢查回應是否包含預期的資料 (格式由全域 interceptor 處理)
+      expect(response.body.success).toBe(true);
+      expect(response.body.data).toEqual(mockResponse);
+      expect(typeof response.body.timestamp).toBe('string');
+      expect(typeof response.body.requestId).toBe('string');
     });
 
     it('should validate request parameters in the complete flow', async () => {
@@ -105,48 +109,54 @@ describe('Notification Detail Integration Tests', () => {
 
     it('should return null when notification does not exist', async () => {
       const mockNcDetailService = app.get(NC_DETAIL_SERVICE_TOKEN);
-      (mockNcDetailService.getNotificationDetail as jest.Mock).mockResolvedValue(null);
+      (
+        mockNcDetailService.getNotificationDetail as jest.Mock
+      ).mockResolvedValue(null);
 
       const response = await request(app.getHttpServer())
         .get(`/api/v1/notification-status/detail/${validShopId}/${validNcId}`)
         .set('ny-operator', validOperator)
         .expect(200);
 
-  expect(response.body.success).toBe(true);
-  expect(response.body.data).toBeNull();
-  expect(typeof response.body.timestamp).toBe('string');
-  expect(typeof response.body.requestId).toBe('string');
+      expect(response.body.success).toBe(true);
+      expect(response.body.data).toBeNull();
+      expect(typeof response.body.timestamp).toBe('string');
+      expect(typeof response.body.requestId).toBe('string');
     });
 
     it('should maintain request tracing throughout the flow', async () => {
       const mockNcDetailService = app.get(NC_DETAIL_SERVICE_TOKEN);
-      (mockNcDetailService.getNotificationDetail as jest.Mock).mockResolvedValue(null);
+      (
+        mockNcDetailService.getNotificationDetail as jest.Mock
+      ).mockResolvedValue(null);
 
       const response = await request(app.getHttpServer())
         .get(`/api/v1/notification-status/detail/${validShopId}/${validNcId}`)
         .set('ny-operator', validOperator)
         .expect(200);
 
-  expect(response.body.success).toBe(true);
-  expect(response.body.data).toBeNull();
-  expect(typeof response.body.timestamp).toBe('string');
-  expect(typeof response.body.requestId).toBe('string');
+      expect(response.body.success).toBe(true);
+      expect(response.body.data).toBeNull();
+      expect(typeof response.body.timestamp).toBe('string');
+      expect(typeof response.body.requestId).toBe('string');
     });
 
     it('should demonstrate operator tracking in logs', async () => {
       const uniqueOperator = `integration-test-${Date.now()}`;
       const mockNcDetailService = app.get(NC_DETAIL_SERVICE_TOKEN);
-      (mockNcDetailService.getNotificationDetail as jest.Mock).mockResolvedValue(null);
+      (
+        mockNcDetailService.getNotificationDetail as jest.Mock
+      ).mockResolvedValue(null);
 
       const response = await request(app.getHttpServer())
         .get(`/api/v1/notification-status/detail/${validShopId}/${validNcId}`)
         .set('ny-operator', uniqueOperator)
         .expect(200);
 
-  // This test verifies that operator tracking works end-to-end
-  expect(response.body.requestId).toBeDefined();
-  expect(typeof response.body.timestamp).toBe('string');
-  expect(response.body.success).toBe(true);
+      // This test verifies that operator tracking works end-to-end
+      expect(response.body.requestId).toBeDefined();
+      expect(typeof response.body.timestamp).toBe('string');
+      expect(response.body.success).toBe(true);
     });
   });
 });

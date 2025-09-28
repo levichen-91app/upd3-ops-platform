@@ -73,9 +73,9 @@ describe('MarketingCloudService', () => {
       const operator = 'test@91app.com';
 
       const mockApiResponse = { devices: mockDevices };
-      (mockMarketingCloudApiService.getMemberDevices as jest.Mock).mockResolvedValue(
-        mockApiResponse,
-      );
+      (
+        mockMarketingCloudApiService.getMemberDevices as jest.Mock
+      ).mockResolvedValue(mockApiResponse);
 
       const result = await service.getMemberDevices(shopId, phone, operator);
 
@@ -85,12 +85,12 @@ describe('MarketingCloudService', () => {
         devices: mockDevices,
         totalCount: 2,
       });
-      expect(mockMarketingCloudApiService.getMemberDevices).toHaveBeenCalledWith(
-        shopId,
-        phone,
-        operator,
-      );
-      expect(mockMarketingCloudApiService.getMemberDevices).toHaveBeenCalledTimes(1);
+      expect(
+        mockMarketingCloudApiService.getMemberDevices,
+      ).toHaveBeenCalledWith(shopId, phone, operator);
+      expect(
+        mockMarketingCloudApiService.getMemberDevices,
+      ).toHaveBeenCalledTimes(1);
     });
 
     it('should handle empty device list', async () => {
@@ -99,9 +99,9 @@ describe('MarketingCloudService', () => {
       const operator = 'admin@91app.com';
 
       const mockApiResponse = { devices: [] };
-      (mockMarketingCloudApiService.getMemberDevices as jest.Mock).mockResolvedValue(
-        mockApiResponse,
-      );
+      (
+        mockMarketingCloudApiService.getMemberDevices as jest.Mock
+      ).mockResolvedValue(mockApiResponse);
 
       const result = await service.getMemberDevices(shopId, phone, operator);
 
@@ -111,11 +111,9 @@ describe('MarketingCloudService', () => {
         devices: [],
         totalCount: 0,
       });
-      expect(mockMarketingCloudApiService.getMemberDevices).toHaveBeenCalledWith(
-        shopId,
-        phone,
-        operator,
-      );
+      expect(
+        mockMarketingCloudApiService.getMemberDevices,
+      ).toHaveBeenCalledWith(shopId, phone, operator);
     });
 
     it('should handle single device', async () => {
@@ -125,9 +123,9 @@ describe('MarketingCloudService', () => {
       const singleDevice = mockDevices[0];
 
       const mockApiResponse = { devices: [singleDevice] };
-      (mockMarketingCloudApiService.getMemberDevices as jest.Mock).mockResolvedValue(
-        mockApiResponse,
-      );
+      (
+        mockMarketingCloudApiService.getMemberDevices as jest.Mock
+      ).mockResolvedValue(mockApiResponse);
 
       const result = await service.getMemberDevices(shopId, phone, operator);
 
@@ -137,11 +135,9 @@ describe('MarketingCloudService', () => {
         devices: [singleDevice],
         totalCount: 1,
       });
-      expect(mockMarketingCloudApiService.getMemberDevices).toHaveBeenCalledWith(
-        shopId,
-        phone,
-        operator,
-      );
+      expect(
+        mockMarketingCloudApiService.getMemberDevices,
+      ).toHaveBeenCalledWith(shopId, phone, operator);
     });
 
     it('should propagate errors from marketing cloud API service', async () => {
@@ -150,19 +146,17 @@ describe('MarketingCloudService', () => {
       const operator = 'test@91app.com';
       const error = new Error('API service error');
 
-      (mockMarketingCloudApiService.getMemberDevices as jest.Mock).mockRejectedValue(
-        error,
-      );
+      (
+        mockMarketingCloudApiService.getMemberDevices as jest.Mock
+      ).mockRejectedValue(error);
 
       await expect(
         service.getMemberDevices(shopId, phone, operator),
       ).rejects.toThrow('API service error');
 
-      expect(mockMarketingCloudApiService.getMemberDevices).toHaveBeenCalledWith(
-        shopId,
-        phone,
-        operator,
-      );
+      expect(
+        mockMarketingCloudApiService.getMemberDevices,
+      ).toHaveBeenCalledWith(shopId, phone, operator);
     });
 
     it('should handle different shop IDs correctly', async () => {
@@ -170,9 +164,9 @@ describe('MarketingCloudService', () => {
       const operator = 'test@91app.com';
       const mockApiResponse = { devices: mockDevices };
 
-      (mockMarketingCloudApiService.getMemberDevices as jest.Mock).mockResolvedValue(
-        mockApiResponse,
-      );
+      (
+        mockMarketingCloudApiService.getMemberDevices as jest.Mock
+      ).mockResolvedValue(mockApiResponse);
 
       // Test with different shop IDs
       const shopIds = [1, 999, 123456];
@@ -186,7 +180,9 @@ describe('MarketingCloudService', () => {
         expect(result.totalCount).toBe(2);
       }
 
-      expect(mockMarketingCloudApiService.getMemberDevices).toHaveBeenCalledTimes(shopIds.length);
+      expect(
+        mockMarketingCloudApiService.getMemberDevices,
+      ).toHaveBeenCalledTimes(shopIds.length);
     });
 
     it('should handle different phone numbers correctly', async () => {
@@ -194,9 +190,9 @@ describe('MarketingCloudService', () => {
       const operator = 'test@91app.com';
       const mockApiResponse = { devices: [] };
 
-      (mockMarketingCloudApiService.getMemberDevices as jest.Mock).mockResolvedValue(
-        mockApiResponse,
-      );
+      (
+        mockMarketingCloudApiService.getMemberDevices as jest.Mock
+      ).mockResolvedValue(mockApiResponse);
 
       // Test with different phone numbers
       const phoneNumbers = ['0912345678', '0987654321', '0955123456'];
@@ -210,7 +206,9 @@ describe('MarketingCloudService', () => {
         expect(result.totalCount).toBe(0);
       }
 
-      expect(mockMarketingCloudApiService.getMemberDevices).toHaveBeenCalledTimes(phoneNumbers.length);
+      expect(
+        mockMarketingCloudApiService.getMemberDevices,
+      ).toHaveBeenCalledTimes(phoneNumbers.length);
     });
   });
 });
