@@ -480,6 +480,12 @@ interface ApiErrorResponse {
 
 ### 7.2 Mock 策略規範
 
+## ❌ 整合測試禁止事項
+- 禁止使用真實 API URL
+- 禁止使用 nock/superagent-mock 等 HTTP 攔截
+- 禁止連接真實外部服務
+- 禁止依賴網路連線進行測試
+
 #### 外部 API Mock (必須遵循)
 ```typescript
 // ✅ 正確：使用 Jest Mock + overrideProvider
@@ -708,7 +714,7 @@ test(notification-status): 補充設備查詢整合測試
 - [ ] 單元測試覆蓋率 ≥ 95% (業務邏輯類別)
 - [ ] 整合測試覆蓋所有 API 端點的主要場景
 - [ ] 合約測試驗證所有公開 API 的回應格式
-- [ ] 外部 API 使用 Jest Mock + overrideProvider（禁用 nock）
+- [ ] **❌ 外部 API 使用 Jest Mock + overrideProvider（嚴禁使用真實 URL、nock 或網路連線）**
 - [ ] 測試案例命名描述業務場景而非技術實作
 - [ ] 所有錯誤分支都有對應測試案例
 - [ ] 測試文件按規範放置在正確目錄結構中
