@@ -38,6 +38,8 @@ import {
   DeviceQueryResponseDto,
   ErrorResponseDto,
 } from './dto/device-response.dto';
+import { NotificationHistoryQuery } from './dto/notification-history-query.dto';
+import { NotificationHistoryResponse } from './dto/notification-history-response.dto';
 import { NyOperatorGuard } from './guards/ny-operator.guard';
 import { NotificationStatusExceptionFilter } from '../../common/filters/notification-status-exception.filter';
 
@@ -187,5 +189,70 @@ export class NotificationStatusController {
       queryDto.phone,
     );
     return result;
+  }
+
+  @Get('history/:notificationId')
+  @UseGuards(NyOperatorGuard)
+  @ApiOperation({
+    summary: '查詢通知活動歷程',
+    description: '透過通知ID查詢活動執行歷程，獲取ncId和bookDateTime',
+  })
+  @ApiParam({
+    name: 'notificationId',
+    description: '通知ID',
+    example: 12345,
+    type: 'integer',
+    format: 'int64',
+  })
+  @ApiHeader({
+    name: 'ny-operator',
+    description: '操作者認證標頭',
+    example: 'operations-team',
+    required: true,
+  })
+  @ApiOkResponse({
+    description: '成功取得活動歷程',
+    type: NotificationHistoryResponse,
+  })
+  @ApiBadRequestResponse({
+    description: '參數驗證失敗',
+    type: ApiErrorResponseDto,
+  })
+  @ApiUnauthorizedResponse({
+    description: '認證失敗',
+    type: ApiErrorResponseDto,
+  })
+  @ApiNotFoundResponse({
+    description: '通知不存在',
+    type: ApiErrorResponseDto,
+  })
+  @ApiInternalServerErrorResponse({
+    description: '內部服務錯誤',
+    type: ApiErrorResponseDto,
+  })
+  async getNotificationHistory(
+    @Param('notificationId') notificationIdParam: string,
+  ): Promise<NotificationHistoryResponse> {
+    // Validate parameter format first (reject decimals, non-numeric strings)
+    if (!/^\d+$/.test(notificationIdParam)) {
+      throw new BadRequestException({
+        code: 'VALIDATION_ERROR',
+        message: '通知ID必須為正整數',
+        details: 'notificationId must be a positive integer',
+      });
+    }
+
+    // Validate and transform parameter
+    const notificationId = parseInt(notificationIdParam, 10);
+
+    if (isNaN(notificationId) || notificationId <= 0 || !Number.isInteger(notificationId)) {
+      throw new BadRequestException({
+        code: 'VALIDATION_ERROR',
+        message: '通知ID必須為正整數',
+        details: 'notificationId must be a positive integer',
+      });
+    }
+
+    return await this.notificationStatusService.getNotificationHistory(notificationId);
   }
 }

@@ -8,6 +8,7 @@ import {
   IMarketingCloudService,
   MARKETING_CLOUD_SERVICE_TOKEN,
 } from './interfaces/marketing-cloud.interface';
+import { WHALE_API_SERVICE_TOKEN } from './interfaces/whale-api.interface';
 
 describe('NotificationStatusService', () => {
   let service: NotificationStatusService;
@@ -23,6 +24,10 @@ describe('NotificationStatusService', () => {
       getDevices: jest.fn(),
     };
 
+    const mockWhaleApiService = {
+      getNotificationHistory: jest.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         NotificationStatusService,
@@ -31,6 +36,7 @@ describe('NotificationStatusService', () => {
           provide: MARKETING_CLOUD_SERVICE_TOKEN,
           useValue: mockMarketingService,
         },
+        { provide: WHALE_API_SERVICE_TOKEN, useValue: mockWhaleApiService },
       ],
     }).compile();
 

@@ -1,0 +1,309 @@
+openapi: 3.0.3
+info:
+  title: Notification History API
+  description: 查詢通知活動歷程的API端點
+  version: 1.0.0
+
+servers:
+  - url: /api/v1
+    description: API v1
+
+paths:
+  /notification-status/history/{notificationId}:
+    get:
+      tags:
+        - Notification Status
+      summary: 查詢通知活動歷程
+      description: |
+        透過通知ID查詢活動執行歷程，獲取ncId和bookDateTime
+
+        **外部API**: Whale Notification API
+        **路徑**: `/api/v1/notifications/{notificationId}`
+      operationId: getNotificationHistory
+      parameters:
+        - name: notificationId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+          description: 通知ID
+          example: 12345
+        - name: ny-operator
+          in: header
+          required: true
+          schema:
+            type: string
+            minLength: 1
+          description: 操作者認證標頭
+          example: "operations-team"
+      responses:
+        '200':
+          description: 成功取得活動歷程
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationHistoryResponse'
+              example:
+                success: true
+                data:
+                  id: 12345
+                  channel: "Push"
+                  bookDatetime: "2024-01-15T10:30:00Z"
+                  sentDatetime: "2024-01-15T10:35:00Z"
+                  ncId: "a4070188-050d-47f7-ab24-2523145408cf"
+                  ncExtId: 67890
+                  status: "Success"
+                  isSettled: true
+                  originalAudienceCount: 1000
+                  filteredAudienceCount: 950
+                  sentAudienceCount: 900
+                  receivedAudienceCount: 850
+                  sentFailedCount: 50
+                  report:
+                    Total: 1000
+                    Sent: 950
+                    Success: 900
+                    Fail: 50
+                    NoUser: 50
+                timestamp: "2024-01-15T10:35:00Z"
+                requestId: "req-history-123457"
+        '400':
+          description: 參數驗證失敗
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              example:
+                success: false
+                error:
+                  code: "VALIDATION_ERROR"
+                  message: "通知ID必須為正整數"
+                  details: "notificationId must be a positive integer"
+                timestamp: "2024-01-15T10:35:00Z"
+                requestId: "req-error-123457"
+        '401':
+          description: 認證失敗
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              example:
+                success: false
+                error:
+                  code: "UNAUTHORIZED"
+                  message: "需要有效的ny-operator認證標頭"
+                  details: "ny-operator header is required"
+                timestamp: "2024-01-15T10:35:00Z"
+                requestId: "req-error-123457"
+        '404':
+          description: 通知不存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              example:
+                success: false
+                error:
+                  code: "NOTIFICATION_NOT_FOUND"
+                  message: "找不到指定的通知"
+                  details:
+                    notificationId: 12345
+                timestamp: "2024-01-15T10:35:00Z"
+                requestId: "req-error-123457"
+        '500':
+          description: 內部服務錯誤
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              examples:
+                external_api_error:
+                  summary: 外部API錯誤
+                  value:
+                    success: false
+                    error:
+                      code: "EXTERNAL_API_ERROR"
+                      message: "外部服務調用失敗"
+                      details:
+                        service: "Whale API"
+                        statusCode: 500
+                        error: "Internal Server Error"
+                    timestamp: "2024-01-15T10:35:00Z"
+                    requestId: "req-error-123457"
+                timeout_error:
+                  summary: 請求超時
+                  value:
+                    success: false
+                    error:
+                      code: "TIMEOUT_ERROR"
+                      message: "請求處理超時"
+                      details:
+                        service: "Whale API"
+                        timeoutMs: 5000
+                    timestamp: "2024-01-15T10:35:00Z"
+                    requestId: "req-error-123457"
+
+components:
+  schemas:
+    NotificationHistoryResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          enum: [true]
+          description: 操作成功標記
+        data:
+          $ref: '#/components/schemas/NotificationHistory'
+        timestamp:
+          type: string
+          format: date-time
+          description: 回應時間戳
+          example: "2024-01-15T10:35:00Z"
+        requestId:
+          type: string
+          description: 請求追蹤ID
+          pattern: '^req-history-[0-9]+-[a-zA-Z0-9]+$'
+          example: "req-history-123457"
+      required:
+        - success
+        - data
+        - timestamp
+        - requestId
+
+    NotificationHistory:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: 通知ID
+        channel:
+          type: string
+          description: 通知頻道
+          example: "Push"
+        bookDatetime:
+          type: string
+          format: date-time
+          description: 預定發送時間
+        sentDatetime:
+          type: string
+          format: date-time
+          nullable: true
+          description: 實際發送時間
+        ncId:
+          type: string
+          format: uuid
+          description: Notification Center ID
+        ncExtId:
+          type: integer
+          description: NC Extension ID
+        status:
+          type: string
+          enum: ["Scheduled", "Booked", "Sent", "Error", "Success", "Fail", "PartialFail", "NoUser"]
+          description: 通知狀態
+        isSettled:
+          type: boolean
+          description: 是否已結算
+        originalAudienceCount:
+          type: integer
+          minimum: 0
+          description: 原始受眾數量
+        filteredAudienceCount:
+          type: integer
+          minimum: 0
+          description: 篩選後受眾數量
+        sentAudienceCount:
+          type: integer
+          minimum: 0
+          description: 實際發送數量
+        receivedAudienceCount:
+          type: integer
+          minimum: 0
+          description: 實際接收數量
+        sentFailedCount:
+          type: integer
+          minimum: 0
+          description: 發送失敗數量
+        report:
+          $ref: '#/components/schemas/WhaleReport'
+      required:
+        - id
+        - channel
+        - bookDatetime
+        - ncId
+        - status
+        - isSettled
+        - report
+
+    WhaleReport:
+      type: object
+      properties:
+        Total:
+          type: integer
+          minimum: 0
+          description: 總數
+        Sent:
+          type: integer
+          minimum: 0
+          description: 已發送
+        Success:
+          type: integer
+          minimum: 0
+          description: 成功數
+        Fail:
+          type: integer
+          minimum: 0
+          description: 失敗數
+        NoUser:
+          type: integer
+          minimum: 0
+          description: 無用戶數
+      required:
+        - Total
+        - Sent
+        - Success
+        - Fail
+        - NoUser
+
+    ApiErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          enum: [false]
+          description: 固定為 false
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              description: 錯誤代碼
+              enum:
+                - "VALIDATION_ERROR"
+                - "UNAUTHORIZED"
+                - "NOTIFICATION_NOT_FOUND"
+                - "EXTERNAL_API_ERROR"
+                - "TIMEOUT_ERROR"
+                - "INTERNAL_SERVER_ERROR"
+            message:
+              type: string
+              description: 錯誤訊息 (用戶友好)
+            details:
+              description: 錯誤詳細資訊
+          required:
+            - code
+            - message
+        timestamp:
+          type: string
+          format: date-time
+          description: 錯誤發生時間戳
+        requestId:
+          type: string
+          description: 請求追蹤ID
+      required:
+        - success
+        - error
+        - timestamp
+        - requestId
