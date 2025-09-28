@@ -6,6 +6,8 @@ Auto-generated from all feature plans. Last updated: 2025-09-28
 - TypeScript 5.x with NestJS 10.x (Node.js 18+) + NestJS, Axios (HTTP client), class-validator, Swagger/OpenAPI (008-docs-notification-status)
 - TypeScript 5.x (strict mode) + NestJS 10.x, @nestjs/axios, class-validator, class-transformer (009-api-v1-notification)
 - N/A (API proxy service, no persistence required) (009-api-v1-notification)
+- TypeScript 5.x (strict mode enabled) + NestJS 10.x, @nestjs/axios, class-validator, class-transformer, @nestjs/swagger (010-api-post-api)
+- N/A (純 API proxy，不涉及資料持久化) (010-api-post-api)
 
 ## Project Structure
 ```
@@ -21,6 +23,7 @@ npm test [ONLY COMMANDS FOR ACTIVE TECHNOLOGIES][ONLY COMMANDS FOR ACTIVE TECHNO
 TypeScript 5.x with NestJS 10.x (Node.js 18+): Follow standard conventions
 
 ## Recent Changes
+- 010-api-post-api: Added TypeScript 5.x (strict mode enabled) + NestJS 10.x, @nestjs/axios, class-validator, class-transformer, @nestjs/swagger
 - 009-api-v1-notification: Added TypeScript 5.x (strict mode) + NestJS 10.x, @nestjs/axios, class-validator, class-transformer
 - 008-docs-notification-status: Added TypeScript 5.x with NestJS 10.x (Node.js 18+) + NestJS, Axios (HTTP client), class-validator, Swagger/OpenAPI
 

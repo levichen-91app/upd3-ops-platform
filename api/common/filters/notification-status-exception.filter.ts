@@ -30,18 +30,35 @@ export class NotificationStatusExceptionFilter implements ExceptionFilter {
 
       if (typeof exceptionResponse === 'object' && exceptionResponse !== null) {
         const responseObj = exceptionResponse as any;
-        message = responseObj.message || exception.message;
-        details = responseObj.details;
 
-        // Set error code based on status or custom code
-        if (responseObj.code) {
-          errorCode = responseObj.code;
-        } else if (status === HttpStatus.BAD_REQUEST) {
+        // Handle NestJS ValidationPipe errors
+        if (status === HttpStatus.BAD_REQUEST && Array.isArray(responseObj.message)) {
           errorCode = 'VALIDATION_ERROR';
-        } else if (status === HttpStatus.NOT_FOUND) {
-          errorCode = responseObj.code === 'NOTIFICATION_NOT_FOUND' ? 'NOTIFICATION_NOT_FOUND' : 'DEVICE_NOT_FOUND';
-        } else if (status === HttpStatus.UNAUTHORIZED) {
-          errorCode = 'UNAUTHORIZED';
+          message = '輸入參數驗證失敗';
+          // Convert ValidationPipe error messages to expected format
+          details = responseObj.message.map((msg: string) => {
+            // Parse field name from validation message
+            const fieldMatch = msg.match(/^(\w+)\s/);
+            const field = fieldMatch ? fieldMatch[1] : 'unknown';
+            return {
+              field,
+              message: msg,
+            };
+          });
+        } else {
+          message = responseObj.message || exception.message;
+          details = responseObj.details;
+
+          // Set error code based on status or custom code
+          if (responseObj.code) {
+            errorCode = responseObj.code;
+          } else if (status === HttpStatus.BAD_REQUEST) {
+            errorCode = 'VALIDATION_ERROR';
+          } else if (status === HttpStatus.NOT_FOUND) {
+            errorCode = responseObj.code === 'NOTIFICATION_NOT_FOUND' ? 'NOTIFICATION_NOT_FOUND' : 'DEVICE_NOT_FOUND';
+          } else if (status === HttpStatus.UNAUTHORIZED) {
+            errorCode = 'UNAUTHORIZED';
+          }
         }
       } else {
         message = exception.message;

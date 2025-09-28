@@ -1,0 +1,244 @@
+openapi: 3.0.3
+info:
+  title: Notification Status Reports API
+  description: 通知狀態報告查詢 API 合約定義
+  version: 1.0.0
+
+paths:
+  /api/v1/notification-status/reports:
+    post:
+      tags:
+        - Notification Status
+      summary: 查詢NS狀態報告
+      description: |
+        透過nsId和日期查詢詳細的推播狀態報告
+
+        **外部API**: NS Report API `/v3/GetNotificationStatusReport`
+
+        **認證**: 需要 ny-operator header
+
+        **行為**: 立即回傳 presigned URL，即使報告未準備完成
+      operationId: getStatusReport
+      parameters:
+        - name: ny-operator
+          in: header
+          required: true
+          schema:
+            type: string
+          description: 內部認證 header
+          example: "internal-ops-team"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StatusReportRequest'
+            example:
+              nsId: "d68e720f-62ed-4955-802b-8e3f04c56a19"
+              notificationDate: "2024/01/15"
+              notificationType: "push"
+      responses:
+        '200':
+          description: 成功取得報告下載連結
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusReportResponse'
+              example:
+                success: true
+                data:
+                  downloadUrl: "https://s3.amazonaws.com/bucket/reports/report-123.tsv?signature=..."
+                  expiredTime: 3600
+                timestamp: "2024-01-15T10:35:00Z"
+                requestId: "req-reports-1705315000-abc123"
+        '400':
+          description: 請求參數錯誤
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              examples:
+                validation_error:
+                  summary: 參數驗證錯誤
+                  value:
+                    success: false
+                    error:
+                      code: "VALIDATION_ERROR"
+                      message: "輸入參數驗證失敗"
+                      details:
+                        - field: "nsId"
+                          message: "nsId must be a valid UUID"
+                        - field: "notificationDate"
+                          message: "Date format should be YYYY/MM/DD"
+                        - field: "notificationType"
+                          message: "Must be one of: sms, push, line, email"
+                    timestamp: "2024-01-15T10:35:00Z"
+                    requestId: "req-reports-1705315000-def456"
+        '401':
+          description: 認證失敗
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              example:
+                success: false
+                error:
+                  code: "UNAUTHORIZED"
+                  message: "認證失敗：缺少或無效的 ny-operator header"
+                  details:
+                    header: "ny-operator"
+                    provided: null
+                timestamp: "2024-01-15T10:35:00Z"
+                requestId: "req-reports-1705315000-ghi789"
+        '500':
+          description: 內部服務錯誤
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              examples:
+                external_api_error:
+                  summary: 外部API錯誤
+                  value:
+                    success: false
+                    error:
+                      code: "EXTERNAL_API_ERROR"
+                      message: "外部服務調用失敗"
+                      details:
+                        service: "NS Report API"
+                        statusCode: 500
+                        error: "Internal Server Error"
+                    timestamp: "2024-01-15T10:35:00Z"
+                    requestId: "req-reports-1705315000-jkl012"
+                timeout_error:
+                  summary: 請求超時
+                  value:
+                    success: false
+                    error:
+                      code: "TIMEOUT_ERROR"
+                      message: "請求處理超時"
+                      details:
+                        service: "NS Report API"
+                        timeoutMs: 30000
+                    timestamp: "2024-01-15T10:35:00Z"
+                    requestId: "req-reports-1705315000-mno345"
+
+components:
+  schemas:
+    StatusReportRequest:
+      type: object
+      required:
+        - nsId
+        - notificationDate
+        - notificationType
+      properties:
+        nsId:
+          type: string
+          format: uuid
+          description: Notification Service ID (UUID格式)
+          example: "d68e720f-62ed-4955-802b-8e3f04c56a19"
+        notificationDate:
+          type: string
+          pattern: '^\d{4}/\d{2}/\d{2}$'
+          description: 通知日期 (YYYY/MM/DD格式)
+          example: "2024/01/15"
+        notificationType:
+          type: string
+          enum: [sms, push, line, email]
+          description: 通知類型
+          example: "push"
+
+    StatusReportData:
+      type: object
+      required:
+        - downloadUrl
+        - expiredTime
+      properties:
+        downloadUrl:
+          type: string
+          format: uri
+          description: S3 presigned URL，用於下載 TSV 報告檔
+          example: "https://s3.amazonaws.com/bucket/reports/report-123.tsv?signature=..."
+        expiredTime:
+          type: integer
+          minimum: 1
+          description: presigned URL 的有效秒數
+          example: 3600
+
+    StatusReportResponse:
+      type: object
+      required:
+        - success
+        - data
+        - timestamp
+        - requestId
+      properties:
+        success:
+          type: boolean
+          enum: [true]
+          description: 操作成功標識
+        data:
+          $ref: '#/components/schemas/StatusReportData'
+        timestamp:
+          type: string
+          format: date-time
+          description: 回應時間戳
+          example: "2024-01-15T10:35:00Z"
+        requestId:
+          type: string
+          pattern: '^req-reports-[0-9]+-[a-zA-Z0-9]+$'
+          description: 請求追蹤ID
+          example: "req-reports-1705315000-abc123"
+
+    ApiErrorResponse:
+      type: object
+      required:
+        - success
+        - error
+        - timestamp
+        - requestId
+      properties:
+        success:
+          type: boolean
+          enum: [false]
+          description: 操作失敗標識
+        error:
+          type: object
+          required:
+            - code
+            - message
+          properties:
+            code:
+              type: string
+              enum:
+                - "VALIDATION_ERROR"
+                - "UNAUTHORIZED"
+                - "EXTERNAL_API_ERROR"
+                - "TIMEOUT_ERROR"
+              description: 錯誤代碼
+            message:
+              type: string
+              description: 使用者友好的錯誤訊息
+            details:
+              description: 錯誤詳細資訊 (可為物件或陣列)
+        timestamp:
+          type: string
+          format: date-time
+          description: 錯誤發生時間戳
+        requestId:
+          type: string
+          description: 請求追蹤ID
+
+  securitySchemes:
+    NyOperatorAuth:
+      type: apiKey
+      in: header
+      name: ny-operator
+      description: 內部認證 header
+
+security:
+  - NyOperatorAuth: []
+
+tags:
+  - name: Notification Status
+    description: 通知狀態查詢相關操作

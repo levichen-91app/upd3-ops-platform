@@ -1,6 +1,8 @@
 import {
   Controller,
   Get,
+  Post,
+  Body,
   Param,
   Headers,
   Query,
@@ -8,6 +10,7 @@ import {
   UseGuards,
   ValidationPipe,
   UsePipes,
+  HttpCode,
   BadRequestException,
   NotFoundException,
   InternalServerErrorException,
@@ -27,6 +30,7 @@ import {
   ApiQuery,
 } from '@nestjs/swagger';
 import { NotificationStatusService } from './notification-status.service';
+import { NotificationStatusReportsService } from './services/notification-status-reports.service';
 import { NotificationDetailQueryDto } from './dto/notification-detail-query.dto';
 import {
   NotificationDetailResponseDto,
@@ -40,8 +44,11 @@ import {
 } from './dto/device-response.dto';
 import { NotificationHistoryQuery } from './dto/notification-history-query.dto';
 import { NotificationHistoryResponse } from './dto/notification-history-response.dto';
+import { StatusReportRequestDto } from './dto/status-report-request.dto';
+import { StatusReportResponseDto, StatusReportErrorResponseDto } from './dto/status-report-response.dto';
 import { NyOperatorGuard } from './guards/ny-operator.guard';
 import { NotificationStatusExceptionFilter } from '../../common/filters/notification-status-exception.filter';
+import { NY_OPERATOR_HEADER } from '../../constants/headers.constants';
 
 @ApiTags('Notification Status')
 @Controller('api/v1/notification-status')
@@ -50,6 +57,7 @@ import { NotificationStatusExceptionFilter } from '../../common/filters/notifica
 export class NotificationStatusController {
   constructor(
     private readonly notificationStatusService: NotificationStatusService,
+    private readonly reportsService: NotificationStatusReportsService,
   ) {}
 
   @Get('detail/:shopId/:ncId')
@@ -254,5 +262,42 @@ export class NotificationStatusController {
     }
 
     return await this.notificationStatusService.getNotificationHistory(notificationId);
+  }
+
+  @Post('reports')
+  @HttpCode(200)
+  @UseGuards(NyOperatorGuard)
+  @ApiOperation({
+    summary: '查詢通知狀態報告',
+    description: '根據 nsId、通知日期和通知類型查詢詳細的通知狀態報告，回傳 presigned URL 供下載 TSV 格式報告',
+  })
+  @ApiHeader({
+    name: NY_OPERATOR_HEADER,
+    description: '內部營運團隊認證標頭',
+    example: 'internal-ops-team',
+    required: true,
+  })
+  @ApiOkResponse({
+    description: '成功取得報告下載連結',
+    type: StatusReportResponseDto,
+  })
+  @ApiBadRequestResponse({
+    description: '輸入參數驗證失敗',
+    type: StatusReportErrorResponseDto,
+  })
+  @ApiUnauthorizedResponse({
+    description: '認證失敗：缺少或無效的 ny-operator header',
+    type: StatusReportErrorResponseDto,
+  })
+  @ApiInternalServerErrorResponse({
+    description: '外部 API 調用失敗',
+    type: StatusReportErrorResponseDto,
+  })
+  async getStatusReports(
+    @Body() requestDto: StatusReportRequestDto,
+  ): Promise<StatusReportResponseDto> {
+    // NyOperatorGuard 已驗證 ny-operator header
+    // 直接調用服務層處理業務邏輯
+    return await this.reportsService.getStatusReport(requestDto);
   }
 }
