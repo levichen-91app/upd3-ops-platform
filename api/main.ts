@@ -36,7 +36,6 @@ async function bootstrap() {
     .setDescription('Standardized API for supplier operations and management')
     .setVersion('1.0')
     .addTag('Suppliers', 'Supplier management operations')
-    .addTag('Marketing Cloud', 'Marketing Cloud Device API integration')
     .addApiKey(
       {
         type: 'apiKey',
