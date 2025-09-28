@@ -2,7 +2,6 @@ import { Module, MiddlewareConsumer, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_INTERCEPTOR, APP_FILTER } from '@nestjs/core';
 import { SuppliersModule } from './modules/suppliers/suppliers.module';
-import { MarketingCloudModule } from './modules/marketing-cloud/marketing-cloud.module';
 import { NotificationStatusModule } from './modules/notification-status/notification-status.module';
 import { RequestIdMiddleware } from './common/middleware/request-id.middleware';
 import { LoggingMiddleware } from './common/middleware/logging.middleware';
@@ -28,7 +27,6 @@ import { validationSchema } from './config/validation.schema';
       ],
     }),
     SuppliersModule,
-    MarketingCloudModule,
     NotificationStatusModule,
   ],
   controllers: [],
