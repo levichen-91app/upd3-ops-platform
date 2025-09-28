@@ -39,7 +39,8 @@
 ## Path Conventions
 - **Single project**: `src/`, `tests/` at repository root
 - **Web app**: `backend/src/`, `frontend/src/`
-- **Mobile**: `api/src/`, `ios/src/` or `android/src/`
+- **NestJS API**: `api/modules/`, `api/common/`, `test/` at repository root
+- **Mobile**: `api/modules/`, `ios/src/` or `android/src/`
 - Paths shown below assume single project - adjust based on plan.md structure
 
 ## Phase 3.1: Setup

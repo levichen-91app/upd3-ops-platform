@@ -9,7 +9,7 @@
 1. Load feature spec from Input path
    → If not found: ERROR "No feature spec at {path}"
 2. Fill Technical Context (scan for NEEDS CLARIFICATION)
-   → Detect Project Type from file system structure or context (web=frontend+backend, mobile=app+api)
+   → Detect Project Type from context (web=frontend+backend, mobile=app+api)
    → Set Structure Decision based on project type
 3. Fill the Constitution Check section based on the content of the constitution document.
 4. Evaluate Constitution Check section below
@@ -63,14 +63,8 @@ specs/[###-feature]/
 ```
 
 ### Source Code (repository root)
-<!--
-  ACTION REQUIRED: Replace the placeholder tree below with the concrete layout
-  for this feature. Delete unused options and expand the chosen structure with
-  real paths (e.g., apps/admin, packages/something). The delivered plan must
-  not include Option labels.
--->
 ```
-# [REMOVE IF UNUSED] Option 1: Single project (DEFAULT)
+# Option 1: Single project (DEFAULT)
 src/
 ├── models/
 ├── services/
@@ -82,7 +76,7 @@ tests/
 ├── integration/
 └── unit/
 
-# [REMOVE IF UNUSED] Option 2: Web application (when "frontend" + "backend" detected)
+# Option 2: Web application (when "frontend" + "backend" detected)
 backend/
 ├── src/
 │   ├── models/
@@ -97,16 +91,37 @@ frontend/
 │   └── services/
 └── tests/
 
-# [REMOVE IF UNUSED] Option 3: Mobile + API (when "iOS/Android" detected)
+# Option 3: NestJS API structure (when API-first design detected)
 api/
-└── [same as backend above]
+├── modules/
+│   ├── [feature]/
+│   │   ├── dto/
+│   │   ├── entities/
+│   │   ├── [feature].controller.ts
+│   │   ├── [feature].service.ts
+│   │   └── [feature].module.ts
+├── common/
+│   ├── filters/
+│   ├── interceptors/
+│   └── exceptions/
+├── config/
+├── app.module.ts
+└── main.ts
+
+test/
+├── unit/
+├── integration/
+└── e2e/
+
+# Option 4: Mobile + API (when "iOS/Android" detected)
+api/
+└── [same as Option 3 above]
 
 ios/ or android/
-└── [platform-specific structure: feature modules, UI flows, platform tests]
+└── [platform-specific structure]
 ```
 
-**Structure Decision**: [Document the selected structure and reference the real
-directories captured above]
+**Structure Decision**: [DEFAULT to Option 1 unless Technical Context indicates web/mobile app, or Option 3 for NestJS API projects]
 
 ## Phase 0: Outline & Research
 1. **Extract unknowns from Technical Context** above:
@@ -152,7 +167,7 @@ directories captured above]
    - Quickstart test = story validation steps
 
 5. **Update agent file incrementally** (O(1) operation):
-   - Run `.specify/scripts/bash/update-agent-context.sh copilot`
+   - Run `.specify/scripts/bash/update-agent-context.sh claude`
      **IMPORTANT**: Execute it exactly as specified above. Do not add or remove any arguments.
    - If exists: Add only NEW tech from current plan
    - Preserve manual additions between markers
