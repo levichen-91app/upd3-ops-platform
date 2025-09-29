@@ -74,7 +74,8 @@ describe('ExternalNSReportService', () => {
     it('should successfully call NS Report API and return download data', async () => {
       // Arrange: Mock successful HTTP response
       const mockResponseData = {
-        downloadUrl: 'https://s3.amazonaws.com/reports/test-report.tsv?signature=abc123',
+        downloadUrl:
+          'https://s3.amazonaws.com/reports/test-report.tsv?signature=abc123',
         expiredTime: 3600,
       };
       const mockAxiosResponse: AxiosResponse = {
@@ -103,7 +104,7 @@ describe('ExternalNSReportService', () => {
             'Content-Type': 'application/json',
             'User-Agent': 'UPD3-OPS-Platform/1.0',
           },
-        }
+        },
       );
 
       // Assert: Correct response transformation
@@ -116,7 +117,10 @@ describe('ExternalNSReportService', () => {
     it('should handle different notification types correctly', async () => {
       // Arrange: Mock response
       const mockResponse: AxiosResponse = {
-        data: { downloadUrl: 'https://s3.aws.com/sms-report.tsv', expiredTime: 1800 },
+        data: {
+          downloadUrl: 'https://s3.aws.com/sms-report.tsv',
+          expiredTime: 1800,
+        },
         status: 200,
         statusText: 'OK',
         headers: {},
@@ -135,7 +139,7 @@ describe('ExternalNSReportService', () => {
         expect(mockHttpService.post).toHaveBeenCalledWith(
           expect.any(String),
           expect.objectContaining({ notificationType: type }),
-          expect.any(Object)
+          expect.any(Object),
         );
       }
     });
@@ -153,7 +157,9 @@ describe('ExternalNSReportService', () => {
       mockHttpService.post.mockReturnValue(throwError(() => httpError));
 
       // Act & Assert
-      await expect(service.getStatusReport(validRequest)).rejects.toThrow('外部 NS Report API 調用失敗');
+      await expect(service.getStatusReport(validRequest)).rejects.toThrow(
+        '外部 NS Report API 調用失敗',
+      );
       expect(mockHttpService.post).toHaveBeenCalledTimes(1);
     });
 
@@ -170,7 +176,9 @@ describe('ExternalNSReportService', () => {
       mockHttpService.post.mockReturnValue(throwError(() => httpError));
 
       // Act & Assert
-      await expect(service.getStatusReport(validRequest)).rejects.toThrow('外部 NS Report API 調用失敗');
+      await expect(service.getStatusReport(validRequest)).rejects.toThrow(
+        '外部 NS Report API 調用失敗',
+      );
     });
 
     it('should throw ExternalApiException when NS Report API returns HTTP 403', async () => {
@@ -186,7 +194,9 @@ describe('ExternalNSReportService', () => {
       mockHttpService.post.mockReturnValue(throwError(() => httpError));
 
       // Act & Assert
-      await expect(service.getStatusReport(validRequest)).rejects.toThrow('外部 NS Report API 調用失敗');
+      await expect(service.getStatusReport(validRequest)).rejects.toThrow(
+        '外部 NS Report API 調用失敗',
+      );
     });
 
     it('should throw ExternalApiException on timeout', async () => {
@@ -198,7 +208,9 @@ describe('ExternalNSReportService', () => {
       mockHttpService.post.mockReturnValue(throwError(() => timeoutError));
 
       // Act & Assert
-      await expect(service.getStatusReport(validRequest)).rejects.toThrow('外部 NS Report API 調用失敗');
+      await expect(service.getStatusReport(validRequest)).rejects.toThrow(
+        '外部 NS Report API 調用失敗',
+      );
     });
 
     it('should throw ExternalApiException on connection failure', async () => {
@@ -210,7 +222,9 @@ describe('ExternalNSReportService', () => {
       mockHttpService.post.mockReturnValue(throwError(() => connectionError));
 
       // Act & Assert
-      await expect(service.getStatusReport(validRequest)).rejects.toThrow('外部 NS Report API 調用失敗');
+      await expect(service.getStatusReport(validRequest)).rejects.toThrow(
+        '外部 NS Report API 調用失敗',
+      );
     });
 
     it('should throw ExternalApiException when response has invalid format', async () => {
@@ -228,7 +242,9 @@ describe('ExternalNSReportService', () => {
       mockHttpService.post.mockReturnValue(of(invalidResponse));
 
       // Act & Assert
-      await expect(service.getStatusReport(validRequest)).rejects.toThrow('外部 NS Report API 調用失敗');
+      await expect(service.getStatusReport(validRequest)).rejects.toThrow(
+        '外部 NS Report API 調用失敗',
+      );
     });
 
     it('should throw ExternalApiException when downloadUrl is null', async () => {
@@ -246,7 +262,9 @@ describe('ExternalNSReportService', () => {
       mockHttpService.post.mockReturnValue(of(invalidResponse));
 
       // Act & Assert
-      await expect(service.getStatusReport(validRequest)).rejects.toThrow('外部 NS Report API 調用失敗');
+      await expect(service.getStatusReport(validRequest)).rejects.toThrow(
+        '外部 NS Report API 調用失敗',
+      );
     });
 
     it('should throw ExternalApiException when expiredTime is not a number', async () => {
@@ -264,7 +282,9 @@ describe('ExternalNSReportService', () => {
       mockHttpService.post.mockReturnValue(of(invalidResponse));
 
       // Act & Assert
-      await expect(service.getStatusReport(validRequest)).rejects.toThrow('外部 NS Report API 調用失敗');
+      await expect(service.getStatusReport(validRequest)).rejects.toThrow(
+        '外部 NS Report API 調用失敗',
+      );
     });
   });
 
@@ -302,7 +322,7 @@ describe('ExternalNSReportService', () => {
       expect(mockHttpService.post).toHaveBeenCalledWith(
         'https://custom.nsreport.api.com/custom/v4/GetReport',
         expect.any(Object),
-        expect.objectContaining({ timeout: 45000 })
+        expect.objectContaining({ timeout: 45000 }),
       );
     });
 
@@ -330,9 +350,9 @@ describe('ExternalNSReportService', () => {
 
       // Assert: Uses default values
       expect(mockHttpService.post).toHaveBeenCalledWith(
-        expect.stringContaining('default'),  // Default URL
+        expect.stringContaining('default'), // Default URL
         expect.any(Object),
-        expect.objectContaining({ timeout: expect.any(Number) })
+        expect.objectContaining({ timeout: expect.any(Number) }),
       );
     });
   });
@@ -366,7 +386,7 @@ describe('ExternalNSReportService', () => {
           notificationDate: '2024/12/25',
           notificationType: 'email',
         },
-        expect.any(Object)
+        expect.any(Object),
       );
     });
 
@@ -399,7 +419,7 @@ describe('ExternalNSReportService', () => {
             'Content-Type': 'application/json',
             'User-Agent': 'UPD3-OPS-Platform/1.0',
           },
-        })
+        }),
       );
     });
   });

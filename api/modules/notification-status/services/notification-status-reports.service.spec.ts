@@ -1,6 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotificationStatusReportsService } from './notification-status-reports.service';
-import { INSReportService, NS_REPORT_SERVICE_TOKEN } from './ns-report.service.interface';
+import {
+  INSReportService,
+  NS_REPORT_SERVICE_TOKEN,
+} from './ns-report.service.interface';
 import { StatusReportRequestDto } from '../dto/status-report-request.dto';
 
 /**
@@ -33,7 +36,9 @@ describe('NotificationStatusReportsService', () => {
       ],
     }).compile();
 
-    service = module.get<NotificationStatusReportsService>(NotificationStatusReportsService);
+    service = module.get<NotificationStatusReportsService>(
+      NotificationStatusReportsService,
+    );
     nsReportService = module.get<INSReportService>(NS_REPORT_SERVICE_TOKEN);
   });
 
@@ -48,21 +53,27 @@ describe('NotificationStatusReportsService', () => {
       notificationType: 'push',
     };
 
-    const testRequestId = 'req-20250928143052-a8b2c4d6-dd70-4edd-9f86-a2cfc0e8be22';
+    const testRequestId =
+      'req-20250928143052-a8b2c4d6-dd70-4edd-9f86-a2cfc0e8be22';
 
     it('should successfully return report data with request ID', async () => {
       // Arrange: Mock successful external API response
       const mockExternalResponse = {
-        downloadUrl: 'https://s3.amazonaws.com/reports/test-report.tsv?signature=abc123',
+        downloadUrl:
+          'https://s3.amazonaws.com/reports/test-report.tsv?signature=abc123',
         expiredTime: 3600,
       };
-      mockNSReportService.getStatusReport.mockResolvedValue(mockExternalResponse);
+      mockNSReportService.getStatusReport.mockResolvedValue(
+        mockExternalResponse,
+      );
 
       // Act
       const result = await service.getStatusReport(validRequest, testRequestId);
 
       // Assert: External service called with correct parameters
-      expect(mockNSReportService.getStatusReport).toHaveBeenCalledWith(validRequest);
+      expect(mockNSReportService.getStatusReport).toHaveBeenCalledWith(
+        validRequest,
+      );
       expect(mockNSReportService.getStatusReport).toHaveBeenCalledTimes(1);
 
       // Assert: Response structure (raw data without wrapping)
@@ -88,7 +99,9 @@ describe('NotificationStatusReportsService', () => {
         const result = await service.getStatusReport(request, testRequestId);
 
         // Assert: Correct service call
-        expect(mockNSReportService.getStatusReport).toHaveBeenCalledWith(request);
+        expect(mockNSReportService.getStatusReport).toHaveBeenCalledWith(
+          request,
+        );
 
         // Assert: Successful response (raw data)
         expect(result).toEqual(mockResponse);
@@ -105,9 +118,12 @@ describe('NotificationStatusReportsService', () => {
       };
       mockNSReportService.getStatusReport.mockResolvedValue(mockResponse);
 
-      const requestId1 = 'req-20250928143052-a8b2c4d6-dd70-4edd-9f86-a2cfc0e8be22';
-      const requestId2 = 'req-20250928143053-b9c3d5e7-ee81-5fee-a097-b3dfd1f9cf33';
-      const requestId3 = 'req-20250928143054-c0d4e6f8-ff92-6gff-b0a8-c4eee2e0dg44';
+      const requestId1 =
+        'req-20250928143052-a8b2c4d6-dd70-4edd-9f86-a2cfc0e8be22';
+      const requestId2 =
+        'req-20250928143053-b9c3d5e7-ee81-5fee-a097-b3dfd1f9cf33';
+      const requestId3 =
+        'req-20250928143054-c0d4e6f8-ff92-6gff-b0a8-c4eee2e0dg44';
 
       // Act: Multiple requests with different request IDs
       const result1 = await service.getStatusReport(validRequest, requestId1);
@@ -143,10 +159,14 @@ describe('NotificationStatusReportsService', () => {
       mockNSReportService.getStatusReport.mockRejectedValue(externalError);
 
       // Act & Assert
-      await expect(service.getStatusReport(validRequest, testRequestId)).rejects.toThrow('External NS Report API failed');
+      await expect(
+        service.getStatusReport(validRequest, testRequestId),
+      ).rejects.toThrow('External NS Report API failed');
 
       // Assert: External service was called
-      expect(mockNSReportService.getStatusReport).toHaveBeenCalledWith(validRequest);
+      expect(mockNSReportService.getStatusReport).toHaveBeenCalledWith(
+        validRequest,
+      );
     });
 
     it('should handle timeout errors from external service', async () => {
@@ -156,7 +176,9 @@ describe('NotificationStatusReportsService', () => {
       mockNSReportService.getStatusReport.mockRejectedValue(timeoutError);
 
       // Act & Assert
-      await expect(service.getStatusReport(validRequest, testRequestId)).rejects.toThrow('Request timeout');
+      await expect(
+        service.getStatusReport(validRequest, testRequestId),
+      ).rejects.toThrow('Request timeout');
     });
 
     it('should handle connection errors from external service', async () => {
@@ -166,12 +188,15 @@ describe('NotificationStatusReportsService', () => {
       mockNSReportService.getStatusReport.mockRejectedValue(connectionError);
 
       // Act & Assert
-      await expect(service.getStatusReport(validRequest, testRequestId)).rejects.toThrow('ECONNREFUSED');
+      await expect(
+        service.getStatusReport(validRequest, testRequestId),
+      ).rejects.toThrow('ECONNREFUSED');
     });
   });
 
   describe('Service dependencies integration', () => {
-    const testRequestId = 'req-20250928143052-a8b2c4d6-dd70-4edd-9f86-a2cfc0e8be22';
+    const testRequestId =
+      'req-20250928143052-a8b2c4d6-dd70-4edd-9f86-a2cfc0e8be22';
 
     it('should properly integrate with INSReportService', async () => {
       // Arrange: Specific request data
@@ -182,16 +207,22 @@ describe('NotificationStatusReportsService', () => {
       };
 
       const specificResponse = {
-        downloadUrl: 'https://s3.aws.com/specific-line-report.tsv?sig=specific123',
+        downloadUrl:
+          'https://s3.aws.com/specific-line-report.tsv?sig=specific123',
         expiredTime: 2400,
       };
       mockNSReportService.getStatusReport.mockResolvedValue(specificResponse);
 
       // Act
-      const result = await service.getStatusReport(specificRequest, testRequestId);
+      const result = await service.getStatusReport(
+        specificRequest,
+        testRequestId,
+      );
 
       // Assert: Exact data passed to and returned from INSReportService
-      expect(mockNSReportService.getStatusReport).toHaveBeenCalledWith(specificRequest);
+      expect(mockNSReportService.getStatusReport).toHaveBeenCalledWith(
+        specificRequest,
+      );
       expect(result).toEqual(specificResponse);
     });
   });

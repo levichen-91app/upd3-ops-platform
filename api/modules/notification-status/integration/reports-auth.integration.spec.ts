@@ -63,7 +63,9 @@ describe('Reports Authentication Integration', () => {
           code: 'UNAUTHORIZED',
           message: 'ny-operator header required',
         },
-        timestamp: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/),
+        timestamp: expect.stringMatching(
+          /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/,
+        ),
         requestId: expect.stringMatching(/^req-\d{14}-[0-9a-f-]{36}$/),
       });
 
@@ -186,7 +188,9 @@ describe('Reports Authentication Integration', () => {
       expect(response.body.data).toEqual(mockResponse);
 
       // Assert: External service was called with valid auth
-      expect(mockNSReportService.getStatusReport).toHaveBeenCalledWith(validRequest);
+      expect(mockNSReportService.getStatusReport).toHaveBeenCalledWith(
+        validRequest,
+      );
     });
   });
 });

@@ -2,7 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 import { firstValueFrom } from 'rxjs';
-import { INSReportService, StatusReportData } from './ns-report.service.interface';
+import {
+  INSReportService,
+  StatusReportData,
+} from './ns-report.service.interface';
 import { StatusReportRequestDto } from '../dto/status-report-request.dto';
 import { ExternalApiException } from '../../../common/exceptions/external-api.exception';
 
@@ -26,12 +29,19 @@ export class ExternalNSReportService implements INSReportService {
    * @returns Promise<StatusReportData> - 包含下載連結和過期時間
    * @throws {ExternalApiException} - 各種外部 API 錯誤情況
    */
-  async getStatusReport(request: StatusReportRequestDto): Promise<StatusReportData> {
+  async getStatusReport(
+    request: StatusReportRequestDto,
+  ): Promise<StatusReportData> {
     try {
       // 取得配置參數
-      const baseUrl = this.configService.get<string>('nsReport.baseUrl') || 'https://default.nsreport.api.com';
-      const endpoint = this.configService.get<string>('nsReport.endpoint') || '/v3/GetNotificationStatusReport';
-      const timeout = this.configService.get<number>('nsReport.timeout') || 30000;
+      const baseUrl =
+        this.configService.get<string>('nsReport.baseUrl') ||
+        'https://default.nsreport.api.com';
+      const endpoint =
+        this.configService.get<string>('nsReport.endpoint') ||
+        '/v3/GetNotificationStatusReport';
+      const timeout =
+        this.configService.get<number>('nsReport.timeout') || 30000;
 
       const url = `${baseUrl}${endpoint}`;
 
@@ -53,7 +63,7 @@ export class ExternalNSReportService implements INSReportService {
 
       // 發送 HTTP POST 請求
       const response = await firstValueFrom(
-        this.httpService.post(url, payload, requestConfig)
+        this.httpService.post(url, payload, requestConfig),
       );
 
       // 驗證回應格式
@@ -78,15 +88,25 @@ export class ExternalNSReportService implements INSReportService {
    */
   private validateResponseFormat(data: any): void {
     if (!data || typeof data !== 'object') {
-      throw new Error('Invalid response format: response data is not an object');
+      throw new Error(
+        'Invalid response format: response data is not an object',
+      );
     }
 
     if (!data.downloadUrl || typeof data.downloadUrl !== 'string') {
-      throw new Error('Invalid response format: downloadUrl is missing or invalid');
+      throw new Error(
+        'Invalid response format: downloadUrl is missing or invalid',
+      );
     }
 
-    if (data.expiredTime === null || data.expiredTime === undefined || typeof data.expiredTime !== 'number') {
-      throw new Error('Invalid response format: expiredTime is missing or invalid');
+    if (
+      data.expiredTime === null ||
+      data.expiredTime === undefined ||
+      typeof data.expiredTime !== 'number'
+    ) {
+      throw new Error(
+        'Invalid response format: expiredTime is missing or invalid',
+      );
     }
 
     if (data.expiredTime <= 0) {
@@ -104,71 +124,57 @@ export class ExternalNSReportService implements INSReportService {
     // HTTP 回應錯誤 (4xx, 5xx)
     if (error.response) {
       const { status, statusText, data } = error.response;
-      return new ExternalApiException(
-        '外部 NS Report API 調用失敗',
-        {
-          originalMessage: error.message,
-          errorType: 'HttpException',
-          statusCode: status,
-          statusText: statusText,
-          responseData: data,
-        }
-      );
+      return new ExternalApiException('外部 NS Report API 調用失敗', {
+        originalMessage: error.message,
+        errorType: 'HttpException',
+        statusCode: status,
+        statusText: statusText,
+        responseData: data,
+      });
     }
 
     // 超時錯誤
     if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
-      return new ExternalApiException(
-        '外部 NS Report API 調用失敗',
-        {
-          originalMessage: error.message,
-          errorType: 'TimeoutError',
-          errorCode: error.code,
-        }
-      );
+      return new ExternalApiException('外部 NS Report API 調用失敗', {
+        originalMessage: error.message,
+        errorType: 'TimeoutError',
+        errorCode: error.code,
+      });
     }
 
     // 連接錯誤
-    if (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND' || error.code === 'ECONNRESET') {
-      return new ExternalApiException(
-        '外部 NS Report API 調用失敗',
-        {
-          originalMessage: error.message,
-          errorType: 'ConnectionError',
-          errorCode: error.code,
-        }
-      );
+    if (
+      error.code === 'ECONNREFUSED' ||
+      error.code === 'ENOTFOUND' ||
+      error.code === 'ECONNRESET'
+    ) {
+      return new ExternalApiException('外部 NS Report API 調用失敗', {
+        originalMessage: error.message,
+        errorType: 'ConnectionError',
+        errorCode: error.code,
+      });
     }
 
     // JSON 解析錯誤
     if (error instanceof SyntaxError || error.name === 'SyntaxError') {
-      return new ExternalApiException(
-        '外部 NS Report API 調用失敗',
-        {
-          originalMessage: error.message,
-          errorType: 'SyntaxError',
-        }
-      );
+      return new ExternalApiException('外部 NS Report API 調用失敗', {
+        originalMessage: error.message,
+        errorType: 'SyntaxError',
+      });
     }
 
     // 回應格式驗證錯誤
     if (error.message?.includes('Invalid response format')) {
-      return new ExternalApiException(
-        '外部 NS Report API 調用失敗',
-        {
-          originalMessage: error.message,
-          errorType: 'InvalidResponseError',
-        }
-      );
+      return new ExternalApiException('外部 NS Report API 調用失敗', {
+        originalMessage: error.message,
+        errorType: 'InvalidResponseError',
+      });
     }
 
     // 其他未預期錯誤
-    return new ExternalApiException(
-      '外部 NS Report API 調用失敗',
-      {
-        originalMessage: error.message || 'Unknown error',
-        errorType: error.name || 'UnknownError',
-      }
-    );
+    return new ExternalApiException('外部 NS Report API 調用失敗', {
+      originalMessage: error.message || 'Unknown error',
+      errorType: error.name || 'UnknownError',
+    });
   }
 }

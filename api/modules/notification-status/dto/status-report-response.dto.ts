@@ -8,7 +8,8 @@ import { ApiProperty } from '@nestjs/swagger';
 export class StatusReportDataDto {
   @ApiProperty({
     description: '報告下載連結 (presigned URL)',
-    example: 'https://s3.amazonaws.com/reports/notification-report-123.tsv?signature=abc123&expires=1640995200',
+    example:
+      'https://s3.amazonaws.com/reports/notification-report-123.tsv?signature=abc123&expires=1640995200',
     type: 'string',
     format: 'uri',
   })
@@ -161,7 +162,10 @@ export class StatusReportErrorDto {
   @ApiProperty({
     description: '錯誤詳細資訊',
     oneOf: [
-      { type: 'array', items: { $ref: '#/components/schemas/StatusReportErrorDetailsDto' } },
+      {
+        type: 'array',
+        items: { $ref: '#/components/schemas/StatusReportErrorDetailsDto' },
+      },
       { $ref: '#/components/schemas/StatusReportErrorDetailsDto' },
     ],
     required: false,

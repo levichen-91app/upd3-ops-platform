@@ -78,7 +78,9 @@ describe('Reports Validation Integration', () => {
             ]),
           },
           timestamp: expect.any(String),
-          requestId: expect.stringMatching(/^req-\d{14}-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/),
+          requestId: expect.stringMatching(
+            /^req-\d{14}-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/,
+          ),
         });
 
         // Assert: External service not called
@@ -107,7 +109,7 @@ describe('Reports Validation Integration', () => {
               field: 'nsId',
               message: expect.stringContaining('should not be empty'),
             }),
-          ])
+          ]),
         );
       });
 
@@ -131,7 +133,7 @@ describe('Reports Validation Integration', () => {
               field: 'nsId',
               message: expect.stringContaining('required'),
             }),
-          ])
+          ]),
         );
       });
     });
@@ -140,14 +142,14 @@ describe('Reports Validation Integration', () => {
       it('should return 500 for invalid date format', async () => {
         // Act: Various invalid date formats
         const invalidDates = [
-          '2024-01-15',    // ISO format instead of YYYY/MM/DD
-          '01/15/2024',    // US format
-          '15/01/2024',    // EU format
-          '2024/1/15',     // Single digit month
-          '2024/01/5',     // Single digit day
-          'invalid-date',  // Non-date string
-          '2024/13/01',    // Invalid month
-          '2024/02/30',    // Invalid day
+          '2024-01-15', // ISO format instead of YYYY/MM/DD
+          '01/15/2024', // US format
+          '15/01/2024', // EU format
+          '2024/1/15', // Single digit month
+          '2024/01/5', // Single digit day
+          'invalid-date', // Non-date string
+          '2024/13/01', // Invalid month
+          '2024/02/30', // Invalid day
         ];
 
         for (const invalidDate of invalidDates) {
@@ -171,7 +173,7 @@ describe('Reports Validation Integration', () => {
                 field: 'notificationDate',
                 message: expect.stringContaining('YYYY/MM/DD'),
               }),
-            ])
+            ]),
           );
         }
       });
@@ -199,7 +201,7 @@ describe('Reports Validation Integration', () => {
               field: 'notificationDate',
               message: 'notificationDate should not be empty',
             }),
-          ])
+          ]),
         );
       });
     });
@@ -209,12 +211,12 @@ describe('Reports Validation Integration', () => {
         // Act: Various invalid notification types
         const invalidTypes = [
           'invalid-type',
-          'PUSH',         // Wrong case
-          'Push',         // Wrong case
-          'text',         // Not supported
-          'whatsapp',     // Not supported
-          'telegram',     // Not supported
-          '',             // Empty
+          'PUSH', // Wrong case
+          'Push', // Wrong case
+          'text', // Not supported
+          'whatsapp', // Not supported
+          'telegram', // Not supported
+          '', // Empty
         ];
 
         for (const invalidType of invalidTypes) {
@@ -236,9 +238,10 @@ describe('Reports Validation Integration', () => {
             expect.arrayContaining([
               expect.objectContaining({
                 field: 'notificationType',
-                message: 'notificationType must be one of: sms, push, line, email',
+                message:
+                  'notificationType must be one of: sms, push, line, email',
               }),
-            ])
+            ]),
           );
         }
       });
@@ -268,7 +271,9 @@ describe('Reports Validation Integration', () => {
             .expect(200);
 
           expect(response.body.success).toBe(true);
-          expect(mockNSReportService.getStatusReport).toHaveBeenCalledWith(validRequest);
+          expect(mockNSReportService.getStatusReport).toHaveBeenCalledWith(
+            validRequest,
+          );
         }
       });
     });
@@ -277,9 +282,9 @@ describe('Reports Validation Integration', () => {
       it('should return all validation errors in single response', async () => {
         // Act: Request with multiple validation errors
         const multipleErrorsRequest = {
-          nsId: 'invalid-uuid',           // Invalid UUID
+          nsId: 'invalid-uuid', // Invalid UUID
           notificationDate: '2024-01-15', // Wrong date format
-          notificationType: 'invalid',     // Invalid type
+          notificationType: 'invalid', // Invalid type
         };
 
         const response = await request(app.getHttpServer())
@@ -293,7 +298,9 @@ describe('Reports Validation Integration', () => {
         expect(response.body.error.message).toBe('輸入參數驗證失敗');
         expect(response.body.error.details).toHaveLength(3);
 
-        const fieldNames = response.body.error.details.map((detail: any) => detail.field);
+        const fieldNames = response.body.error.details.map(
+          (detail: any) => detail.field,
+        );
         expect(fieldNames).toContain('nsId');
         expect(fieldNames).toContain('notificationDate');
         expect(fieldNames).toContain('notificationType');
@@ -344,8 +351,12 @@ describe('Reports Validation Integration', () => {
           message: '輸入參數驗證失敗',
           details: expect.any(Array), // Exception filter converts ValidationPipe errors to details array
         },
-        timestamp: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/),
-        requestId: expect.stringMatching(/^req-\d{14}-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/),
+        timestamp: expect.stringMatching(
+          /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/,
+        ),
+        requestId: expect.stringMatching(
+          /^req-\d{14}-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/,
+        ),
       });
     });
   });

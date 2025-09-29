@@ -12,7 +12,8 @@ describe('WhaleApiService', () => {
 
   const mockConfigService = {
     get: jest.fn((key: string) => {
-      if (key === 'whaleApi.baseUrl') return 'http://whale-api-internal.qa.91dev.tw';
+      if (key === 'whaleApi.baseUrl')
+        return 'http://whale-api-internal.qa.91dev.tw';
       if (key === 'whaleApi.timeout') return 10000;
       return undefined;
     }),
@@ -85,7 +86,7 @@ describe('WhaleApiService', () => {
       expect(result).toEqual(mockResponse.data);
       expect(mockHttpService.get).toHaveBeenCalledWith(
         `http://whale-api-internal.qa.91dev.tw/api/v1/notifications/${notificationId}`,
-        { timeout: 10000 }
+        { timeout: 10000 },
       );
     });
 
@@ -155,9 +156,9 @@ describe('WhaleApiService', () => {
 
       mockHttpService.get.mockReturnValue(throwError(() => timeoutError));
 
-      await expect(service.getNotificationHistory(notificationId)).rejects.toThrow(
-        'Timeout: Request took longer than 10000ms'
-      );
+      await expect(
+        service.getNotificationHistory(notificationId),
+      ).rejects.toThrow('Timeout: Request took longer than 10000ms');
     });
 
     it('should throw HTTP error for server responses with error status', async () => {
@@ -180,9 +181,9 @@ describe('WhaleApiService', () => {
 
       mockHttpService.get.mockReturnValue(throwError(() => axiosError));
 
-      await expect(service.getNotificationHistory(notificationId)).rejects.toThrow(
-        'HTTP Error 500: Internal Server Error'
-      );
+      await expect(
+        service.getNotificationHistory(notificationId),
+      ).rejects.toThrow('HTTP Error 500: Internal Server Error');
     });
 
     it('should throw network error for connection issues', async () => {
@@ -191,9 +192,9 @@ describe('WhaleApiService', () => {
 
       mockHttpService.get.mockReturnValue(throwError(() => networkError));
 
-      await expect(service.getNotificationHistory(notificationId)).rejects.toThrow(
-        'ECONNREFUSED: Connection refused'
-      );
+      await expect(
+        service.getNotificationHistory(notificationId),
+      ).rejects.toThrow('ECONNREFUSED: Connection refused');
     });
 
     it('should use correct configuration values', () => {
@@ -219,7 +220,7 @@ describe('WhaleApiService', () => {
       // Verify that the observable was created with the correct URL
       expect(mockHttpService.get).toHaveBeenCalledWith(
         `http://whale-api-internal.qa.91dev.tw/api/v1/notifications/${notificationId}`,
-        { timeout: 10000 }
+        { timeout: 10000 },
       );
     });
 
@@ -229,19 +230,23 @@ describe('WhaleApiService', () => {
 
       mockHttpService.get.mockReturnValue(throwError(() => sslError));
 
-      await expect(service.getNotificationHistory(notificationId)).rejects.toThrow(
-        'CERT_UNTRUSTED: Certificate is not trusted'
-      );
+      await expect(
+        service.getNotificationHistory(notificationId),
+      ).rejects.toThrow('CERT_UNTRUSTED: Certificate is not trusted');
     });
 
     it('should handle DNS resolution errors', async () => {
       const notificationId = 12345;
-      const dnsError = new Error('ENOTFOUND: getaddrinfo ENOTFOUND whale-api.example.com');
+      const dnsError = new Error(
+        'ENOTFOUND: getaddrinfo ENOTFOUND whale-api.example.com',
+      );
 
       mockHttpService.get.mockReturnValue(throwError(() => dnsError));
 
-      await expect(service.getNotificationHistory(notificationId)).rejects.toThrow(
-        'ENOTFOUND: getaddrinfo ENOTFOUND whale-api.example.com'
+      await expect(
+        service.getNotificationHistory(notificationId),
+      ).rejects.toThrow(
+        'ENOTFOUND: getaddrinfo ENOTFOUND whale-api.example.com',
       );
     });
   });

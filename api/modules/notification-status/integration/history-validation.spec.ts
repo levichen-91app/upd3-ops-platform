@@ -118,7 +118,9 @@ describe('Notification History Validation Tests', () => {
 
       expect(response.body.success).toBe(true);
       expect(response.body.data.id).toBe(id);
-      expect(mockWhaleApiService.getNotificationHistory).toHaveBeenCalledWith(id);
+      expect(mockWhaleApiService.getNotificationHistory).toHaveBeenCalledWith(
+        id,
+      );
     }
   });
 

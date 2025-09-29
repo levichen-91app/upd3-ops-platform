@@ -84,18 +84,20 @@ describe('Devices API Contract (e2e)', () => {
     });
 
     it('should ensure timestamp is ISO 8601 format', async () => {
-      mockMarketingCloudService.getDevices.mockResolvedValue([{
-        guid: '123e4567-e89b-12d3-a456-426614174000',
-        udid: 'device_udid_123',
-        token: 'device_token_123',
-        shopId: 12345,
-        platformDef: 'iOS',
-        memberId: 67890,
-        advertiseId: 'ad_id_123',
-        appVersion: '1.2.3',
-        createdDateTime: '2024-01-15T10:00:00Z',
-        updatedDateTime: '2024-01-15T10:30:00Z',
-      }]);
+      mockMarketingCloudService.getDevices.mockResolvedValue([
+        {
+          guid: '123e4567-e89b-12d3-a456-426614174000',
+          udid: 'device_udid_123',
+          token: 'device_token_123',
+          shopId: 12345,
+          platformDef: 'iOS',
+          memberId: 67890,
+          advertiseId: 'ad_id_123',
+          appVersion: '1.2.3',
+          createdDateTime: '2024-01-15T10:00:00Z',
+          updatedDateTime: '2024-01-15T10:30:00Z',
+        },
+      ]);
 
       const response = await request(app.getHttpServer())
         .get('/api/v1/notification-status/devices')
@@ -106,7 +108,9 @@ describe('Devices API Contract (e2e)', () => {
         })
         .expect(200);
 
-      expect(response.body.timestamp).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
+      expect(response.body.timestamp).toMatch(
+        /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/,
+      );
       expect(new Date(response.body.timestamp)).toBeInstanceOf(Date);
     });
 
@@ -173,7 +177,9 @@ describe('Devices API Contract (e2e)', () => {
           },
         },
         timestamp: expect.any(String),
-        requestId: expect.stringMatching(/^req-\d{14}-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/),
+        requestId: expect.stringMatching(
+          /^req-\d{14}-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/,
+        ),
       });
     });
 
@@ -220,7 +226,9 @@ describe('Devices API Contract (e2e)', () => {
 
     it('should return standardized 500 external API error response', async () => {
       mockMarketingCloudService.getDevices.mockRejectedValue(
-        new Error('EXTERNAL_API_ERROR: Marketing Cloud API returned status 500')
+        new Error(
+          'EXTERNAL_API_ERROR: Marketing Cloud API returned status 500',
+        ),
       );
 
       const response = await request(app.getHttpServer())
@@ -239,7 +247,9 @@ describe('Devices API Contract (e2e)', () => {
           message: expect.any(String),
         },
         timestamp: expect.any(String),
-        requestId: expect.stringMatching(/^req-\d{14}-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/),
+        requestId: expect.stringMatching(
+          /^req-\d{14}-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/,
+        ),
       });
     });
   });
@@ -295,24 +305,30 @@ describe('Devices API Contract (e2e)', () => {
       ]);
 
       expect(responses[0].body.requestId).not.toBe(responses[1].body.requestId);
-      expect(responses[0].body.requestId).toMatch(/^req-\d{14}-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/);
-      expect(responses[1].body.requestId).toMatch(/^req-\d{14}-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/);
+      expect(responses[0].body.requestId).toMatch(
+        /^req-\d{14}-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/,
+      );
+      expect(responses[1].body.requestId).toMatch(
+        /^req-\d{14}-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/,
+      );
     });
 
     it('should maintain request ID format consistency across different response types', async () => {
       // Success case
-      mockMarketingCloudService.getDevices.mockResolvedValueOnce([{
-        guid: '123e4567-e89b-12d3-a456-426614174000',
-        udid: 'device_udid_123',
-        token: 'device_token_123',
-        shopId: 12345,
-        platformDef: 'iOS',
-        memberId: 67890,
-        advertiseId: 'ad_id_123',
-        appVersion: '1.2.3',
-        createdDateTime: '2024-01-15T10:00:00Z',
-        updatedDateTime: '2024-01-15T10:30:00Z',
-      }]);
+      mockMarketingCloudService.getDevices.mockResolvedValueOnce([
+        {
+          guid: '123e4567-e89b-12d3-a456-426614174000',
+          udid: 'device_udid_123',
+          token: 'device_token_123',
+          shopId: 12345,
+          platformDef: 'iOS',
+          memberId: 67890,
+          advertiseId: 'ad_id_123',
+          appVersion: '1.2.3',
+          createdDateTime: '2024-01-15T10:00:00Z',
+          updatedDateTime: '2024-01-15T10:30:00Z',
+        },
+      ]);
 
       const successResponse = await request(app.getHttpServer())
         .get('/api/v1/notification-status/devices')
@@ -330,25 +346,31 @@ describe('Devices API Contract (e2e)', () => {
         .expect(404);
 
       // Both should follow the same pattern
-      expect(successResponse.body.requestId).toMatch(/^req-\d{14}-[0-9a-f-]{36}$/);
-      expect(notFoundResponse.body.requestId).toMatch(/^req-\d{14}-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/);
+      expect(successResponse.body.requestId).toMatch(
+        /^req-\d{14}-[0-9a-f-]{36}$/,
+      );
+      expect(notFoundResponse.body.requestId).toMatch(
+        /^req-\d{14}-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/,
+      );
     });
   });
 
   describe('Response Time Performance', () => {
     it('should respond within reasonable time for success case', async () => {
-      mockMarketingCloudService.getDevices.mockResolvedValue([{
-        guid: '123e4567-e89b-12d3-a456-426614174000',
-        udid: 'device_udid_123',
-        token: 'device_token_123',
-        shopId: 12345,
-        platformDef: 'iOS',
-        memberId: 67890,
-        advertiseId: 'ad_id_123',
-        appVersion: '1.2.3',
-        createdDateTime: '2024-01-15T10:00:00Z',
-        updatedDateTime: '2024-01-15T10:30:00Z',
-      }]);
+      mockMarketingCloudService.getDevices.mockResolvedValue([
+        {
+          guid: '123e4567-e89b-12d3-a456-426614174000',
+          udid: 'device_udid_123',
+          token: 'device_token_123',
+          shopId: 12345,
+          platformDef: 'iOS',
+          memberId: 67890,
+          advertiseId: 'ad_id_123',
+          appVersion: '1.2.3',
+          createdDateTime: '2024-01-15T10:00:00Z',
+          updatedDateTime: '2024-01-15T10:30:00Z',
+        },
+      ]);
 
       const startTime = Date.now();
 

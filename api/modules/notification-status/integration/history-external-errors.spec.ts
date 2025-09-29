@@ -31,7 +31,7 @@ describe('Notification History External API Error Tests', () => {
   it('should return 500 when Whale API is unavailable', async () => {
     const notificationId = 12345;
     mockWhaleApiService.getNotificationHistory.mockRejectedValue(
-      new Error('ECONNREFUSED: Connection refused')
+      new Error('ECONNREFUSED: Connection refused'),
     );
 
     const response = await request(app.getHttpServer())
@@ -49,7 +49,7 @@ describe('Notification History External API Error Tests', () => {
   it('should return 500 when Whale API times out', async () => {
     const notificationId = 12345;
     mockWhaleApiService.getNotificationHistory.mockRejectedValue(
-      new Error('Timeout: Request took longer than 10000ms')
+      new Error('Timeout: Request took longer than 10000ms'),
     );
 
     const response = await request(app.getHttpServer())
@@ -88,7 +88,9 @@ describe('Notification History External API Error Tests', () => {
 
   it('should return 500 for network connection errors', async () => {
     const notificationId = 12345;
-    const networkError = new Error('ENOTFOUND: getaddrinfo ENOTFOUND whale-api.example.com');
+    const networkError = new Error(
+      'ENOTFOUND: getaddrinfo ENOTFOUND whale-api.example.com',
+    );
 
     mockWhaleApiService.getNotificationHistory.mockRejectedValue(networkError);
 
@@ -124,7 +126,7 @@ describe('Notification History External API Error Tests', () => {
     const startTime = Date.now();
 
     mockWhaleApiService.getNotificationHistory.mockRejectedValue(
-      new Error('Connection refused')
+      new Error('Connection refused'),
     );
 
     const response = await request(app.getHttpServer())

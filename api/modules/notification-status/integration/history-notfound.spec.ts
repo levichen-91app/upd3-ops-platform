@@ -42,7 +42,9 @@ describe('Notification History Not Found Tests', () => {
     expect(response.body.error.message).toBe('找不到指定的通知');
     expect(response.body.error.details.notificationId).toBe(notificationId);
     expect(response.body.requestId).toMatch(/^req-\d{14}-[0-9a-f-]{36}/);
-    expect(mockWhaleApiService.getNotificationHistory).toHaveBeenCalledWith(notificationId);
+    expect(mockWhaleApiService.getNotificationHistory).toHaveBeenCalledWith(
+      notificationId,
+    );
   });
 
   it('should return 404 when Whale API returns NOT_FOUND response', async () => {
@@ -53,7 +55,9 @@ describe('Notification History Not Found Tests', () => {
       data: null,
     };
 
-    mockWhaleApiService.getNotificationHistory.mockResolvedValue(notFoundResponse);
+    mockWhaleApiService.getNotificationHistory.mockResolvedValue(
+      notFoundResponse,
+    );
 
     const response = await request(app.getHttpServer())
       .get(`/api/v1/notification-status/history/${notificationId}`)
@@ -116,7 +120,7 @@ describe('Notification History Not Found Tests', () => {
     // Test 500 case (external API failure)
     const errorId = 22222;
     mockWhaleApiService.getNotificationHistory.mockRejectedValueOnce(
-      new Error('External API failed')
+      new Error('External API failed'),
     );
 
     const errorResponse = await request(app.getHttpServer())

@@ -80,18 +80,20 @@ describe('Devices Authentication (e2e)', () => {
     });
 
     it('should accept valid ny-operator header', async () => {
-      mockMarketingCloudService.getDevices.mockResolvedValue([{
-        guid: '123e4567-e89b-12d3-a456-426614174000',
-        udid: 'device_udid_123',
-        token: 'device_token_123',
-        shopId: 12345,
-        platformDef: 'iOS',
-        memberId: 67890,
-        advertiseId: 'ad_id_123',
-        appVersion: '1.2.3',
-        createdDateTime: '2024-01-15T10:00:00Z',
-        updatedDateTime: '2024-01-15T10:30:00Z',
-      }]);
+      mockMarketingCloudService.getDevices.mockResolvedValue([
+        {
+          guid: '123e4567-e89b-12d3-a456-426614174000',
+          udid: 'device_udid_123',
+          token: 'device_token_123',
+          shopId: 12345,
+          platformDef: 'iOS',
+          memberId: 67890,
+          advertiseId: 'ad_id_123',
+          appVersion: '1.2.3',
+          createdDateTime: '2024-01-15T10:00:00Z',
+          updatedDateTime: '2024-01-15T10:30:00Z',
+        },
+      ]);
 
       const response = await request(app.getHttpServer())
         .get('/api/v1/notification-status/devices')
@@ -126,7 +128,9 @@ describe('Devices Authentication (e2e)', () => {
           .expect(404); // 404 because mock returns empty array
       }
 
-      expect(mockMarketingCloudService.getDevices).toHaveBeenCalledTimes(validOperators.length);
+      expect(mockMarketingCloudService.getDevices).toHaveBeenCalledTimes(
+        validOperators.length,
+      );
     });
 
     it('should trim whitespace from ny-operator header value', async () => {
@@ -218,18 +222,20 @@ describe('Devices Authentication (e2e)', () => {
     });
 
     it('should include operator in successful request context', async () => {
-      mockMarketingCloudService.getDevices.mockResolvedValue([{
-        guid: '123e4567-e89b-12d3-a456-426614174000',
-        udid: 'device_udid_123',
-        token: 'device_token_123',
-        shopId: 12345,
-        platformDef: 'iOS',
-        memberId: 67890,
-        advertiseId: 'ad_id_123',
-        appVersion: '1.2.3',
-        createdDateTime: '2024-01-15T10:00:00Z',
-        updatedDateTime: '2024-01-15T10:30:00Z',
-      }]);
+      mockMarketingCloudService.getDevices.mockResolvedValue([
+        {
+          guid: '123e4567-e89b-12d3-a456-426614174000',
+          udid: 'device_udid_123',
+          token: 'device_token_123',
+          shopId: 12345,
+          platformDef: 'iOS',
+          memberId: 67890,
+          advertiseId: 'ad_id_123',
+          appVersion: '1.2.3',
+          createdDateTime: '2024-01-15T10:00:00Z',
+          updatedDateTime: '2024-01-15T10:30:00Z',
+        },
+      ]);
 
       const response = await request(app.getHttpServer())
         .get('/api/v1/notification-status/devices')

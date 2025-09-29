@@ -57,7 +57,8 @@ describe('Reports Success Integration', () => {
     it('should successfully return report download link for push notification', async () => {
       // Arrange: Mock successful NS Report API response
       const mockDownloadData = {
-        downloadUrl: 'https://s3.amazonaws.com/reports/push-report-123.tsv?signature=abc123',
+        downloadUrl:
+          'https://s3.amazonaws.com/reports/push-report-123.tsv?signature=abc123',
         expiredTime: 3600,
       };
       mockNSReportService.getStatusReport.mockResolvedValue(mockDownloadData);
@@ -93,7 +94,8 @@ describe('Reports Success Integration', () => {
       // Arrange
       const smsRequest = { ...validRequest, notificationType: 'sms' };
       const mockSmsResponse = {
-        downloadUrl: 'https://s3.amazonaws.com/reports/sms-report-456.tsv?signature=def456',
+        downloadUrl:
+          'https://s3.amazonaws.com/reports/sms-report-456.tsv?signature=def456',
         expiredTime: 1800, // 30 minutes
       };
       mockNSReportService.getStatusReport.mockResolvedValue(mockSmsResponse);
@@ -108,14 +110,17 @@ describe('Reports Success Integration', () => {
       // Assert
       expect(response.body.success).toBe(true);
       expect(response.body.data).toEqual(mockSmsResponse);
-      expect(mockNSReportService.getStatusReport).toHaveBeenCalledWith(smsRequest);
+      expect(mockNSReportService.getStatusReport).toHaveBeenCalledWith(
+        smsRequest,
+      );
     });
 
     it('should handle LINE notification type successfully', async () => {
       // Arrange
       const lineRequest = { ...validRequest, notificationType: 'line' };
       const mockLineResponse = {
-        downloadUrl: 'https://s3.amazonaws.com/reports/line-report-789.tsv?signature=ghi789',
+        downloadUrl:
+          'https://s3.amazonaws.com/reports/line-report-789.tsv?signature=ghi789',
         expiredTime: 7200, // 2 hours
       };
       mockNSReportService.getStatusReport.mockResolvedValue(mockLineResponse);
@@ -136,7 +141,8 @@ describe('Reports Success Integration', () => {
       // Arrange
       const emailRequest = { ...validRequest, notificationType: 'email' };
       const mockEmailResponse = {
-        downloadUrl: 'https://s3.amazonaws.com/reports/email-report-101.tsv?signature=jkl101',
+        downloadUrl:
+          'https://s3.amazonaws.com/reports/email-report-101.tsv?signature=jkl101',
         expiredTime: 10800, // 3 hours
       };
       mockNSReportService.getStatusReport.mockResolvedValue(mockEmailResponse);
@@ -174,8 +180,12 @@ describe('Reports Success Integration', () => {
 
       // Assert: Request IDs are unique
       expect(response1.body.requestId).not.toBe(response2.body.requestId);
-      expect(response1.body.requestId).toMatch(/^req-reports-\d+-[a-zA-Z0-9]+$/);
-      expect(response2.body.requestId).toMatch(/^req-reports-\d+-[a-zA-Z0-9]+$/);
+      expect(response1.body.requestId).toMatch(
+        /^req-reports-\d+-[a-zA-Z0-9]+$/,
+      );
+      expect(response2.body.requestId).toMatch(
+        /^req-reports-\d+-[a-zA-Z0-9]+$/,
+      );
     });
 
     it('should include timestamp in ISO 8601 format', async () => {
@@ -195,7 +205,9 @@ describe('Reports Success Integration', () => {
 
       // Assert: Timestamp format
       const timestamp = response.body.timestamp;
-      expect(timestamp).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
+      expect(timestamp).toMatch(
+        /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/,
+      );
 
       // Assert: Timestamp is recent (within 5 seconds)
       const requestTime = new Date(timestamp);

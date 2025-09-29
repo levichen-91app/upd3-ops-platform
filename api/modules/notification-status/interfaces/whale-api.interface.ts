@@ -1,5 +1,7 @@
 export interface IWhaleApiService {
-  getNotificationHistory(notificationId: number): Promise<WhaleApiNotificationResponse | null>;
+  getNotificationHistory(
+    notificationId: number,
+  ): Promise<WhaleApiNotificationResponse | null>;
 }
 
 export const WHALE_API_SERVICE_TOKEN = 'IWhaleApiService';

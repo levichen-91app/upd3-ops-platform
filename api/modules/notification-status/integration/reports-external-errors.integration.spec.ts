@@ -76,12 +76,16 @@ describe('Reports External Errors Integration', () => {
           code: 'EXTERNAL_API_ERROR',
           message: '外部 NS Report API 調用失敗',
         },
-        timestamp: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/),
+        timestamp: expect.stringMatching(
+          /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/,
+        ),
         requestId: expect.stringMatching(/^req-\d{14}-[0-9a-f-]{36}$/),
       });
 
       // Assert: External service was called
-      expect(mockNSReportService.getStatusReport).toHaveBeenCalledWith(validRequest);
+      expect(mockNSReportService.getStatusReport).toHaveBeenCalledWith(
+        validRequest,
+      );
     });
 
     it('should return 500 when NS Report API returns HTTP 500 error', async () => {
@@ -105,7 +109,9 @@ describe('Reports External Errors Integration', () => {
       // Assert: Error response structure for HTTP error
       expect(response.body.success).toBe(false);
       expect(response.body.error.code).toBe('EXTERNAL_API_ERROR');
-      expect(response.body.error.message).toContain('外部 NS Report API 調用失敗');
+      expect(response.body.error.message).toContain(
+        '外部 NS Report API 調用失敗',
+      );
       expect(response.body.error.details).toEqual({
         originalMessage: 'Internal Server Error',
         errorType: 'HttpException',
@@ -217,7 +223,9 @@ describe('Reports External Errors Integration', () => {
 
       // Assert: Invalid response structure error
       expect(response.body.error.code).toBe('EXTERNAL_API_ERROR');
-      expect(response.body.error.message).toContain('外部 NS Report API 調用失敗');
+      expect(response.body.error.message).toContain(
+        '外部 NS Report API 調用失敗',
+      );
     });
 
     it('should maintain consistent error response format across all external failures', async () => {
@@ -259,7 +267,9 @@ describe('Reports External Errors Integration', () => {
 
     it('should include unique request IDs for external API failures', async () => {
       // Arrange: Mock error
-      mockNSReportService.getStatusReport.mockRejectedValue(new Error('Service unavailable'));
+      mockNSReportService.getStatusReport.mockRejectedValue(
+        new Error('Service unavailable'),
+      );
 
       // Act: Make multiple requests
       const response1 = await request(app.getHttpServer())

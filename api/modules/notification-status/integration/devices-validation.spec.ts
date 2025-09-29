@@ -139,20 +139,28 @@ describe('Devices Validation (e2e)', () => {
     });
 
     it('should accept valid Taiwan mobile phone numbers', async () => {
-      mockMarketingCloudService.getDevices.mockResolvedValue([{
-        guid: '123e4567-e89b-12d3-a456-426614174000',
-        udid: 'device_udid_123',
-        token: 'device_token_123',
-        shopId: 12345,
-        platformDef: 'iOS',
-        memberId: 67890,
-        advertiseId: 'ad_id_123',
-        appVersion: '1.2.3',
-        createdDateTime: '2024-01-15T10:00:00Z',
-        updatedDateTime: '2024-01-15T10:30:00Z',
-      }]);
+      mockMarketingCloudService.getDevices.mockResolvedValue([
+        {
+          guid: '123e4567-e89b-12d3-a456-426614174000',
+          udid: 'device_udid_123',
+          token: 'device_token_123',
+          shopId: 12345,
+          platformDef: 'iOS',
+          memberId: 67890,
+          advertiseId: 'ad_id_123',
+          appVersion: '1.2.3',
+          createdDateTime: '2024-01-15T10:00:00Z',
+          updatedDateTime: '2024-01-15T10:30:00Z',
+        },
+      ]);
 
-      const validPhones = ['0912345678', '0987654321', '091-234-5678', '+886912345678', '(02)12345678'];
+      const validPhones = [
+        '0912345678',
+        '0987654321',
+        '091-234-5678',
+        '+886912345678',
+        '(02)12345678',
+      ];
 
       for (const phone of validPhones) {
         await request(app.getHttpServer())
@@ -179,18 +187,20 @@ describe('Devices Validation (e2e)', () => {
     });
 
     it('should ignore extra query parameters', async () => {
-      mockMarketingCloudService.getDevices.mockResolvedValue([{
-        guid: '123e4567-e89b-12d3-a456-426614174000',
-        udid: 'device_udid_123',
-        token: 'device_token_123',
-        shopId: 12345,
-        platformDef: 'iOS',
-        memberId: 67890,
-        advertiseId: 'ad_id_123',
-        appVersion: '1.2.3',
-        createdDateTime: '2024-01-15T10:00:00Z',
-        updatedDateTime: '2024-01-15T10:30:00Z',
-      }]);
+      mockMarketingCloudService.getDevices.mockResolvedValue([
+        {
+          guid: '123e4567-e89b-12d3-a456-426614174000',
+          udid: 'device_udid_123',
+          token: 'device_token_123',
+          shopId: 12345,
+          platformDef: 'iOS',
+          memberId: 67890,
+          advertiseId: 'ad_id_123',
+          appVersion: '1.2.3',
+          createdDateTime: '2024-01-15T10:00:00Z',
+          updatedDateTime: '2024-01-15T10:30:00Z',
+        },
+      ]);
 
       const response = await request(app.getHttpServer())
         .get('/api/v1/notification-status/devices')
@@ -236,7 +246,10 @@ describe('Devices Validation (e2e)', () => {
         })
         .expect(404);
 
-      expect(mockMarketingCloudService.getDevices).toHaveBeenCalledWith(12345, '0912345678');
+      expect(mockMarketingCloudService.getDevices).toHaveBeenCalledWith(
+        12345,
+        '0912345678',
+      );
     });
 
     it('should sanitize phone input', async () => {
@@ -251,7 +264,10 @@ describe('Devices Validation (e2e)', () => {
         })
         .expect(404);
 
-      expect(mockMarketingCloudService.getDevices).toHaveBeenCalledWith(12345, ' 0912345678 ');
+      expect(mockMarketingCloudService.getDevices).toHaveBeenCalledWith(
+        12345,
+        ' 0912345678 ',
+      );
     });
   });
 });

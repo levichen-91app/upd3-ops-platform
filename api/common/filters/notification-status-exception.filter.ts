@@ -33,7 +33,10 @@ export class NotificationStatusExceptionFilter implements ExceptionFilter {
         const responseObj = exceptionResponse as any;
 
         // Handle NestJS ValidationPipe errors
-        if (status === HttpStatus.BAD_REQUEST && Array.isArray(responseObj.message)) {
+        if (
+          status === HttpStatus.BAD_REQUEST &&
+          Array.isArray(responseObj.message)
+        ) {
           errorCode = 'VALIDATION_ERROR';
           message = '輸入參數驗證失敗';
           // Convert ValidationPipe error messages to expected format
@@ -56,7 +59,10 @@ export class NotificationStatusExceptionFilter implements ExceptionFilter {
           } else if (status === HttpStatus.BAD_REQUEST) {
             errorCode = 'VALIDATION_ERROR';
           } else if (status === HttpStatus.NOT_FOUND) {
-            errorCode = responseObj.code === 'NOTIFICATION_NOT_FOUND' ? 'NOTIFICATION_NOT_FOUND' : 'DEVICE_NOT_FOUND';
+            errorCode =
+              responseObj.code === 'NOTIFICATION_NOT_FOUND'
+                ? 'NOTIFICATION_NOT_FOUND'
+                : 'DEVICE_NOT_FOUND';
           } else if (status === HttpStatus.UNAUTHORIZED) {
             errorCode = 'UNAUTHORIZED';
           }
@@ -68,22 +74,32 @@ export class NotificationStatusExceptionFilter implements ExceptionFilter {
       const errorMessage = exception.message;
 
       // Parse custom error codes from service layer
-      if (errorMessage === 'TIMEOUT_ERROR' || errorMessage.startsWith('TIMEOUT_ERROR:')) {
+      if (
+        errorMessage === 'TIMEOUT_ERROR' ||
+        errorMessage.startsWith('TIMEOUT_ERROR:')
+      ) {
         status = HttpStatus.INTERNAL_SERVER_ERROR;
         errorCode = 'TIMEOUT_ERROR';
         message = '請求處理超時';
         details = {
           service: 'Whale API',
           timeoutMs: 10000,
-          error: errorMessage.startsWith('TIMEOUT_ERROR:') ? errorMessage.replace('TIMEOUT_ERROR: ', '') : errorMessage
+          error: errorMessage.startsWith('TIMEOUT_ERROR:')
+            ? errorMessage.replace('TIMEOUT_ERROR: ', '')
+            : errorMessage,
         };
-      } else if (errorMessage === 'EXTERNAL_API_ERROR' || errorMessage.startsWith('EXTERNAL_API_ERROR:')) {
+      } else if (
+        errorMessage === 'EXTERNAL_API_ERROR' ||
+        errorMessage.startsWith('EXTERNAL_API_ERROR:')
+      ) {
         status = HttpStatus.INTERNAL_SERVER_ERROR;
         errorCode = 'EXTERNAL_API_ERROR';
         message = '外部服務調用失敗';
         details = {
           service: 'Whale API',
-          error: errorMessage.startsWith('EXTERNAL_API_ERROR:') ? errorMessage.replace('EXTERNAL_API_ERROR: ', '') : errorMessage
+          error: errorMessage.startsWith('EXTERNAL_API_ERROR:')
+            ? errorMessage.replace('EXTERNAL_API_ERROR: ', '')
+            : errorMessage,
         };
       } else if (errorMessage.startsWith('DATA_FORMAT_ERROR:')) {
         status = HttpStatus.INTERNAL_SERVER_ERROR;

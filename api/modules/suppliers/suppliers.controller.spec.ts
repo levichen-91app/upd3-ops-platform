@@ -77,7 +77,12 @@ describe('SuppliersController', () => {
 
     it('should throw BadRequestException when shopId is zero', async () => {
       await expect(
-        controller.updateSupplierId(0, validOperator, validUpdateDto, mockRequest),
+        controller.updateSupplierId(
+          0,
+          validOperator,
+          validUpdateDto,
+          mockRequest,
+        ),
       ).rejects.toThrow(
         new BadRequestException({
           code: ErrorCode.VALIDATION_ERROR,
@@ -91,7 +96,12 @@ describe('SuppliersController', () => {
 
     it('should throw BadRequestException when shopId is negative', async () => {
       await expect(
-        controller.updateSupplierId(-1, validOperator, validUpdateDto, mockRequest),
+        controller.updateSupplierId(
+          -1,
+          validOperator,
+          validUpdateDto,
+          mockRequest,
+        ),
       ).rejects.toThrow(
         new BadRequestException({
           code: ErrorCode.VALIDATION_ERROR,
@@ -105,7 +115,12 @@ describe('SuppliersController', () => {
 
     it('should throw UnauthorizedException when operator header is missing', async () => {
       await expect(
-        controller.updateSupplierId(validShopId, '', validUpdateDto, mockRequest),
+        controller.updateSupplierId(
+          validShopId,
+          '',
+          validUpdateDto,
+          mockRequest,
+        ),
       ).rejects.toThrow(
         new UnauthorizedException({
           code: ErrorCode.UNAUTHORIZED_ACCESS,
@@ -118,7 +133,12 @@ describe('SuppliersController', () => {
 
     it('should throw UnauthorizedException when operator header contains only spaces', async () => {
       await expect(
-        controller.updateSupplierId(validShopId, '   ', validUpdateDto, mockRequest),
+        controller.updateSupplierId(
+          validShopId,
+          '   ',
+          validUpdateDto,
+          mockRequest,
+        ),
       ).rejects.toThrow(
         new UnauthorizedException({
           code: ErrorCode.UNAUTHORIZED_ACCESS,
@@ -137,7 +157,12 @@ describe('SuppliersController', () => {
       };
 
       await expect(
-        controller.updateSupplierId(validShopId, validOperator, identicalDto, mockRequest),
+        controller.updateSupplierId(
+          validShopId,
+          validOperator,
+          identicalDto,
+          mockRequest,
+        ),
       ).rejects.toThrow(
         new BadRequestException({
           code: ErrorCode.SUPPLIER_IDS_IDENTICAL,
@@ -206,7 +231,12 @@ describe('SuppliersController', () => {
       );
 
       await expect(
-        controller.updateSupplierId(validShopId, validOperator, validUpdateDto, mockRequest),
+        controller.updateSupplierId(
+          validShopId,
+          validOperator,
+          validUpdateDto,
+          mockRequest,
+        ),
       ).rejects.toThrow('Service error');
 
       expect(mockSuppliersService.updateSupplierId).toHaveBeenCalledWith(

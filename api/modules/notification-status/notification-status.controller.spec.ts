@@ -37,13 +37,23 @@ describe('NotificationStatusController', () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [NotificationStatusController],
       providers: [
-        { provide: NotificationStatusService, useValue: mockNotificationStatusService },
-        { provide: NotificationStatusReportsService, useValue: mockReportsService },
+        {
+          provide: NotificationStatusService,
+          useValue: mockNotificationStatusService,
+        },
+        {
+          provide: NotificationStatusReportsService,
+          useValue: mockReportsService,
+        },
       ],
     }).compile();
 
-    controller = module.get<NotificationStatusController>(NotificationStatusController);
-    reportsService = module.get<NotificationStatusReportsService>(NotificationStatusReportsService);
+    controller = module.get<NotificationStatusController>(
+      NotificationStatusController,
+    );
+    reportsService = module.get<NotificationStatusReportsService>(
+      NotificationStatusReportsService,
+    );
   });
 
   beforeEach(() => {

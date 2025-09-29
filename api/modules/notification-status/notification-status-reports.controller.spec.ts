@@ -29,13 +29,23 @@ describe('NotificationStatusController - Reports', () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [NotificationStatusController],
       providers: [
-        { provide: NotificationStatusService, useValue: mockNotificationStatusService },
-        { provide: NotificationStatusReportsService, useValue: mockReportsService },
+        {
+          provide: NotificationStatusService,
+          useValue: mockNotificationStatusService,
+        },
+        {
+          provide: NotificationStatusReportsService,
+          useValue: mockReportsService,
+        },
       ],
     }).compile();
 
-    controller = module.get<NotificationStatusController>(NotificationStatusController);
-    reportsService = module.get<NotificationStatusReportsService>(NotificationStatusReportsService);
+    controller = module.get<NotificationStatusController>(
+      NotificationStatusController,
+    );
+    reportsService = module.get<NotificationStatusReportsService>(
+      NotificationStatusReportsService,
+    );
   });
 
   beforeEach(() => {
@@ -62,10 +72,16 @@ describe('NotificationStatusController - Reports', () => {
       mockReportsService.getStatusReport.mockResolvedValue(mockServiceResponse);
 
       // Act
-      const result = await controller.getStatusReports(validRequest, mockRequest);
+      const result = await controller.getStatusReports(
+        validRequest,
+        mockRequest,
+      );
 
       // Assert: Service called correctly with requestId
-      expect(mockReportsService.getStatusReport).toHaveBeenCalledWith(validRequest, mockRequest.requestId);
+      expect(mockReportsService.getStatusReport).toHaveBeenCalledWith(
+        validRequest,
+        mockRequest.requestId,
+      );
       expect(mockReportsService.getStatusReport).toHaveBeenCalledTimes(1);
 
       // Assert: Raw data response passed through correctly
@@ -88,7 +104,10 @@ describe('NotificationStatusController - Reports', () => {
         const result = await controller.getStatusReports(request, mockRequest);
 
         // Assert
-        expect(mockReportsService.getStatusReport).toHaveBeenCalledWith(request, mockRequest.requestId);
+        expect(mockReportsService.getStatusReport).toHaveBeenCalledWith(
+          request,
+          mockRequest.requestId,
+        );
         expect(result).toEqual(mockResponse);
 
         jest.clearAllMocks();
@@ -102,21 +121,26 @@ describe('NotificationStatusController - Reports', () => {
       mockReportsService.getStatusReport.mockRejectedValue(serviceError);
 
       // Act & Assert: Error should be propagated
-      await expect(controller.getStatusReports(validRequest, mockRequest)).rejects.toThrow('External NS Report API failed');
+      await expect(
+        controller.getStatusReports(validRequest, mockRequest),
+      ).rejects.toThrow('External NS Report API failed');
 
       // Assert: Service was called
-      expect(mockReportsService.getStatusReport).toHaveBeenCalledWith(validRequest, mockRequest.requestId);
+      expect(mockReportsService.getStatusReport).toHaveBeenCalledWith(
+        validRequest,
+        mockRequest.requestId,
+      );
     });
 
     it('should handle concurrent requests independently', async () => {
       // Arrange: Mock different responses (raw data)
       const mockResponse1 = {
         downloadUrl: 'mock-report1-url',
-        expiredTime: 3600
+        expiredTime: 3600,
       };
       const mockResponse2 = {
         downloadUrl: 'mock-report2-url',
-        expiredTime: 7200
+        expiredTime: 7200,
       };
 
       mockReportsService.getStatusReport

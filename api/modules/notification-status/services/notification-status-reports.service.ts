@@ -1,5 +1,8 @@
 import { Inject, Injectable } from '@nestjs/common';
-import type { INSReportService, StatusReportData } from './ns-report.service.interface';
+import type {
+  INSReportService,
+  StatusReportData,
+} from './ns-report.service.interface';
 import { NS_REPORT_SERVICE_TOKEN } from './ns-report.service.interface';
 import { StatusReportRequestDto } from '../dto/status-report-request.dto';
 import { StatusReportResponseDto } from '../dto/status-report-response.dto';
@@ -25,8 +28,10 @@ export class NotificationStatusReportsService {
    * @returns Promise<StatusReportData> - 包含下載連結和過期時間的原始資料
    * @throws {ExternalApiException} - 當外部 API 調用失敗時
    */
-  async getStatusReport(request: StatusReportRequestDto, requestId: string): Promise<{ downloadUrl: string; expiredTime: number }> {
-
+  async getStatusReport(
+    request: StatusReportRequestDto,
+    requestId: string,
+  ): Promise<{ downloadUrl: string; expiredTime: number }> {
     try {
       // 調用外部 NS Report API
       const reportData = await this.nsReportService.getStatusReport(request);

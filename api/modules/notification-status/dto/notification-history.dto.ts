@@ -1,5 +1,14 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsInt, IsString, IsBoolean, IsDateString, IsUUID, Min, IsOptional, IsEnum } from 'class-validator';
+import {
+  IsInt,
+  IsString,
+  IsBoolean,
+  IsDateString,
+  IsUUID,
+  Min,
+  IsOptional,
+  IsEnum,
+} from 'class-validator';
 import { WhaleReport } from './whale-report.dto';
 
 export enum NotificationStatus {

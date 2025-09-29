@@ -31,4 +31,4 @@ export const ERROR_CODES = {
 /**
  * 錯誤代碼類型定義
  */
-export type ErrorCode = typeof ERROR_CODES[keyof typeof ERROR_CODES];
+export type ErrorCode = (typeof ERROR_CODES)[keyof typeof ERROR_CODES];

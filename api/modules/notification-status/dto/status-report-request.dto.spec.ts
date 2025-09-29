@@ -26,7 +26,7 @@ describe('StatusReportRequestDto', () => {
       const errors = await validate(dto);
 
       // Assert
-      const nsIdErrors = errors.filter(error => error.property === 'nsId');
+      const nsIdErrors = errors.filter((error) => error.property === 'nsId');
       expect(nsIdErrors).toHaveLength(0);
     });
 
@@ -41,10 +41,12 @@ describe('StatusReportRequestDto', () => {
       const errors = await validate(dto);
 
       // Assert
-      const nsIdErrors = errors.filter(error => error.property === 'nsId');
+      const nsIdErrors = errors.filter((error) => error.property === 'nsId');
       expect(nsIdErrors.length).toBeGreaterThan(0);
       expect(nsIdErrors[0].constraints).toHaveProperty('isUuid');
-      expect(nsIdErrors[0].constraints.isUuid).toContain('must be a valid UUID');
+      expect(nsIdErrors[0].constraints.isUuid).toContain(
+        'must be a valid UUID',
+      );
     });
 
     it('should fail validation for empty nsId', async () => {
@@ -58,7 +60,7 @@ describe('StatusReportRequestDto', () => {
       const errors = await validate(dto);
 
       // Assert
-      const nsIdErrors = errors.filter(error => error.property === 'nsId');
+      const nsIdErrors = errors.filter((error) => error.property === 'nsId');
       expect(nsIdErrors.length).toBeGreaterThan(0);
       expect(nsIdErrors[0].constraints).toHaveProperty('isNotEmpty');
     });
@@ -73,7 +75,7 @@ describe('StatusReportRequestDto', () => {
       const errors = await validate(dto);
 
       // Assert
-      const nsIdErrors = errors.filter(error => error.property === 'nsId');
+      const nsIdErrors = errors.filter((error) => error.property === 'nsId');
       expect(nsIdErrors.length).toBeGreaterThan(0);
     });
   });
@@ -98,7 +100,9 @@ describe('StatusReportRequestDto', () => {
         const errors = await validate(dto);
 
         // Assert
-        const dateErrors = errors.filter(error => error.property === 'notificationDate');
+        const dateErrors = errors.filter(
+          (error) => error.property === 'notificationDate',
+        );
         expect(dateErrors).toHaveLength(0);
       }
     });
@@ -106,13 +110,13 @@ describe('StatusReportRequestDto', () => {
     it('should fail validation for invalid date formats', async () => {
       // Arrange - Only test formats that will definitely fail our regex
       const invalidDates = [
-        '2024-01-15',    // ISO format - will fail
-        '01/15/2024',    // US format - will fail
-        '15/01/2024',    // EU format - will fail
-        '2024/1/15',     // Single digit month - will fail
-        '2024/01/5',     // Single digit day - will fail
-        'invalid-date',  // Non-date string - will fail
-        '',              // Empty string - will fail due to @IsNotEmpty
+        '2024-01-15', // ISO format - will fail
+        '01/15/2024', // US format - will fail
+        '15/01/2024', // EU format - will fail
+        '2024/1/15', // Single digit month - will fail
+        '2024/01/5', // Single digit day - will fail
+        'invalid-date', // Non-date string - will fail
+        '', // Empty string - will fail due to @IsNotEmpty
       ];
 
       for (const invalidDate of invalidDates) {
@@ -125,7 +129,9 @@ describe('StatusReportRequestDto', () => {
         const errors = await validate(dto);
 
         // Assert
-        const dateErrors = errors.filter(error => error.property === 'notificationDate');
+        const dateErrors = errors.filter(
+          (error) => error.property === 'notificationDate',
+        );
         expect(dateErrors.length).toBeGreaterThan(0);
         expect(dateErrors[0].constraints).toBeDefined();
       }
@@ -141,7 +147,9 @@ describe('StatusReportRequestDto', () => {
       const errors = await validate(dto);
 
       // Assert
-      const dateErrors = errors.filter(error => error.property === 'notificationDate');
+      const dateErrors = errors.filter(
+        (error) => error.property === 'notificationDate',
+      );
       expect(dateErrors.length).toBeGreaterThan(0);
     });
   });
@@ -161,7 +169,9 @@ describe('StatusReportRequestDto', () => {
         const errors = await validate(dto);
 
         // Assert
-        const typeErrors = errors.filter(error => error.property === 'notificationType');
+        const typeErrors = errors.filter(
+          (error) => error.property === 'notificationType',
+        );
         expect(typeErrors).toHaveLength(0);
       }
     });
@@ -170,13 +180,13 @@ describe('StatusReportRequestDto', () => {
       // Arrange
       const invalidTypes = [
         'invalid-type',
-        'PUSH',         // Wrong case
-        'Push',         // Wrong case
-        'text',         // Not supported
-        'whatsapp',     // Not supported
-        'telegram',     // Not supported
-        '',             // Empty
-        'sms,push',     // Multiple values
+        'PUSH', // Wrong case
+        'Push', // Wrong case
+        'text', // Not supported
+        'whatsapp', // Not supported
+        'telegram', // Not supported
+        '', // Empty
+        'sms,push', // Multiple values
       ];
 
       for (const invalidType of invalidTypes) {
@@ -189,7 +199,9 @@ describe('StatusReportRequestDto', () => {
         const errors = await validate(dto);
 
         // Assert
-        const typeErrors = errors.filter(error => error.property === 'notificationType');
+        const typeErrors = errors.filter(
+          (error) => error.property === 'notificationType',
+        );
         expect(typeErrors.length).toBeGreaterThan(0);
         expect(typeErrors[0].constraints).toBeDefined();
       }
@@ -205,7 +217,9 @@ describe('StatusReportRequestDto', () => {
       const errors = await validate(dto);
 
       // Assert
-      const typeErrors = errors.filter(error => error.property === 'notificationType');
+      const typeErrors = errors.filter(
+        (error) => error.property === 'notificationType',
+      );
       expect(typeErrors.length).toBeGreaterThan(0);
     });
   });
@@ -236,7 +250,7 @@ describe('StatusReportRequestDto', () => {
       const errors = await validate(dto);
 
       // Assert: All three fields should have validation errors
-      const fieldNames = errors.map(error => error.property);
+      const fieldNames = errors.map((error) => error.property);
       expect(fieldNames).toContain('nsId');
       expect(fieldNames).toContain('notificationDate');
       expect(fieldNames).toContain('notificationType');
@@ -252,7 +266,7 @@ describe('StatusReportRequestDto', () => {
 
       // Assert: All fields should be required
       expect(errors.length).toBeGreaterThanOrEqual(3);
-      const fieldNames = errors.map(error => error.property);
+      const fieldNames = errors.map((error) => error.property);
       expect(fieldNames).toContain('nsId');
       expect(fieldNames).toContain('notificationDate');
       expect(fieldNames).toContain('notificationType');

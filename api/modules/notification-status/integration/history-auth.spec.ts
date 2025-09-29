@@ -88,7 +88,9 @@ describe('Notification History Authentication Tests', () => {
       .expect(200);
 
     expect(response.body.success).toBe(true);
-    expect(mockWhaleApiService.getNotificationHistory).toHaveBeenCalledWith(12345);
+    expect(mockWhaleApiService.getNotificationHistory).toHaveBeenCalledWith(
+      12345,
+    );
   });
 
   it('should accept different valid ny-operator values', async () => {
@@ -121,7 +123,9 @@ describe('Notification History Authentication Tests', () => {
     };
 
     for (const operator of validOperators) {
-      mockWhaleApiService.getNotificationHistory.mockResolvedValue(mockResponse);
+      mockWhaleApiService.getNotificationHistory.mockResolvedValue(
+        mockResponse,
+      );
 
       const response = await request(app.getHttpServer())
         .get('/api/v1/notification-status/history/12345')

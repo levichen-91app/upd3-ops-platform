@@ -58,7 +58,9 @@ describe('Notification History Contract Tests', () => {
         },
       };
 
-      mockWhaleApiService.getNotificationHistory.mockResolvedValue(mockResponse);
+      mockWhaleApiService.getNotificationHistory.mockResolvedValue(
+        mockResponse,
+      );
 
       const response = await request(app.getHttpServer())
         .get(`/api/v1/notification-status/history/${notificationId}`)
@@ -70,7 +72,9 @@ describe('Notification History Contract Tests', () => {
       expect(response.body).toHaveProperty('data');
       expect(response.body).toHaveProperty('timestamp');
       expect(response.body).toHaveProperty('requestId');
-      expect(response.body.requestId).toMatch(/^req-\d{14}-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/);
+      expect(response.body.requestId).toMatch(
+        /^req-\d{14}-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/,
+      );
 
       // Validate data structure
       const { data } = response.body;

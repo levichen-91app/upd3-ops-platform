@@ -78,7 +78,9 @@ describe('NotificationStatusReports Contract Tests', () => {
           downloadUrl: expect.any(String),
           expiredTime: expect.any(Number),
         },
-        timestamp: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/),
+        timestamp: expect.stringMatching(
+          /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/,
+        ),
         requestId: expect.stringMatching(/^req-\d{14}-[0-9a-f-]{36}$/),
       });
 
@@ -112,7 +114,9 @@ describe('NotificationStatusReports Contract Tests', () => {
           message: expect.any(String),
           details: expect.anything(),
         },
-        timestamp: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/),
+        timestamp: expect.stringMatching(
+          /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/,
+        ),
         requestId: expect.stringMatching(/^req-\d{14}-[0-9a-f-]{36}$/),
       });
 
@@ -146,7 +150,7 @@ describe('NotificationStatusReports Contract Tests', () => {
     it('should return valid error response schema for external API failures', async () => {
       // Arrange: Mock external API failure
       mockNSReportService.getStatusReport.mockRejectedValue(
-        new ExternalApiException('External service unavailable')
+        new ExternalApiException('External service unavailable'),
       );
 
       // Act

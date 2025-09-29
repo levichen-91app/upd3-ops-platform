@@ -57,7 +57,9 @@ describe('Notification History Success Scenarios', () => {
       },
     };
 
-    mockWhaleApiService.getNotificationHistory.mockResolvedValue(mockHistoryData);
+    mockWhaleApiService.getNotificationHistory.mockResolvedValue(
+      mockHistoryData,
+    );
 
     const response = await request(app.getHttpServer())
       .get(`/api/v1/notification-status/history/${notificationId}`)
@@ -68,8 +70,12 @@ describe('Notification History Success Scenarios', () => {
     expect(response.body.data).toHaveProperty('id', notificationId);
     expect(response.body.data.channel).toBe('Push');
     expect(response.body.data.status).toBe('Success');
-    expect(response.body.requestId).toMatch(/^req-\d{14}-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/);
-    expect(mockWhaleApiService.getNotificationHistory).toHaveBeenCalledWith(notificationId);
+    expect(response.body.requestId).toMatch(
+      /^req-\d{14}-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/,
+    );
+    expect(mockWhaleApiService.getNotificationHistory).toHaveBeenCalledWith(
+      notificationId,
+    );
   });
 
   it('should handle different notification statuses correctly', async () => {
@@ -90,7 +96,8 @@ describe('Notification History Success Scenarios', () => {
           id: notificationId,
           channel: 'Email',
           bookDatetime: '2024-01-15T10:30:00Z',
-          sentDatetime: testCase.status === 'Scheduled' ? null : '2024-01-15T10:35:00Z',
+          sentDatetime:
+            testCase.status === 'Scheduled' ? null : '2024-01-15T10:35:00Z',
           ncId: 'test-uuid',
           ncExtId: 123,
           status: testCase.status,
