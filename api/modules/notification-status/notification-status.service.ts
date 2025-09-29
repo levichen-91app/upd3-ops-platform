@@ -1,4 +1,7 @@
 import { Injectable, Inject, Logger, NotFoundException } from '@nestjs/common';
+import { BusinessNotFoundException } from '../../common/exceptions/business-logic.exception';
+import { ExternalApiException } from '../../common/exceptions/external-api.exception';
+import { ERROR_CODES } from '../../constants/error-codes.constants';
 import type {
   INcDetailService,
   NotificationDetail,
@@ -15,7 +18,10 @@ import {
   ErrorResponseDto,
 } from './dto/device-response.dto';
 import { NotificationHistoryResponse } from './dto/notification-history-response.dto';
-import { NotificationHistory, NotificationStatus } from './dto/notification-history.dto';
+import {
+  NotificationHistory,
+  NotificationStatus,
+} from './dto/notification-history.dto';
 import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
@@ -37,7 +43,6 @@ export class NotificationStatusService {
     operator: string,
     requestId: string,
   ): Promise<NotificationDetail | null> {
-
     this.logger.log(
       `Processing notification detail request - shopId: ${shopId}, ncId: ${ncId}, operator: ${operator}, requestId: ${requestId}`,
     );
@@ -82,15 +87,15 @@ export class NotificationStatusService {
           `No devices found for shopId: ${shopId}, phone: ${phone}, requestId: ${requestId}`,
         );
 
-        // Throw custom exception with details
-        throw new NotFoundException({
-          code: 'DEVICE_NOT_FOUND',
-          message: 'No devices found for the specified customer',
-          details: {
+        // 使用業務邏輯異常處理找不到設備的情況
+        throw new BusinessNotFoundException(
+          ERROR_CODES.DEVICE_NOT_FOUND,
+          '找不到指定客戶的設備',
+          {
             shopId,
             phone,
           },
-        });
+        );
       }
 
       this.logger.log(
@@ -109,34 +114,52 @@ export class NotificationStatusService {
         error.stack,
       );
 
-      // If it's already a NotFoundException, just re-throw
-      if (error instanceof NotFoundException) {
+      // 如果是業務邏輯異常，直接重新拋出
+      if (error instanceof BusinessNotFoundException) {
         throw error;
       }
 
-      // Otherwise, re-throw the original error for the filter to handle
-      throw error;
+      // 檢查是否為超時錯誤
+      if (error.message?.startsWith('TIMEOUT_ERROR:')) {
+        throw new ExternalApiException(
+          'Marketing Cloud API 請求逾時',
+          { originalError: error.message },
+          ERROR_CODES.TIMEOUT_ERROR,
+        );
+      }
+
+      // 其他錯誤視為外部 API 錯誤
+      throw new ExternalApiException('Marketing Cloud API 調用失敗', {
+        originalError: error.message,
+      });
     }
   }
 
-
-  async getNotificationHistory(notificationId: number, requestId: string): Promise<NotificationHistoryResponse> {
+  async getNotificationHistory(
+    notificationId: number,
+    requestId: string,
+  ): Promise<NotificationHistoryResponse> {
     const timestamp = new Date().toISOString();
 
-    this.logger.log(`Processing notification history request - notificationId: ${notificationId}, requestId: ${requestId}`);
+    this.logger.log(
+      `Processing notification history request - notificationId: ${notificationId}, requestId: ${requestId}`,
+    );
 
     try {
-      const whaleApiResponse = await this.whaleApiService.getNotificationHistory(notificationId);
+      const whaleApiResponse =
+        await this.whaleApiService.getNotificationHistory(notificationId);
 
       if (!whaleApiResponse || !whaleApiResponse.data) {
-        this.logger.log(`Notification ${notificationId} not found in Whale API - requestId: ${requestId}`);
-        throw new NotFoundException({
-          code: 'NOTIFICATION_NOT_FOUND',
-          message: '找不到指定的通知',
-          details: {
+        this.logger.log(
+          `Notification ${notificationId} not found in Whale API - requestId: ${requestId}`,
+        );
+        throw new BusinessNotFoundException(
+          ERROR_CODES.NOTIFICATION_NOT_FOUND,
+          '找不到指定的通知',
+          {
             notificationId,
           },
-        });
+        );
       }
 
       // Transform Whale API response to internal format
@@ -163,7 +186,9 @@ export class NotificationStatusService {
         },
       };
 
-      this.logger.log(`Successfully retrieved notification history - notificationId: ${notificationId}, requestId: ${requestId}`);
+      this.logger.log(
+        `Successfully retrieved notification history - notificationId: ${notificationId}, requestId: ${requestId}`,
+      );
 
       return {
         success: true,
@@ -172,31 +197,49 @@ export class NotificationStatusService {
         requestId,
       };
     } catch (error: any) {
-      this.logger.error(`Failed to get notification history - notificationId: ${notificationId}, requestId: ${requestId}`, error.stack);
+      this.logger.error(
+        `Failed to get notification history - notificationId: ${notificationId}, requestId: ${requestId}`,
+        error.stack,
+      );
 
-      // Handle timeout errors specifically
-      if (error.message && error.message.includes('Timeout')) {
-        throw new Error('TIMEOUT_ERROR');
-      }
-
-      // Handle axios errors (HTTP errors from Whale API)
-      if (error.name === 'AxiosError' && error.response) {
-        throw new Error('EXTERNAL_API_ERROR');
-      }
-
-      // Handle connection errors
-      if (error.message && (error.message.includes('ECONNREFUSED') || error.message.includes('ENOTFOUND'))) {
-        throw new Error('EXTERNAL_API_ERROR');
-      }
-
-      // If it's already a NotFoundException, just re-throw
-      if (error instanceof NotFoundException) {
+      // 如果是業務邏輯異常，直接重新拋出
+      if (error instanceof BusinessNotFoundException) {
         throw error;
       }
 
-      // Otherwise, treat as external API error
-      throw new Error('EXTERNAL_API_ERROR');
+      // 處理超時錯誤
+      if (error.message && error.message.includes('Timeout')) {
+        throw new ExternalApiException(
+          'Whale API 請求逾時',
+          { errorType: 'TIMEOUT', originalError: error.message },
+          ERROR_CODES.TIMEOUT_ERROR,
+        );
+      }
+
+      // 處理 HTTP 錯誤
+      if (error.name === 'AxiosError' && error.response) {
+        throw new ExternalApiException(
+          `Whale API 回傳狀態碼 ${error.response.status}`,
+          { statusCode: error.response.status, originalError: error.message },
+        );
+      }
+
+      // 處理連接錯誤
+      if (
+        error.message &&
+        (error.message.includes('ECONNREFUSED') ||
+          error.message.includes('ENOTFOUND'))
+      ) {
+        throw new ExternalApiException('無法連接到 Whale API', {
+          errorType: 'CONNECTION',
+          originalError: error.message,
+        });
+      }
+
+      // 其他錯誤視為外部 API 錯誤
+      throw new ExternalApiException('Whale API 調用失敗', {
+        originalError: error.message,
+      });
     }
   }
-
 }

@@ -17,7 +17,7 @@ import {
   InternalServerErrorException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { Request } from 'express';
+import type { Request } from 'express';
 import {
   ApiTags,
   ApiOperation,
@@ -47,7 +47,10 @@ import {
 import { NotificationHistoryQuery } from './dto/notification-history-query.dto';
 import { NotificationHistoryResponse } from './dto/notification-history-response.dto';
 import { StatusReportRequestDto } from './dto/status-report-request.dto';
-import { StatusReportResponseDto, StatusReportErrorResponseDto } from './dto/status-report-response.dto';
+import {
+  StatusReportResponseDto,
+  StatusReportErrorResponseDto,
+} from './dto/status-report-response.dto';
 import { NyOperatorGuard } from './guards/ny-operator.guard';
 import { NotificationStatusExceptionFilter } from '../../common/filters/notification-status-exception.filter';
 import { RequestIdMiddleware } from '../../common/middleware/request-id.middleware';
@@ -265,7 +268,11 @@ export class NotificationStatusController {
     // Validate and transform parameter
     const notificationId = parseInt(notificationIdParam, 10);
 
-    if (isNaN(notificationId) || notificationId <= 0 || !Number.isInteger(notificationId)) {
+    if (
+      isNaN(notificationId) ||
+      notificationId <= 0 ||
+      !Number.isInteger(notificationId)
+    ) {
       throw new BadRequestException({
         code: 'VALIDATION_ERROR',
         message: '通知ID必須為正整數',
@@ -275,7 +282,10 @@ export class NotificationStatusController {
 
     const requestId = RequestIdMiddleware.getRequestId(request);
 
-    return await this.notificationStatusService.getNotificationHistory(notificationId, requestId);
+    return await this.notificationStatusService.getNotificationHistory(
+      notificationId,
+      requestId,
+    );
   }
 
   @Post('reports')
@@ -283,7 +293,8 @@ export class NotificationStatusController {
   @UseGuards(NyOperatorGuard)
   @ApiOperation({
     summary: '查詢通知狀態報告',
-    description: '根據 nsId、通知日期和通知類型查詢詳細的通知狀態報告，回傳 presigned URL 供下載 TSV 格式報告',
+    description:
+      '根據 nsId、通知日期和通知類型查詢詳細的通知狀態報告，回傳 presigned URL 供下載 TSV 格式報告',
   })
   @ApiHeader({
     name: NY_OPERATOR_HEADER,

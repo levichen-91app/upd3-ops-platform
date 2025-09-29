@@ -23,7 +23,8 @@ export const REQUEST_ID_CONSTANTS = {
    * 格式: req-{yyyymmddhhmmss}-{uuid-v4}
    * 範例: req-20250928143052-a8b2c4d6-dd70-4edd-9f86-a2cfc0e8be22
    */
-  PATTERN: /^req-\d{14}-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/,
+  PATTERN:
+    /^req-\d{14}-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/,
 
   /**
    * Request ID 固定前綴

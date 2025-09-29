@@ -52,21 +52,25 @@ describe('Devices Not Found Scenarios (e2e)', () => {
       success: false,
       error: {
         code: 'DEVICE_NOT_FOUND',
-        message: 'No devices found for the specified customer',
+        message: '找不到指定客戶的設備',
         details: {
           shopId: 99999,
           phone: '0987654321',
         },
       },
       timestamp: expect.any(String),
-      requestId: expect.stringMatching(/^req-\d{14}-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/),
+      requestId: expect.stringMatching(
+        /^req-\d{14}-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/,
+      ),
     });
   });
 
   it('should return 500 when Marketing Cloud API returns 404 not found', async () => {
     // Mock the service to throw an external API error
     mockMarketingCloudService.getDevices.mockImplementation(() => {
-      throw new Error('EXTERNAL_API_ERROR: Marketing Cloud API returned status 404');
+      throw new Error(
+        'EXTERNAL_API_ERROR: Marketing Cloud API returned status 404',
+      );
     });
 
     const response = await request(app.getHttpServer())
@@ -132,7 +136,9 @@ describe('Devices Not Found Scenarios (e2e)', () => {
       .expect(404);
 
     expect(response.body.requestId).toBeDefined();
-    expect(response.body.requestId).toMatch(/^req-\d{14}-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/);
+    expect(response.body.requestId).toMatch(
+      /^req-\d{14}-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/,
+    );
     expect(response.body.timestamp).toBeDefined();
     expect(new Date(response.body.timestamp)).toBeInstanceOf(Date);
   });

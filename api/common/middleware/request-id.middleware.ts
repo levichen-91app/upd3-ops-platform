@@ -3,6 +3,10 @@ import { Request, Response, NextFunction } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import { RequestContextService } from '../services/request-context.service';
 import { RequestContextFactory } from '../interfaces/request-context.interface';
+import {
+  REQUEST_ID_CONSTANTS,
+  isValidRequestId,
+} from '../../constants/request-id.constants';
 
 /**
  * Middleware to generate unique request IDs for tracing and logging
@@ -10,25 +14,20 @@ import { RequestContextFactory } from '../interfaces/request-context.interface';
  */
 @Injectable()
 export class RequestIdMiddleware implements NestMiddleware {
-  private static readonly REQUEST_ID_HEADER = 'x-request-id';
-  private static readonly REQUEST_ID_PROPERTY = 'requestId';
-
   public use(req: Request, res: Response, next: NextFunction): void {
     // Check if request ID already exists (from client or upstream proxy)
-    let requestId = req.headers[
-      RequestIdMiddleware.REQUEST_ID_HEADER
-    ] as string;
+    let requestId = req.headers[REQUEST_ID_CONSTANTS.HEADER_NAME] as string;
 
     // Generate new request ID if none exists or invalid format
-    if (!requestId || !this.isValidRequestId(requestId)) {
+    if (!requestId || !isValidRequestId(requestId)) {
       requestId = this.generateRequestId();
     }
 
     // Store request ID in request object for access by other middleware/handlers
-    (req as any)[RequestIdMiddleware.REQUEST_ID_PROPERTY] = requestId;
+    (req as any)[REQUEST_ID_CONSTANTS.PROPERTY_NAME] = requestId;
 
     // Add request ID to response headers for client tracking
-    res.set(RequestIdMiddleware.REQUEST_ID_HEADER, requestId);
+    res.set(REQUEST_ID_CONSTANTS.HEADER_NAME, requestId);
 
     // Create and set request context for the entire request lifecycle
     const requestContext = RequestContextFactory.fromExpressRequest(
@@ -47,7 +46,7 @@ export class RequestIdMiddleware implements NestMiddleware {
   private generateRequestId(): string {
     const timestamp = this.generateTimestamp();
     const uuid = uuidv4();
-    return `req-${timestamp}-${uuid}`;
+    return `${REQUEST_ID_CONSTANTS.PREFIX}${timestamp}-${uuid}`;
   }
 
   /**
@@ -66,25 +65,16 @@ export class RequestIdMiddleware implements NestMiddleware {
   }
 
   /**
-   * Validate request ID format: req-{14-digit-timestamp}-{36-character-uuid}
-   */
-  private isValidRequestId(requestId: string): boolean {
-    const pattern =
-      /^req-\d{14}-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/;
-    return pattern.test(requestId);
-  }
-
-  /**
    * Static method to get request ID from request object
    */
   public static getRequestId(req: Request): string {
-    return (req as any)[RequestIdMiddleware.REQUEST_ID_PROPERTY] || 'unknown';
+    return (req as any)[REQUEST_ID_CONSTANTS.PROPERTY_NAME] || 'unknown';
   }
 
   /**
    * Static method to get request ID header name
    */
   public static getRequestIdHeader(): string {
-    return RequestIdMiddleware.REQUEST_ID_HEADER;
+    return REQUEST_ID_CONSTANTS.HEADER_NAME;
   }
 }

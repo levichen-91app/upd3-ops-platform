@@ -13,11 +13,16 @@ export class ExternalApiException extends HttpException {
    *
    * @param message - 錯誤訊息
    * @param details - 錯誤詳細資訊
+   * @param errorCode - 指定錯誤代碼，預設為 EXTERNAL_API_ERROR
    */
-  constructor(message: string, details?: any) {
+  constructor(
+    message: string,
+    details?: any,
+    errorCode: string = ERROR_CODES.EXTERNAL_API_ERROR,
+  ) {
     super(
       {
-        code: ERROR_CODES.EXTERNAL_API_ERROR,
+        code: errorCode,
         message: message || '外部 API 調用失敗',
         details,
       },
