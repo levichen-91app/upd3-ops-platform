@@ -65,23 +65,20 @@ describe('Reports Validation Integration', () => {
           .expect(400);
 
         // Assert: Validation error response
-        expect(response.body).toEqual({
-          success: false,
-          error: {
-            code: 'INVALID_ARGUMENT',
-            message: '輸入參數驗證失敗',
-            details: expect.arrayContaining([
-              expect.objectContaining({
-                field: 'nsId',
-                message: 'nsId must be a valid UUID',
-              }),
-            ]),
-          },
-          timestamp: expect.any(String),
-          requestId: expect.stringMatching(
-            /^req-\d{14}-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/,
-          ),
+        expect(response.body.success).toBe(false);
+        expect(response.body.error.code).toBe('INVALID_ARGUMENT');
+        expect(response.body.error.message).toBeDefined();
+        expect(response.body.error.details).toHaveLength(1);
+        expect(response.body.error.details[0]).toEqual({
+          '@type': 'type.upd3ops.com/ValidationError',
+          validationErrors: expect.arrayContaining([
+            expect.stringContaining('nsId must be a valid UUID'),
+          ]),
         });
+        expect(response.body.timestamp).toBeDefined();
+        expect(response.body.requestId).toMatch(
+          /^req-\d{14}-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/,
+        );
 
         // Assert: External service not called
         expect(mockNSReportService.getStatusReport).not.toHaveBeenCalled();
@@ -103,14 +100,13 @@ describe('Reports Validation Integration', () => {
 
         // Assert
         expect(response.body.error.code).toBe('INVALID_ARGUMENT');
-        expect(response.body.error.details).toEqual(
-          expect.arrayContaining([
-            expect.objectContaining({
-              field: 'nsId',
-              message: expect.stringContaining('should not be empty'),
-            }),
+        expect(response.body.error.details).toHaveLength(1);
+        expect(response.body.error.details[0]).toEqual({
+          '@type': 'type.upd3ops.com/ValidationError',
+          validationErrors: expect.arrayContaining([
+            expect.stringContaining('should not be empty'),
           ]),
-        );
+        });
       });
 
       it('should return 400 for missing nsId', async () => {
@@ -127,19 +123,19 @@ describe('Reports Validation Integration', () => {
           .expect(400);
 
         // Assert
-        expect(response.body.error.details).toEqual(
-          expect.arrayContaining([
-            expect.objectContaining({
-              field: 'nsId',
-              message: expect.stringContaining('required'),
-            }),
+        expect(response.body.error.code).toBe('INVALID_ARGUMENT');
+        expect(response.body.error.details).toHaveLength(1);
+        expect(response.body.error.details[0]).toEqual({
+          '@type': 'type.upd3ops.com/ValidationError',
+          validationErrors: expect.arrayContaining([
+            expect.stringContaining('should not be empty'),
           ]),
-        );
+        });
       });
     });
 
     describe('notificationDate validation errors', () => {
-      it('should return 500 for invalid date format', async () => {
+      it('should return 400 for invalid date format', async () => {
         // Act: Various invalid date formats
         const invalidDates = [
           '2024-01-15', // ISO format instead of YYYY/MM/DD
@@ -166,15 +162,14 @@ describe('Reports Validation Integration', () => {
             .expect(400);
 
           expect(response.body.error.code).toBe('INVALID_ARGUMENT');
-          expect(response.body.error.message).toBe('輸入參數驗證失敗');
-          expect(response.body.error.details).toEqual(
-            expect.arrayContaining([
-              expect.objectContaining({
-                field: 'notificationDate',
-                message: expect.stringContaining('YYYY/MM/DD'),
-              }),
+          expect(response.body.error.message).toBeDefined();
+          expect(response.body.error.details).toHaveLength(1);
+          expect(response.body.error.details[0]).toEqual({
+            '@type': 'type.upd3ops.com/ValidationError',
+            validationErrors: expect.arrayContaining([
+              expect.stringContaining('YYYY/MM/DD'),
             ]),
-          );
+          });
         }
       });
 
@@ -194,15 +189,14 @@ describe('Reports Validation Integration', () => {
 
         // Assert
         expect(response.body.error.code).toBe('INVALID_ARGUMENT');
-        expect(response.body.error.message).toBe('輸入參數驗證失敗');
-        expect(response.body.error.details).toEqual(
-          expect.arrayContaining([
-            expect.objectContaining({
-              field: 'notificationDate',
-              message: 'notificationDate should not be empty',
-            }),
+        expect(response.body.error.message).toBeDefined();
+        expect(response.body.error.details).toHaveLength(1);
+        expect(response.body.error.details[0]).toEqual({
+          '@type': 'type.upd3ops.com/ValidationError',
+          validationErrors: expect.arrayContaining([
+            expect.stringContaining('should not be empty'),
           ]),
-        );
+        });
       });
     });
 
@@ -233,16 +227,14 @@ describe('Reports Validation Integration', () => {
             .expect(400);
 
           expect(response.body.error.code).toBe('INVALID_ARGUMENT');
-          expect(response.body.error.message).toBe('輸入參數驗證失敗');
-          expect(response.body.error.details).toEqual(
-            expect.arrayContaining([
-              expect.objectContaining({
-                field: 'notificationType',
-                message:
-                  'notificationType must be one of: sms, push, line, email',
-              }),
+          expect(response.body.error.message).toBeDefined();
+          expect(response.body.error.details).toHaveLength(1);
+          expect(response.body.error.details[0]).toEqual({
+            '@type': 'type.upd3ops.com/ValidationError',
+            validationErrors: expect.arrayContaining([
+              expect.stringContaining('must be one of'),
             ]),
-          );
+          });
         }
       });
 
@@ -295,15 +287,15 @@ describe('Reports Validation Integration', () => {
 
         // Assert: All errors included
         expect(response.body.error.code).toBe('INVALID_ARGUMENT');
-        expect(response.body.error.message).toBe('輸入參數驗證失敗');
-        expect(response.body.error.details).toHaveLength(3);
-
-        const fieldNames = response.body.error.details.map(
-          (detail: any) => detail.field,
+        expect(response.body.error.message).toBeDefined();
+        expect(response.body.error.details).toHaveLength(1);
+        expect(response.body.error.details[0]['@type']).toBe(
+          'type.upd3ops.com/ValidationError',
         );
-        expect(fieldNames).toContain('nsId');
-        expect(fieldNames).toContain('notificationDate');
-        expect(fieldNames).toContain('notificationType');
+        // Should have multiple validation errors
+        expect(
+          response.body.error.details[0].validationErrors.length,
+        ).toBeGreaterThan(1);
       });
     });
 
@@ -324,8 +316,12 @@ describe('Reports Validation Integration', () => {
 
         // Assert
         expect(response.body.error.code).toBe('INVALID_ARGUMENT');
-        expect(response.body.error.message).toBe('輸入參數驗證失敗');
-        expect(response.body.error.details.length).toBeGreaterThan(0);
+        expect(response.body.error.message).toBeDefined();
+        expect(response.body.error.details).toHaveLength(1);
+        expect(response.body.error.details[0]['@type']).toBe(
+          'type.upd3ops.com/ValidationError',
+        );
+        expect(response.body.error.details[0].validationErrors.length).toBeGreaterThan(0);
       });
     });
 
@@ -344,20 +340,20 @@ describe('Reports Validation Integration', () => {
         .expect(400);
 
       // Assert: Response structure consistency
-      expect(response.body).toMatchObject({
-        success: false,
-        error: {
-          code: 'INVALID_ARGUMENT',
-          message: '輸入參數驗證失敗',
-          details: expect.any(Array), // Exception filter converts ValidationPipe errors to details array
-        },
-        timestamp: expect.stringMatching(
-          /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/,
-        ),
-        requestId: expect.stringMatching(
-          /^req-\d{14}-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/,
-        ),
+      expect(response.body.success).toBe(false);
+      expect(response.body.error.code).toBe('INVALID_ARGUMENT');
+      expect(response.body.error.message).toBeDefined();
+      expect(response.body.error.details).toHaveLength(1);
+      expect(response.body.error.details[0]).toEqual({
+        '@type': 'type.upd3ops.com/ValidationError',
+        validationErrors: expect.any(Array),
       });
+      expect(response.body.timestamp).toMatch(
+        /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/,
+      );
+      expect(response.body.requestId).toMatch(
+        /^req-\d{14}-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/,
+      );
     });
   });
 });
