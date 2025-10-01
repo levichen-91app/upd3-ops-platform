@@ -3,6 +3,8 @@ import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { AppModule } from '../../../app.module';
 import { WHALE_API_SERVICE_TOKEN } from '../interfaces/whale-api.interface';
+import { ExternalApiException } from '../../../common/exceptions/external-api.exception';
+import { ERROR_CODES } from '../../../constants/error-codes.constants';
 
 describe('Notification History Not Found Tests', () => {
   let app: INestApplication;
@@ -127,7 +129,16 @@ describe('Notification History Not Found Tests', () => {
     // Test 503 case (external API failure)
     const errorId = 22222;
     mockWhaleApiService.getNotificationHistory.mockRejectedValueOnce(
-      new Error('UNAVAILABLE: External API failed'),
+      new ExternalApiException(
+        ERROR_CODES.UNAVAILABLE,
+        'External API failed',
+        {
+          '@type': 'type.upd3ops.com/ErrorInfo',
+          reason: 'HTTP_ERROR',
+          domain: 'whale-api',
+          metadata: { httpStatus: 503 },
+        },
+      ),
     );
 
     const errorResponse = await request(app.getHttpServer())

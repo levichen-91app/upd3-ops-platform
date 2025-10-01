@@ -4,6 +4,8 @@ import request from 'supertest';
 import { AppModule } from '../../../app.module';
 import { MARKETING_CLOUD_SERVICE_TOKEN } from '../interfaces/marketing-cloud.interface';
 import { NC_DETAIL_SERVICE_TOKEN } from '../interfaces/nc-detail.interface';
+import { ExternalApiException } from '../../../common/exceptions/external-api.exception';
+import { ERROR_CODES } from '../../../constants/error-codes.constants';
 
 describe('Devices API Contract (e2e)', () => {
   let app: INestApplication;
@@ -171,10 +173,11 @@ describe('Devices API Contract (e2e)', () => {
         error: {
           code: 'NOT_FOUND',
           message: expect.any(String),
-          details: {
-            shopId: 99999,
-            phone: '0987654321',
-          },
+          details: expect.arrayContaining([
+            expect.objectContaining({
+              '@type': expect.any(String),
+            }),
+          ]),
         },
         timestamp: expect.any(String),
         requestId: expect.stringMatching(
@@ -197,7 +200,7 @@ describe('Devices API Contract (e2e)', () => {
         success: false,
         error: {
           code: 'INVALID_ARGUMENT',
-          message: expect.any(Array),
+          message: expect.any(String),
         },
         timestamp: expect.any(String),
         requestId: expect.stringMatching(/^req-\d{14}-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/),
@@ -226,8 +229,15 @@ describe('Devices API Contract (e2e)', () => {
 
     it('should return standardized 503 external API error response', async () => {
       mockMarketingCloudService.getDevices.mockRejectedValue(
-        new Error(
-          'UNAVAILABLE: Marketing Cloud API returned status 500',
+        new ExternalApiException(
+          ERROR_CODES.UNAVAILABLE,
+          'Marketing Cloud API returned status 500',
+          {
+            '@type': 'type.upd3ops.com/ErrorInfo',
+            reason: 'HTTP_ERROR',
+            domain: 'marketing-cloud',
+            metadata: { httpStatus: 500 },
+          },
         ),
       );
 
