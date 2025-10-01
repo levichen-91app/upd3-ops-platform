@@ -4,6 +4,8 @@ import request from 'supertest';
 import { AppModule } from '../../../app.module';
 import { MARKETING_CLOUD_SERVICE_TOKEN } from '../interfaces/marketing-cloud.interface';
 import { NC_DETAIL_SERVICE_TOKEN } from '../interfaces/nc-detail.interface';
+import { ExternalApiException } from '../../../common/exceptions/external-api.exception';
+import { ERROR_CODES } from '../../../constants/error-codes.constants';
 
 describe('Devices Not Found Scenarios (e2e)', () => {
   let app: INestApplication;
@@ -70,12 +72,19 @@ describe('Devices Not Found Scenarios (e2e)', () => {
   });
 
   it('should return 404 when Marketing Cloud API returns 404 not found', async () => {
-    // Mock the service to throw an external API error
-    mockMarketingCloudService.getDevices.mockImplementation(() => {
-      throw new Error(
-        'NOT_FOUND: Marketing Cloud API returned status 404',
-      );
-    });
+    // Mock the service to throw an ExternalApiException with NOT_FOUND
+    mockMarketingCloudService.getDevices.mockRejectedValue(
+      new ExternalApiException(
+        ERROR_CODES.NOT_FOUND,
+        'Resource not found in marketing-cloud',
+        [{
+          '@type': 'type.upd3ops.com/ErrorInfo',
+          reason: 'RESOURCE_MISSING',
+          domain: 'marketing-cloud',
+          metadata: { httpStatus: 404 },
+        }],
+      ),
+    );
 
     const response = await request(app.getHttpServer())
       .get('/api/v1/notification-status/devices')

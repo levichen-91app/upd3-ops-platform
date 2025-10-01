@@ -47,7 +47,7 @@ describe('Devices Authentication (e2e)', () => {
         .expect(401);
 
       expect(response.body.success).toBe(false);
-      expect(response.body.error.code).toBe('UNAUTHORIZED');
+      expect(response.body.error.code).toBe('UNAUTHENTICATED');
       expect(response.body.error.message).toContain('ny-operator');
     });
 
@@ -62,7 +62,7 @@ describe('Devices Authentication (e2e)', () => {
         .expect(401);
 
       expect(response.body.success).toBe(false);
-      expect(response.body.error.code).toBe('UNAUTHORIZED');
+      expect(response.body.error.code).toBe('UNAUTHENTICATED');
     });
 
     it('should return 401 when ny-operator header contains only whitespace', async () => {
@@ -76,7 +76,7 @@ describe('Devices Authentication (e2e)', () => {
         .expect(401);
 
       expect(response.body.success).toBe(false);
-      expect(response.body.error.code).toBe('UNAUTHORIZED');
+      expect(response.body.error.code).toBe('UNAUTHENTICATED');
     });
 
     it('should accept valid ny-operator header', async () => {
@@ -217,7 +217,7 @@ describe('Devices Authentication (e2e)', () => {
         .get('/api/v1/notification-status/devices')
         .expect(401);
 
-      expect(response.body.error.code).toBe('UNAUTHORIZED');
+      expect(response.body.error.code).toBe('UNAUTHENTICATED');
       expect(mockMarketingCloudService.getDevices).not.toHaveBeenCalled();
     });
 
@@ -280,7 +280,7 @@ describe('Devices Authentication (e2e)', () => {
         })
         .expect(401);
 
-      expect(response.body.error.code).toBe('UNAUTHORIZED');
+      expect(response.body.error.code).toBe('UNAUTHENTICATED');
     });
   });
 });

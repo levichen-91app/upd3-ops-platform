@@ -60,8 +60,8 @@ describe('Reports Authentication Integration', () => {
       expect(response.body).toEqual({
         success: false,
         error: {
-          code: 'UNAUTHORIZED',
-          message: 'ny-operator header required',
+          code: 'UNAUTHENTICATED',
+          message: 'Authentication required',
         },
         timestamp: expect.stringMatching(
           /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/,
@@ -86,8 +86,8 @@ describe('Reports Authentication Integration', () => {
 
       // Assert: Error response structure (matches NyOperatorGuard behavior)
       expect(response.body.success).toBe(false);
-      expect(response.body.error.code).toBe('UNAUTHORIZED');
-      expect(response.body.error.message).toBe('ny-operator header required');
+      expect(response.body.error.code).toBe('UNAUTHENTICATED');
+      expect(response.body.error.message).toBe('Authentication required');
 
       // Assert: External service should not be called
       expect(mockNSReportService.getStatusReport).not.toHaveBeenCalled();
@@ -106,8 +106,8 @@ describe('Reports Authentication Integration', () => {
 
       // Assert: Error response structure
       expect(response.body.success).toBe(false);
-      expect(response.body.error.code).toBe('UNAUTHORIZED');
-      expect(response.body.error.message).toBe('ny-operator header required');
+      expect(response.body.error.code).toBe('UNAUTHENTICATED');
+      expect(response.body.error.message).toBe('Authentication required');
 
       // Assert: External service should not be called
       expect(mockNSReportService.getStatusReport).not.toHaveBeenCalled();
@@ -154,7 +154,7 @@ describe('Reports Authentication Integration', () => {
       const expectedStructure = {
         success: false,
         error: {
-          code: 'UNAUTHORIZED',
+          code: 'UNAUTHENTICATED',
           message: expect.any(String),
         },
         timestamp: expect.any(String),

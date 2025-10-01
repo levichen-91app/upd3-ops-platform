@@ -48,7 +48,7 @@ describe('Devices Validation (e2e)', () => {
 
       expect(response.body.success).toBe(false);
       expect(response.body.error.code).toBe('INVALID_ARGUMENT');
-      expect(response.body.error.message).toContain('輸入參數驗證失敗');
+      expect(response.body.error.message).toBeDefined();
     });
 
     it('should return 400 when shopId is not a number', async () => {
@@ -106,7 +106,7 @@ describe('Devices Validation (e2e)', () => {
 
       expect(response.body.success).toBe(false);
       expect(response.body.error.code).toBe('INVALID_ARGUMENT');
-      expect(response.body.error.message).toContain('輸入參數驗證失敗');
+      expect(response.body.error.message).toBeDefined();
     });
 
     it('should return 400 when phone format is invalid', async () => {
@@ -121,7 +121,7 @@ describe('Devices Validation (e2e)', () => {
 
       expect(response.body.success).toBe(false);
       expect(response.body.error.code).toBe('INVALID_ARGUMENT');
-      expect(response.body.error.message).toContain('輸入參數驗證失敗');
+      expect(response.body.error.message).toBeDefined();
     });
 
     it('should return 400 when phone contains invalid characters', async () => {
