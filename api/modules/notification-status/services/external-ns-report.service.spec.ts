@@ -158,7 +158,7 @@ describe('ExternalNSReportService', () => {
 
       // Act & Assert
       await expect(service.getStatusReport(validRequest)).rejects.toThrow(
-        '外部 NS Report API 調用失敗',
+        ExternalApiException,
       );
       expect(mockHttpService.post).toHaveBeenCalledTimes(1);
     });
@@ -177,7 +177,7 @@ describe('ExternalNSReportService', () => {
 
       // Act & Assert
       await expect(service.getStatusReport(validRequest)).rejects.toThrow(
-        '外部 NS Report API 調用失敗',
+        ExternalApiException,
       );
     });
 
@@ -195,7 +195,7 @@ describe('ExternalNSReportService', () => {
 
       // Act & Assert
       await expect(service.getStatusReport(validRequest)).rejects.toThrow(
-        '外部 NS Report API 調用失敗',
+        ExternalApiException,
       );
     });
 
@@ -209,7 +209,7 @@ describe('ExternalNSReportService', () => {
 
       // Act & Assert
       await expect(service.getStatusReport(validRequest)).rejects.toThrow(
-        '外部 NS Report API 調用失敗',
+        ExternalApiException,
       );
     });
 
@@ -223,7 +223,7 @@ describe('ExternalNSReportService', () => {
 
       // Act & Assert
       await expect(service.getStatusReport(validRequest)).rejects.toThrow(
-        '外部 NS Report API 調用失敗',
+        ExternalApiException,
       );
     });
 
@@ -243,7 +243,7 @@ describe('ExternalNSReportService', () => {
 
       // Act & Assert
       await expect(service.getStatusReport(validRequest)).rejects.toThrow(
-        '外部 NS Report API 調用失敗',
+        ExternalApiException,
       );
     });
 
@@ -263,7 +263,7 @@ describe('ExternalNSReportService', () => {
 
       // Act & Assert
       await expect(service.getStatusReport(validRequest)).rejects.toThrow(
-        '外部 NS Report API 調用失敗',
+        ExternalApiException,
       );
     });
 
@@ -283,7 +283,7 @@ describe('ExternalNSReportService', () => {
 
       // Act & Assert
       await expect(service.getStatusReport(validRequest)).rejects.toThrow(
-        '外部 NS Report API 調用失敗',
+        ExternalApiException,
       );
     });
   });

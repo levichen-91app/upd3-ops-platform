@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { NotFoundException } from '@nestjs/common';
 import { NotificationStatusService } from '../notification-status.service';
+import { BusinessNotFoundException } from '../../../common/exceptions/business-logic.exception';
 import { NC_DETAIL_SERVICE_TOKEN } from '../interfaces/nc-detail.interface';
 import { MARKETING_CLOUD_SERVICE_TOKEN } from '../interfaces/marketing-cloud.interface';
 import {
@@ -156,25 +156,28 @@ describe('NotificationStatusService - History Method Only', () => {
       }
     });
 
-    it('should throw NotFoundException when notification is not found (null response)', async () => {
+    it('should throw BusinessNotFoundException when notification is not found (null response)', async () => {
       const notificationId = 99999;
       mockWhaleApiService.getNotificationHistory.mockResolvedValue(null);
 
       await expect(
         service.getNotificationHistory(notificationId, testRequestId),
-      ).rejects.toThrow(NotFoundException);
+      ).rejects.toThrow(BusinessNotFoundException);
 
       const error = await service
         .getNotificationHistory(notificationId, testRequestId)
         .catch((e) => e);
-      expect(error.getResponse()).toEqual({
-        code: 'NOT_FOUND',
-        message: '找不到指定的通知',
-        details: { notificationId },
+      const response = error.getResponse();
+      expect(response.code).toBe('NOT_FOUND');
+      expect(response.message).toBe('找不到指定的通知');
+      expect(response.details).toHaveLength(1);
+      expect(response.details[0]).toMatchObject({
+        '@type': 'type.upd3ops.com/ResourceInfo',
+        notificationId,
       });
     });
 
-    it('should throw NotFoundException when whale response has no data', async () => {
+    it('should throw BusinessNotFoundException when whale response has no data', async () => {
       const notificationId = 88888;
       const mockResponse = {
         code: 'Success',
@@ -188,91 +191,40 @@ describe('NotificationStatusService - History Method Only', () => {
 
       await expect(
         service.getNotificationHistory(notificationId, testRequestId),
-      ).rejects.toThrow(NotFoundException);
+      ).rejects.toThrow(BusinessNotFoundException);
     });
 
-    it('should throw TIMEOUT_ERROR for timeout exceptions', async () => {
+    it('should re-throw errors from WhaleApiService without modification', async () => {
       const notificationId = 12345;
-      const timeoutError = new Error(
-        'Timeout: Request took longer than 10000ms',
+      const externalError = new Error('External API error from WhaleApiService');
+
+      mockWhaleApiService.getNotificationHistory.mockRejectedValue(
+        externalError,
+      );
+
+      await expect(
+        service.getNotificationHistory(notificationId, testRequestId),
+      ).rejects.toThrow(externalError);
+    });
+
+    it('should re-throw BusinessNotFoundException without modification', async () => {
+      const notificationId = 12345;
+      const businessError = new BusinessNotFoundException(
+        'Custom not found message',
+        { notificationId },
       );
 
       mockWhaleApiService.getNotificationHistory.mockRejectedValue(
-        timeoutError,
+        businessError,
       );
 
       await expect(
         service.getNotificationHistory(notificationId, testRequestId),
-      ).rejects.toThrow('TIMEOUT_ERROR');
-    });
-
-    it('should throw EXTERNAL_API_ERROR for axios HTTP errors', async () => {
-      const notificationId = 12345;
-      const axiosError = new Error('HTTP Error 500: Internal Server Error');
-      axiosError.name = 'AxiosError';
-      (axiosError as any).response = { status: 500 };
-
-      mockWhaleApiService.getNotificationHistory.mockRejectedValue(axiosError);
+      ).rejects.toThrow(BusinessNotFoundException);
 
       await expect(
         service.getNotificationHistory(notificationId, testRequestId),
-      ).rejects.toThrow('EXTERNAL_API_ERROR');
-    });
-
-    it('should throw EXTERNAL_API_ERROR for connection errors', async () => {
-      const notificationId = 12345;
-      const connectionError = new Error('ECONNREFUSED: Connection refused');
-
-      mockWhaleApiService.getNotificationHistory.mockRejectedValue(
-        connectionError,
-      );
-
-      await expect(
-        service.getNotificationHistory(notificationId, testRequestId),
-      ).rejects.toThrow('EXTERNAL_API_ERROR');
-    });
-
-    it('should throw EXTERNAL_API_ERROR for DNS errors', async () => {
-      const notificationId = 12345;
-      const dnsError = new Error(
-        'ENOTFOUND: getaddrinfo ENOTFOUND whale-api.example.com',
-      );
-
-      mockWhaleApiService.getNotificationHistory.mockRejectedValue(dnsError);
-
-      await expect(
-        service.getNotificationHistory(notificationId, testRequestId),
-      ).rejects.toThrow('EXTERNAL_API_ERROR');
-    });
-
-    it('should re-throw NotFoundException without modification', async () => {
-      const notificationId = 12345;
-      const notFoundException = new NotFoundException({
-        code: 'NOT_FOUND',
-        message: 'Custom not found message',
-        details: { notificationId },
-      });
-
-      mockWhaleApiService.getNotificationHistory.mockRejectedValue(
-        notFoundException,
-      );
-
-      await expect(
-        service.getNotificationHistory(notificationId, testRequestId),
-      ).rejects.toThrow(NotFoundException);
-    });
-
-    it('should treat unknown errors as EXTERNAL_API_ERROR', async () => {
-      const notificationId = 12345;
-      const unknownError = new Error('Some unexpected error');
-
-      mockWhaleApiService.getNotificationHistory.mockRejectedValue(
-        unknownError,
-      );
-
-      await expect(
-        service.getNotificationHistory(notificationId, testRequestId),
-      ).rejects.toThrow('EXTERNAL_API_ERROR');
+      ).rejects.toThrow('Custom not found message');
     });
 
     it('should generate unique request IDs', async () => {
