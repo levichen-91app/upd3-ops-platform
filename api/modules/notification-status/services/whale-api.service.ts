@@ -7,6 +7,10 @@ import {
   IWhaleApiService,
   WhaleApiNotificationResponse,
 } from '../interfaces/whale-api.interface';
+import {
+  HTTP_CONFIG,
+  FALLBACK_URLS,
+} from '../../../constants/http-config.constants';
 
 @Injectable()
 export class WhaleApiService implements IWhaleApiService {
@@ -20,9 +24,10 @@ export class WhaleApiService implements IWhaleApiService {
   ) {
     this.baseUrl =
       this.configService.get<string>('whaleApi.baseUrl') ||
-      'http://whale-api-internal.qa.91dev.tw';
+      FALLBACK_URLS.WHALE_API;
     this.timeoutMs =
-      this.configService.get<number>('whaleApi.timeout') || 10000;
+      this.configService.get<number>('whaleApi.timeout') ||
+      HTTP_CONFIG.DEFAULT_TIMEOUT;
   }
 
   async getNotificationHistory(

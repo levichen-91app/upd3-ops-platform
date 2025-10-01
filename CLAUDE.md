@@ -234,14 +234,37 @@ export const REQUEST_ID_HEADER = 'x-request-id';
 
 // api/constants/error-codes.constants.ts
 export const ERROR_CODES = {
+  // 外部 API 錯誤 (5xx)
   EXTERNAL_API_ERROR: 'EXTERNAL_API_ERROR',
+  EXTERNAL_API_TIMEOUT: 'EXTERNAL_API_TIMEOUT',
+  EXTERNAL_API_UNAVAILABLE: 'EXTERNAL_API_UNAVAILABLE',
+
+  // 業務邏輯錯誤 (4xx)
   DEVICE_NOT_FOUND: 'DEVICE_NOT_FOUND',
+  RESOURCE_NOT_FOUND: 'RESOURCE_NOT_FOUND',
+  DUPLICATE_RESOURCE: 'DUPLICATE_RESOURCE',
+
+  // 認證/授權錯誤 (401/403)
   UNAUTHORIZED: 'UNAUTHORIZED',
+  FORBIDDEN: 'FORBIDDEN',
+  INVALID_OPERATOR: 'INVALID_OPERATOR',
+  MISSING_CREDENTIALS: 'MISSING_CREDENTIALS',
+
+  // 驗證錯誤 (400)
   VALIDATION_ERROR: 'VALIDATION_ERROR',
+  INVALID_REQUEST_FORMAT: 'INVALID_REQUEST_FORMAT',
+  MISSING_REQUIRED_FIELD: 'MISSING_REQUIRED_FIELD',
+  INVALID_FIELD_VALUE: 'INVALID_FIELD_VALUE',
 } as const;
 
-// api/constants/request-patterns.constants.ts
-export const REQUEST_ID_PATTERN = /^req-(devices|error)-[0-9]+-?[a-zA-Z0-9]*$/;
+// api/constants/request-id.constants.ts
+export const REQUEST_ID_CONSTANTS = {
+  HEADER_NAME: 'x-request-id',
+  PROPERTY_NAME: 'requestId',
+  PATTERN:
+    /^req-\d{14}-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/,
+  PREFIX: 'req-',
+} as const;
 ```
 
 **步驟二：統一配置管理**
@@ -265,125 +288,874 @@ export default registerAs('api', () => ({
 
 ---
 
-### 4.4 規範四：Request ID 統一生成
+### 4.4 規範四：Request ID 統一追蹤機制
 
 #### 條文
 
-所有 Request ID 必須使用統一的生成器，確保格式一致且可追蹤。
+所有 HTTP 請求必須使用統一的 Request ID 進行追蹤，確保格式一致、全域唯一且便於日誌分析和問題排查。
 
-#### 實作步驟
+#### 實作原則
 
-**步驟一：建立 Request ID 服務**
+**4.4.1 統一使用 HTTP 層級 Request ID**
+
+採用單一 Request ID 機制，避免多層 ID 造成的複雜性和混淆。每個 HTTP 請求對應一個唯一的 Request ID，涵蓋整個請求-回應生命週期。
+
+**4.4.2 彈性的 Request ID 來源**
+
+支援雙向 Request ID 機制：
+
+- **Client 提供優先**：支援微服務間追蹤和調試場景
+- **Server 自動生成**：確保每個請求都有唯一標識
+
+#### 技術實作規範
+
+**步驟一：Middleware 層統一處理**
 
 ```typescript
-// api/common/services/request-id.service.ts
-import { Injectable } from '@nestjs/common';
-
+// api/common/middleware/request-id.middleware.ts
 @Injectable()
-export class RequestIdService {
-  generateRequestId(prefix: 'devices' | 'error'): string {
-    const timestamp = Date.now();
-    const randomId = Math.random().toString(36).substring(2);
-    return `req-${prefix}-${timestamp}-${randomId}`;
+export class RequestIdMiddleware implements NestMiddleware {
+  private static readonly REQUEST_ID_HEADER = 'x-request-id';
+
+  public use(req: Request, res: Response, next: NextFunction): void {
+    // 優先使用 client 提供的 Request ID
+    let requestId = req.headers['x-request-id'] as string;
+
+    // 驗證格式，無效則重新生成
+    if (!requestId || !this.isValidRequestId(requestId)) {
+      requestId = this.generateRequestId();
+    }
+
+    // 存儲到 request 對象供後續使用
+    req.requestId = requestId;
+
+    // 添加到 response header 供 client 追蹤
+    res.set('x-request-id', requestId);
+
+    next();
   }
 
-  validateRequestId(requestId: string): boolean {
-    return REQUEST_ID_PATTERN.test(requestId);
+  private generateRequestId(): string {
+    const timestamp = this.generateTimestamp(); // yyyymmddhhmmss
+    const uuid = uuidv4();
+    return `req-${timestamp}-${uuid}`;
+  }
+
+  private isValidRequestId(requestId: string): boolean {
+    const pattern =
+      /^req-\d{14}-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/;
+    return pattern.test(requestId);
   }
 }
 ```
 
-**步驟二：在 Interceptor 中使用**
+**步驟二：Controller 層標準用法**
 
 ```typescript
-// api/common/interceptors/request-id.interceptor.ts
-@Injectable()
-export class RequestIdInterceptor implements NestInterceptor {
-  constructor(private readonly requestIdService: RequestIdService) {}
+@Controller('example')
+export class ExampleController {
+  @Get('items')
+  async getItems(
+    @Query() query: QueryDto,
+    @Headers('ny-operator') operator: string,
+    @Req() request: Request, // 注入 request 對象
+  ) {
+    // 取得統一的 Request ID
+    const requestId = RequestIdMiddleware.getRequestId(request);
 
-  intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
-    const request = context.switchToHttp().getRequest();
-    request.requestId = this.requestIdService.generateRequestId('devices');
-    return next.handle();
+    // 傳遞給 Service 層進行業務處理
+    return this.exampleService.getItems(query, requestId);
   }
 }
 ```
+
+**步驟三：Service 層使用 Request ID**
+
+```typescript
+@Injectable()
+export class ExampleService {
+  private readonly logger = new Logger(ExampleService.name);
+
+  async getItems(query: QueryDto, requestId: string) {
+    // 使用 Request ID 進行日誌追蹤
+    this.logger.log(`Processing items query - requestId: ${requestId}`, {
+      query,
+      requestId,
+    });
+
+    // 業務處理邏輯...
+    const result = await this.processItems(query);
+
+    this.logger.log(`Items query completed - requestId: ${requestId}`, {
+      resultCount: result.length,
+      requestId,
+    });
+
+    // Request ID 會由 ResponseFormatInterceptor 自動加入回應
+    return result;
+  }
+}
+```
+
+#### Request ID 格式規範
+
+**標準格式**
+
+```
+req-{yyyymmddhhmmss}-{uuid-v4}
+```
+
+**格式說明**
+
+- **前綴**: `req-` (固定)
+- **時間戳**: `yyyymmddhhmmss` (14位數字，精確到秒)
+- **分隔符**: `-` (連接符)
+- **唯一標識**: UUID v4 格式 (36字符)
+
+**格式範例**
+
+```
+req-20250928143052-a8b2c4d6-dd70-4edd-9f86-a2cfc0e8be22
+```
+
+#### 使用場景
+
+**場景一：外部 Client 調用 (Server 生成)**
+
+```bash
+# Client 請求 (無 x-request-id)
+curl -H "ny-operator: test" /api/v1/items
+
+# Server 回應
+{
+  "success": true,
+  "data": [...],
+  "timestamp": "2025-09-28T14:30:52.123Z",
+  "requestId": "req-20250928143052-a8b2c4d6-dd70-4edd-9f86-a2cfc0e8be22"
+}
+```
+
+**場景二：微服務間調用 (Client 提供)**
+
+```typescript
+// Service A 調用 Service B
+const upstreamRequestId = RequestIdMiddleware.getRequestId(request);
+
+const response = await this.httpService.get('/api/v1/downstream', {
+  headers: {
+    'x-request-id': upstreamRequestId, // 傳遞上游 Request ID
+    'ny-operator': operator,
+  },
+});
+```
+
+#### 常數管理
+
+Request ID 相關常數已統一定義在 4.3 節的常數目錄中，請參考 `api/constants/request-id.constants.ts`。
+
+#### 禁止事項
+
+**❌ 嚴禁的做法**
+
+- **禁止自行生成 Request ID**：不得在 Service 層手動產生 Request ID
+- **禁止格式不一致**：所有 Request ID 必須符合統一格式規範
+- **禁止重複 ID 邏輯**：不得存在多套 Request ID 生成機制
+- **禁止硬編碼常數**：Header 名稱、格式等必須使用統一常數
 
 #### 理由
 
-- **可追蹤性**：統一格式便於日誌分析
-- **可測試性**：生成邏輯可以被測試
-- **可重用性**：多個模組可以共用
+**技術優勢**
+
+- **架構簡化**：單一追蹤機制，避免多層 ID 複雜性
+- **全域一致**：所有模組使用相同的 Request ID 格式
+- **自動化處理**：Middleware 和 Interceptor 自動處理，減少手動操作
+- **標準兼容**：符合 HTTP `x-request-id` 標準慣例
+
+**業務價值**
+
+- **問題排查**：統一 ID 便於跨服務日誌關聯和錯誤追蹤
+- **性能監控**：清晰的請求生命週期追蹤
+- **調試友好**：支援自定義 Request ID 進行特定追蹤
+- **合規需求**：滿足審計和監控要求
 
 ---
 
-### 4.5 規範五：錯誤處理分層
+### 4.5 規範五：Google Cloud API 風格錯誤處理
 
 #### 條文
 
-必須明確區分外部 API 錯誤（500）與業務邏輯錯誤（404），使用不同的 Exception 類別。
+採用 Google Cloud API 錯誤處理標準，使用標準化的 RPC 錯誤代碼和 HTTP Status 映射機制。所有錯誤代碼使用 `UPPER_SNAKE_CASE`，錯誤原因和服務域名使用 `kebab-case`，確保與 Google Cloud API 完全一致。
+
+#### 核心設計原則
+
+**1. 錯誤代碼與 HTTP Status 映射**
+
+- 不同類型的錯誤使用不同的 HTTP Status Code
+- 錯誤代碼遵循 Google Cloud API 標準 RPC codes
+- 支援客戶端根據 HTTP Status 做不同處理
+
+**2. 三層錯誤資訊架構**
+
+```typescript
+interface ApiErrorResponse {
+  success: false;
+  error: {
+    // Layer 1: Standard RPC Error Code (UPPER_SNAKE_CASE)
+    code: string; // 'NOT_FOUND' | 'DEADLINE_EXCEEDED' | 'UNAVAILABLE'
+
+    // Layer 2: User-facing Message
+    message: string; // 'Marketing Cloud request timeout'
+
+    // Layer 3: Technical Details (Google ErrorInfo format)
+    details: Array<{
+      '@type': string; // 'type.upd3ops.com/ErrorInfo'
+      reason: string; // 'TIMEOUT' | 'CONNECTION_FAILED' (UPPER_SNAKE_CASE)
+      domain: string; // 'marketing-cloud' | 'whale-api' (kebab-case)
+      metadata?: Record<string, any>;
+    }>;
+  };
+  timestamp: string; // ISO 8601 format
+  requestId: string; // req-{timestamp}-{uuid}
+}
+```
+
+#### 命名規範原則
+
+**三層命名規範**（遵循 Google Cloud API 標準）：
+
+1. **Error Codes（錯誤代碼）**: `UPPER_SNAKE_CASE`
+   - ✅ `NOT_FOUND`, `DEADLINE_EXCEEDED`, `UNAVAILABLE`
+   - ❌ `not-found`, `not_found`, `NotFound`
+
+2. **Error Reasons（錯誤原因）**: `UPPER_SNAKE_CASE`
+   - ✅ `TIMEOUT`, `CONNECTION_FAILED`, `HTTP_ERROR`
+   - ❌ `timeout`, `connection-failed`, `httpError`
+
+3. **Service Domains（服務域名）**: `kebab-case`
+   - ✅ `marketing-cloud`, `whale-api`, `ns-report`
+   - ❌ `MARKETING_CLOUD`, `marketing_cloud`, `MarketingCloud`
+
+**理由**：
+
+- 完全符合 Google Cloud API 設計規範
+- 錯誤代碼使用業界標準（gRPC Status Codes）
+- 便於與其他 Google Cloud 服務整合
+- TypeScript 常數定義自然對應 `UPPER_SNAKE_CASE`
 
 #### 實作步驟
 
-**步驟一：建立外部 API 異常**
+**步驟一：定義 Google RPC 標準錯誤代碼**
+
+```typescript
+// api/constants/error-codes.constants.ts
+
+/**
+ * Google Cloud API 標準錯誤代碼
+ * 參考：https://cloud.google.com/apis/design/errors
+ * 參考：https://grpc.github.io/grpc/core/md_doc_statuscodes.html
+ */
+export const ERROR_CODES = {
+  // Standard Google RPC Codes
+  INVALID_ARGUMENT: 'INVALID_ARGUMENT', // 400 - 客戶端指定了無效參數
+  UNAUTHENTICATED: 'UNAUTHENTICATED', // 401 - 缺少有效的身份驗證憑證
+  PERMISSION_DENIED: 'PERMISSION_DENIED', // 403 - 權限不足
+  NOT_FOUND: 'NOT_FOUND', // 404 - 找不到指定資源
+  RESOURCE_EXHAUSTED: 'RESOURCE_EXHAUSTED', // 429 - 資源配額耗盡或速率限制
+  INTERNAL: 'INTERNAL', // 500 - 內部伺服器錯誤
+  UNAVAILABLE: 'UNAVAILABLE', // 503 - 服務暫時不可用
+  DEADLINE_EXCEEDED: 'DEADLINE_EXCEEDED', // 504 - 請求超時
+
+  // Custom Application Codes (遵循 Google 命名風格)
+  EXTERNAL_API_ERROR: 'EXTERNAL_API_ERROR', // 500 - 外部 API 通用錯誤
+} as const;
+
+/**
+ * 錯誤代碼到 HTTP Status 的映射表
+ * 根據 Google Cloud API 標準定義
+ */
+export const ERROR_CODE_TO_HTTP_STATUS: Record<string, number> = {
+  INVALID_ARGUMENT: 400,
+  UNAUTHENTICATED: 401,
+  PERMISSION_DENIED: 403,
+  NOT_FOUND: 404,
+  RESOURCE_EXHAUSTED: 429,
+  INTERNAL: 500,
+  UNAVAILABLE: 503,
+  DEADLINE_EXCEEDED: 504,
+  EXTERNAL_API_ERROR: 500,
+};
+
+export type ErrorCode = (typeof ERROR_CODES)[keyof typeof ERROR_CODES];
+```
+
+**步驟二：定義錯誤原因和服務域名**
+
+```typescript
+// api/constants/error-types.constants.ts
+
+/**
+ * 錯誤原因（Error Reasons）
+ * 用於 ErrorDetail 的 reason 欄位
+ * 遵循 UPPER_SNAKE_CASE 命名規範
+ */
+export const ERROR_REASONS = {
+  // Network Errors
+  TIMEOUT: 'TIMEOUT',
+  CONNECTION_FAILED: 'CONNECTION_FAILED',
+  DNS_RESOLUTION_FAILED: 'DNS_RESOLUTION_FAILED',
+
+  // HTTP Errors
+  HTTP_ERROR: 'HTTP_ERROR',
+  INVALID_RESPONSE_FORMAT: 'INVALID_RESPONSE_FORMAT',
+
+  // Resource Errors
+  RESOURCE_MISSING: 'RESOURCE_MISSING',
+  RESOURCE_ALREADY_EXISTS: 'RESOURCE_ALREADY_EXISTS',
+
+  // Authentication Errors
+  MISSING_CREDENTIALS: 'MISSING_CREDENTIALS',
+  INVALID_CREDENTIALS: 'INVALID_CREDENTIALS',
+  TOKEN_EXPIRED: 'TOKEN_EXPIRED',
+
+  // Validation Errors
+  INVALID_PARAMETER: 'INVALID_PARAMETER',
+  MISSING_REQUIRED_FIELD: 'MISSING_REQUIRED_FIELD',
+
+  // Rate Limiting
+  RATE_LIMIT_EXCEEDED: 'RATE_LIMIT_EXCEEDED',
+} as const;
+
+/**
+ * 服務域名（Service Domains）
+ * 識別錯誤來自哪個外部服務
+ * 使用 kebab-case 命名規範
+ */
+export const SERVICE_DOMAINS = {
+  MARKETING_CLOUD: 'marketing-cloud',
+  WHALE_API: 'whale-api',
+  NS_REPORT: 'ns-report',
+  NC_DETAIL: 'nc-detail',
+} as const;
+
+/**
+ * ErrorDetail 的 @type 欄位前綴
+ */
+export const ERROR_DETAIL_TYPE_PREFIX = 'type.upd3ops.com';
+
+export type ErrorReason = (typeof ERROR_REASONS)[keyof typeof ERROR_REASONS];
+export type ServiceDomain =
+  (typeof SERVICE_DOMAINS)[keyof typeof SERVICE_DOMAINS];
+```
+
+**步驟三：定義標準化錯誤訊息**
+
+```typescript
+// api/constants/error-messages.constants.ts
+import { ERROR_CODES } from './error-codes.constants';
+import { SERVICE_DOMAINS } from './error-types.constants';
+
+/**
+ * 標準化錯誤訊息模板
+ * 對應 Google RPC Error Codes
+ */
+export const ERROR_MESSAGES = {
+  // Standard RPC Error Messages
+  [ERROR_CODES.INVALID_ARGUMENT]: 'Invalid request parameters provided',
+  [ERROR_CODES.UNAUTHENTICATED]: 'Authentication required',
+  [ERROR_CODES.PERMISSION_DENIED]: 'Permission denied',
+  [ERROR_CODES.NOT_FOUND]: 'Requested resource not found',
+  [ERROR_CODES.RESOURCE_EXHAUSTED]: 'Rate limit exceeded',
+  [ERROR_CODES.INTERNAL]: 'Internal server error',
+  [ERROR_CODES.UNAVAILABLE]: 'Service temporarily unavailable',
+  [ERROR_CODES.DEADLINE_EXCEEDED]: 'Request deadline exceeded',
+
+  // External API Specific Messages
+  EXTERNAL_API_ERROR: (domain: string) => `External ${domain} API call failed`,
+} as const;
+
+/**
+ * 特定服務的錯誤訊息模板
+ */
+export const SERVICE_ERROR_MESSAGES = {
+  [SERVICE_DOMAINS.MARKETING_CLOUD]: {
+    TIMEOUT: 'Marketing Cloud API request timeout',
+    CONNECTION_FAILED: 'Unable to connect to Marketing Cloud service',
+    NOT_FOUND: 'Device not found in Marketing Cloud',
+  },
+  [SERVICE_DOMAINS.WHALE_API]: {
+    TIMEOUT: 'Whale API request timeout',
+    CONNECTION_FAILED: 'Unable to connect to Whale API service',
+    NOT_FOUND: 'Supplier not found in Whale API',
+  },
+  [SERVICE_DOMAINS.NS_REPORT]: {
+    TIMEOUT: 'NS Report API request timeout',
+    CONNECTION_FAILED: 'Unable to connect to NS Report service',
+  },
+} as const;
+```
+
+**步驟四：建立 ExternalApiErrorHandler 工具類別**
+
+```typescript
+// api/common/helpers/external-api-error-handler.ts
+import { AxiosError } from 'axios';
+import { ERROR_CODES } from '../../constants/error-codes.constants';
+import {
+  ERROR_REASONS,
+  ERROR_DETAIL_TYPE_PREFIX,
+  ServiceDomain,
+} from '../../constants/error-types.constants';
+import {
+  ExternalApiException,
+  ErrorDetail,
+} from '../exceptions/external-api.exception';
+
+/**
+ * 外部 API 錯誤處理器
+ * 統一處理 Axios 錯誤並轉換為標準化的 ExternalApiException
+ */
+export class ExternalApiErrorHandler {
+  /**
+   * 處理 Axios 錯誤
+   * 根據錯誤類型自動映射到對應的 Google RPC Code
+   */
+  static handleAxiosError(
+    error: AxiosError,
+    serviceDomain: ServiceDomain,
+  ): never {
+    // 1. 超時錯誤 → DEADLINE_EXCEEDED (504)
+    if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
+      throw new ExternalApiException(
+        ERROR_CODES.DEADLINE_EXCEEDED,
+        `${serviceDomain} API request timeout`,
+        ExternalApiErrorHandler.createErrorDetail(
+          ERROR_REASONS.TIMEOUT,
+          serviceDomain,
+          { timeout: error.config?.timeout },
+        ),
+      );
+    }
+
+    // 2. 連線失敗 → UNAVAILABLE (503)
+    if (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND') {
+      throw new ExternalApiException(
+        ERROR_CODES.UNAVAILABLE,
+        `Unable to connect to ${serviceDomain} service`,
+        ExternalApiErrorHandler.createErrorDetail(
+          ERROR_REASONS.CONNECTION_FAILED,
+          serviceDomain,
+          { errorCode: error.code },
+        ),
+      );
+    }
+
+    // 3. HTTP 錯誤（根據 status code 映射）
+    if (error.response) {
+      const status = error.response.status;
+
+      // 404 → NOT_FOUND
+      if (status === 404) {
+        throw new ExternalApiException(
+          ERROR_CODES.NOT_FOUND,
+          `Resource not found in ${serviceDomain}`,
+          ExternalApiErrorHandler.createErrorDetail(
+            ERROR_REASONS.RESOURCE_MISSING,
+            serviceDomain,
+            { httpStatus: status, url: error.config?.url },
+          ),
+        );
+      }
+
+      // 401/403 → PERMISSION_DENIED
+      if (status === 401 || status === 403) {
+        throw new ExternalApiException(
+          ERROR_CODES.PERMISSION_DENIED,
+          `${serviceDomain} authentication failed`,
+          ExternalApiErrorHandler.createErrorDetail(
+            ERROR_REASONS.INVALID_CREDENTIALS,
+            serviceDomain,
+            { httpStatus: status },
+          ),
+        );
+      }
+
+      // 429 → RESOURCE_EXHAUSTED
+      if (status === 429) {
+        throw new ExternalApiException(
+          ERROR_CODES.RESOURCE_EXHAUSTED,
+          `${serviceDomain} rate limit exceeded`,
+          ExternalApiErrorHandler.createErrorDetail(
+            ERROR_REASONS.RATE_LIMIT_EXCEEDED,
+            serviceDomain,
+            {
+              httpStatus: status,
+              retryAfter: error.response.headers['retry-after'],
+            },
+          ),
+        );
+      }
+
+      // 5xx → UNAVAILABLE
+      if (status >= 500) {
+        throw new ExternalApiException(
+          ERROR_CODES.UNAVAILABLE,
+          `${serviceDomain} service error`,
+          ExternalApiErrorHandler.createErrorDetail(
+            ERROR_REASONS.HTTP_ERROR,
+            serviceDomain,
+            { httpStatus: status, message: error.response.data },
+          ),
+        );
+      }
+    }
+
+    // 4. 未知錯誤 → INTERNAL
+    throw new ExternalApiException(
+      ERROR_CODES.INTERNAL,
+      `Unexpected error calling ${serviceDomain}`,
+      ExternalApiErrorHandler.createErrorDetail(
+        'UNKNOWN_ERROR',
+        serviceDomain,
+        { message: error.message },
+      ),
+    );
+  }
+
+  /**
+   * 建立標準化的 ErrorDetail（遵循 Google ErrorInfo 格式）
+   */
+  static createErrorDetail(
+    reason: string,
+    domain: string,
+    metadata?: Record<string, any>,
+  ): ErrorDetail {
+    return {
+      '@type': `${ERROR_DETAIL_TYPE_PREFIX}/ErrorInfo`,
+      reason,
+      domain,
+      metadata,
+    };
+  }
+}
+```
+
+**步驟五：重構 ExternalApiException**
 
 ```typescript
 // api/common/exceptions/external-api.exception.ts
 import { HttpException } from '@nestjs/common';
-import { ERROR_CODES } from '../../constants/error-codes.constants';
+import { ERROR_CODE_TO_HTTP_STATUS } from '../../constants/error-codes.constants';
 
+/**
+ * ErrorDetail 結構（模仿 Google Cloud API）
+ */
+export interface ErrorDetail {
+  '@type': string;
+  reason: string;
+  domain: string;
+  metadata?: Record<string, any>;
+}
+
+/**
+ * 外部 API 錯誤異常
+ * 支援 Google Cloud API 風格的錯誤代碼映射
+ */
 export class ExternalApiException extends HttpException {
-  constructor(message: string, statusCode?: number) {
+  constructor(
+    errorCode: string,
+    message: string,
+    details?: ErrorDetail | ErrorDetail[],
+  ) {
+    const httpStatus = ERROR_CODE_TO_HTTP_STATUS[errorCode] || 500;
+
     super(
       {
-        code: ERROR_CODES.EXTERNAL_API_ERROR,
-        message: '外部API調用失敗',
-        details: { originalMessage: message, statusCode },
+        code: errorCode,
+        message,
+        details: Array.isArray(details) ? details : [details].filter(Boolean),
       },
-      500,
+      httpStatus,
     );
   }
 }
 ```
 
-**步驟二：建立業務邏輯異常**
+**步驟六：重構 BusinessNotFoundException**
 
 ```typescript
 // api/common/exceptions/business-logic.exception.ts
 import { HttpException } from '@nestjs/common';
+import { ERROR_CODES } from '../../constants/error-codes.constants';
 
+/**
+ * 業務邏輯錯誤：資源找不到
+ */
 export class BusinessNotFoundException extends HttpException {
-  constructor(code: string, message: string, details?: any) {
-    super({ code, message, details }, 404);
+  constructor(message: string, details?: Record<string, any>) {
+    super(
+      {
+        code: ERROR_CODES.NOT_FOUND,
+        message,
+        details: details
+          ? [{ '@type': 'type.upd3ops.com/ResourceInfo', ...details }]
+          : [],
+      },
+      404,
+    );
   }
 }
 ```
 
-**步驟三：在服務中正確使用**
+**步驟七：在服務中正確使用**
 
 ```typescript
-// 外部 API 錯誤（500）
-if (error.response) {
-  throw new ExternalApiException(
-    `Marketing Cloud API returned status ${error.response.status}`,
-  );
-}
+// api/modules/notification-status/services/marketing-cloud.service.ts
+import { Injectable } from '@nestjs/common';
+import { HttpService } from '@nestjs/axios';
+import { firstValueFrom } from 'rxjs';
+import { ExternalApiErrorHandler } from '../../../common/helpers/external-api-error-handler';
+import { SERVICE_DOMAINS } from '../../../constants/error-types.constants';
 
-// 業務邏輯錯誤（404）
-if (!devices || devices.length === 0) {
-  throw new BusinessNotFoundException(
-    ERROR_CODES.DEVICE_NOT_FOUND,
-    'No devices found for the specified customer',
-    { shopId, phone },
-  );
+@Injectable()
+export class MarketingCloudService implements IMarketingCloudService {
+  constructor(private readonly httpService: HttpService) {}
+
+  async getDevices(shopId: number, phone: string): Promise<Device[]> {
+    try {
+      const response = await firstValueFrom(
+        this.httpService.get(`/api/devices`, {
+          params: { shopId, phone },
+          timeout: 10000,
+        }),
+      );
+      return response.data;
+    } catch (error) {
+      // ✅ 使用統一的錯誤處理器，自動映射到對應的 RPC Code
+      ExternalApiErrorHandler.handleAxiosError(
+        error,
+        SERVICE_DOMAINS.MARKETING_CLOUD,
+      );
+    }
+  }
 }
 ```
 
+```typescript
+// api/modules/notification-status/notification-status.service.ts
+import { Injectable } from '@nestjs/common';
+import { BusinessNotFoundException } from '../../common/exceptions/business-logic.exception';
+
+@Injectable()
+export class NotificationStatusService {
+  async getDevices(shopId: number, phone: string): Promise<Device[]> {
+    const devices = await this.marketingCloudService.getDevices(shopId, phone);
+
+    // ✅ 業務邏輯錯誤（使用 Google NOT_FOUND）
+    if (!devices || devices.length === 0) {
+      throw new BusinessNotFoundException(
+        'No devices found for the specified customer',
+        { shopId, phone },
+      );
+    }
+
+    return devices;
+  }
+}
+```
+
+#### 標準錯誤回應範例
+
+**範例一：外部 API 超時錯誤（DEADLINE_EXCEEDED → HTTP 504）**
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "DEADLINE_EXCEEDED",
+    "message": "marketing-cloud API request timeout",
+    "details": [
+      {
+        "@type": "type.upd3ops.com/ErrorInfo",
+        "reason": "TIMEOUT",
+        "domain": "marketing-cloud",
+        "metadata": {
+          "timeout": 10000
+        }
+      }
+    ]
+  },
+  "timestamp": "2025-10-01T06:37:42.876Z",
+  "requestId": "req-20251001143742-a8ac0ef0-7698-4f66-b7ad-cbca0273dc6a"
+}
+```
+
+**範例二：外部 API 服務不可用（UNAVAILABLE → HTTP 503）**
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "UNAVAILABLE",
+    "message": "ns-report service error",
+    "details": [
+      {
+        "@type": "type.upd3ops.com/ErrorInfo",
+        "reason": "HTTP_ERROR",
+        "domain": "ns-report",
+        "metadata": {
+          "httpStatus": 500,
+          "message": "Internal Server Error"
+        }
+      }
+    ]
+  },
+  "timestamp": "2025-10-01T06:37:42.876Z",
+  "requestId": "req-20251001143742-c9g4d6e8-ff92-6gff-bg08-c4egd2g0dg4c"
+}
+```
+
+**範例三：業務邏輯錯誤（NOT_FOUND → HTTP 404）**
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "NOT_FOUND",
+    "message": "No devices found for the specified customer",
+    "details": [
+      {
+        "@type": "type.upd3ops.com/ResourceInfo",
+        "shopId": 12345,
+        "phone": "0912345678"
+      }
+    ]
+  },
+  "timestamp": "2025-10-01T06:37:42.876Z",
+  "requestId": "req-20251001143742-d0h5e7f9-gg03-7hgg-ch19-d5fhe3h1eh5d"
+}
+```
+
+**範例四：外部 API 找不到資源（NOT_FOUND → HTTP 404）**
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "NOT_FOUND",
+    "message": "Resource not found in whale-api",
+    "details": [
+      {
+        "@type": "type.upd3ops.com/ErrorInfo",
+        "reason": "RESOURCE_MISSING",
+        "domain": "whale-api",
+        "metadata": {
+          "httpStatus": 404,
+          "url": "/api/suppliers/999"
+        }
+      }
+    ]
+  },
+  "timestamp": "2025-10-01T06:37:42.876Z",
+  "requestId": "req-20251001143742-e1i6f8g0-hh14-8ihh-di20-e6gif4i2fi6e"
+}
+```
+
+**範例五：速率限制錯誤（RESOURCE_EXHAUSTED → HTTP 429）**
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "RESOURCE_EXHAUSTED",
+    "message": "marketing-cloud rate limit exceeded",
+    "details": [
+      {
+        "@type": "type.upd3ops.com/ErrorInfo",
+        "reason": "RATE_LIMIT_EXCEEDED",
+        "domain": "marketing-cloud",
+        "metadata": {
+          "httpStatus": 429,
+          "retryAfter": "60"
+        }
+      }
+    ]
+  },
+  "timestamp": "2025-10-01T06:37:42.876Z",
+  "requestId": "req-20251001143742-f2j7g9h1-ii25-9jii-ej31-f7hjg5j3gj7f"
+}
+```
+
+#### HTTP Status 映射對照表
+
+| 錯誤代碼 (Error Code) | HTTP Status | 使用場景       | 客戶端建議行動              |
+| --------------------- | ----------- | -------------- | --------------------------- |
+| `INVALID_ARGUMENT`    | 400         | 參數驗證失敗   | 檢查請求參數並修正          |
+| `UNAUTHENTICATED`     | 401         | 缺少認證憑證   | 提供有效的認證資訊          |
+| `PERMISSION_DENIED`   | 403         | 權限不足       | 聯繫管理員取得權限          |
+| `NOT_FOUND`           | 404         | 資源不存在     | 確認資源 ID 是否正確        |
+| `RESOURCE_EXHAUSTED`  | 429         | 超過速率限制   | 稍後重試，遵守 `retryAfter` |
+| `INTERNAL`            | 500         | 內部伺服器錯誤 | 聯繫技術支援                |
+| `UNAVAILABLE`         | 503         | 服務暫時不可用 | 稍後重試（指數退避）        |
+| `DEADLINE_EXCEEDED`   | 504         | 請求超時       | 稍後重試或增加超時時間      |
+
 #### 理由
 
-- **明確性**：錯誤類型一目了然
-- **一致性**：相同類型錯誤有統一處理
-- **可維護性**：錯誤處理邏輯集中管理
+**1. 業界標準遵循**
+
+- 完全遵循 Google Cloud API 錯誤處理設計
+- 使用 gRPC Status Codes 作為錯誤代碼基礎
+- ErrorInfo 結構符合 Google API 標準（[參考文檔](https://cloud.google.com/apis/design/errors)）
+
+**2. HTTP 語義正確性**
+
+- 不同錯誤類型映射到語義正確的 HTTP Status
+- 客戶端可根據 Status Code 做不同處理（重試、提示、報錯）
+- 符合 RESTful API 最佳實踐
+
+**3. 可維護性**
+
+- 集中管理所有錯誤代碼、映射表、訊息模板
+- `ExternalApiErrorHandler` 統一處理邏輯，避免重複程式碼
+- 新增外部服務只需在常數中定義
+
+**4. 可測試性**
+
+- 結構化的錯誤資訊便於編寫測試斷言
+- Mock 行為清晰明確
+- TypeScript 型別檢查確保使用正確的 Error Code
+
+**5. 可觀測性**
+
+- `details` 陣列結構便於日誌過濾和統計分析
+- `reason` 和 `domain` 可用於監控告警
+- `metadata` 提供豐富的調試資訊
+
+**6. 客戶端友善**
+
+- HTTP Status 提供第一層快速判斷
+- Error Code 提供第二層精確分類
+- details 提供第三層技術細節
+- 前端可根據 `code` 做 i18n 對應
+- 不需要解析文字訊息
+- 統一的英文鍵值便於翻譯管理
+
+**7. 符合業界標準**
+
+- 完全遵循 Google Cloud API 設計指南
+- 使用 gRPC Status Codes（業界標準）
+- 便於與 Google Cloud 服務整合或遷移
+
+#### 禁止事項
+
+**❌ 嚴禁的做法**
+
+- 使用多種命名風格（UPPER_SNAKE_CASE、snake_case、kebab-case 混用）
+- 在錯誤訊息中使用中文或混合語言
+- 在不同服務中使用不同的錯誤處理方式
+- 直接在業務邏輯中構造錯誤，應使用 `ExternalApiErrorHandler`
+- 修改 `ExternalApiException` 允許自訂 `errorCode`（應固定為 `external-api-error`）
+- 在 `message` 中包含動態資訊（如服務名稱、狀態碼），應放在 `details` 中
+- 手動拼接錯誤字串，應使用預定義的常數
 
 ---
 

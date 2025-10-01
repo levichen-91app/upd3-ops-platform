@@ -14,6 +14,8 @@ import {
 import { ExternalApiErrorHandler } from '../../../common/helpers/external-api-error-handler';
 import { SERVICE_DOMAINS } from '../../../constants/error-types.constants';
 import externalApisConfig from '../../../config/external-apis.config';
+import { HTTP_CONFIG } from '../../../constants/http-config.constants';
+import { NY_OPERATOR_HEADER } from '../../../constants/headers.constants';
 
 @Injectable()
 export class WhaleApiService implements IWhaleApiService {
@@ -44,10 +46,10 @@ export class WhaleApiService implements IWhaleApiService {
       baseUrl: process.env.WHALE_API_URL_OVERRIDE || marketConfig.url,
       timeout: process.env.WHALE_API_TIMEOUT
         ? parseInt(process.env.WHALE_API_TIMEOUT)
-        : marketConfig.timeout || 10000,
+        : marketConfig.timeout || HTTP_CONFIG.DEFAULT_TIMEOUT,
       retries: process.env.WHALE_API_RETRIES
         ? parseInt(process.env.WHALE_API_RETRIES)
-        : marketConfig.retries || 3,
+        : marketConfig.retries || HTTP_CONFIG.DEFAULT_RETRIES,
     };
 
     this.logger.log(`Whale API configured for ${environment}/${market}`, {
@@ -88,7 +90,7 @@ export class WhaleApiService implements IWhaleApiService {
             headers: {
               'Content-Type': 'application/json',
               'User-Agent': 'upd3-ops-platform/1.0',
-              'ny-operator': operator,
+              [NY_OPERATOR_HEADER]: operator,
             },
           },
         ),

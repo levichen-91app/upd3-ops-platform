@@ -7,6 +7,7 @@ import { RequestIdMiddleware } from './common/middleware/request-id.middleware';
 import { LoggingMiddleware } from './common/middleware/logging.middleware';
 import { ResponseFormatInterceptor } from './common/interceptors/response-format.interceptor';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
+import { RequestIdService } from './common/services/request-id.service';
 import configurations from './config/configuration';
 import { validationSchema } from './config/validation.schema';
 
@@ -31,6 +32,7 @@ import { validationSchema } from './config/validation.schema';
   ],
   controllers: [],
   providers: [
+    RequestIdService,
     {
       provide: APP_INTERCEPTOR,
       useClass: ResponseFormatInterceptor,

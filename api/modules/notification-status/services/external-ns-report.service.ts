@@ -9,6 +9,10 @@ import {
 import { StatusReportRequestDto } from '../dto/status-report-request.dto';
 import { ExternalApiErrorHandler } from '../../../common/helpers/external-api-error-handler';
 import { SERVICE_DOMAINS } from '../../../constants/error-types.constants';
+import {
+  HTTP_CONFIG,
+  FALLBACK_URLS,
+} from '../../../constants/http-config.constants';
 
 /**
  * 外部 NS Report Service 實作
@@ -37,12 +41,13 @@ export class ExternalNSReportService implements INSReportService {
       // 取得配置參數
       const baseUrl =
         this.configService.get<string>('nsReport.baseUrl') ||
-        'https://default.nsreport.api.com';
+        FALLBACK_URLS.NS_REPORT_API;
       const endpoint =
         this.configService.get<string>('nsReport.endpoint') ||
         '/v3/GetNotificationStatusReport';
       const timeout =
-        this.configService.get<number>('nsReport.timeout') || 30000;
+        this.configService.get<number>('nsReport.timeout') ||
+        HTTP_CONFIG.LONG_OPERATION_TIMEOUT;
 
       const url = `${baseUrl}${endpoint}`;
 
