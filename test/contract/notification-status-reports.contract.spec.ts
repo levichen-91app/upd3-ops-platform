@@ -5,6 +5,7 @@ import { AppModule } from '../../api/app.module';
 import { NotificationStatusModule } from '../../api/modules/notification-status/notification-status.module';
 import { NS_REPORT_SERVICE_TOKEN } from '../../api/modules/notification-status/services/ns-report.service.interface';
 import { ExternalApiException } from '../../api/common/exceptions/external-api.exception';
+import { ERROR_CODES } from '../../api/constants/error-codes.constants';
 
 /**
  * 合約測試：通知狀態報告 API
@@ -139,7 +140,7 @@ describe('NotificationStatusReports Contract Tests', () => {
       expect(response.body).toMatchObject({
         success: false,
         error: {
-          code: 'UNAUTHORIZED',
+          code: 'UNAUTHENTICATED',
           message: expect.any(String),
         },
         timestamp: expect.any(String),
@@ -150,7 +151,16 @@ describe('NotificationStatusReports Contract Tests', () => {
     it('should return valid error response schema for external API failures', async () => {
       // Arrange: Mock external API failure
       mockNSReportService.getStatusReport.mockRejectedValue(
-        new ExternalApiException('External service unavailable'),
+        new ExternalApiException(
+          ERROR_CODES.UNAVAILABLE,
+          'External service unavailable',
+          {
+            '@type': 'type.upd3ops.com/ErrorInfo',
+            reason: 'HTTP_ERROR',
+            domain: 'ns-report',
+            metadata: { httpStatus: 503 },
+          },
+        ),
       );
 
       // Act
@@ -158,13 +168,13 @@ describe('NotificationStatusReports Contract Tests', () => {
         .post('/api/v1/notification-status/reports')
         .set(validHeaders)
         .send(validRequest)
-        .expect(500);
+        .expect(503);
 
       // Assert: External API error structure
       expect(response.body).toMatchObject({
         success: false,
         error: {
-          code: 'EXTERNAL_API_ERROR',
+          code: 'UNAVAILABLE',
           message: expect.any(String),
         },
         timestamp: expect.any(String),

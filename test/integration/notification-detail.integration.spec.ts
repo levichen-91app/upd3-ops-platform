@@ -1,10 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
 import request from 'supertest';
-import { NotificationStatusModule } from '../../api/modules/notification-status/notification-status.module';
+import { AppModule } from '../../api/app.module';
 import { NC_DETAIL_SERVICE_TOKEN } from '../../api/modules/notification-status/interfaces/nc-detail.interface';
-import ncApiConfig from '../../api/config/nc-api.config';
 
 describe('Notification Detail Integration Tests', () => {
   let app: INestApplication;
@@ -16,24 +14,13 @@ describe('Notification Detail Integration Tests', () => {
     };
 
     const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [
-        ConfigModule.forRoot({
-          load: [ncApiConfig],
-          isGlobal: true,
-        }),
-        NotificationStatusModule,
-      ],
+      imports: [AppModule],
     })
       .overrideProvider(NC_DETAIL_SERVICE_TOKEN)
       .useValue(mockNcDetailService)
       .compile();
 
     app = moduleFixture.createNestApplication();
-    // 手動註冊全域 ResponseFormatInterceptor
-    const {
-      ResponseFormatInterceptor,
-    } = require('../../api/common/interceptors/response-format.interceptor');
-    app.useGlobalInterceptors(new ResponseFormatInterceptor());
     await app.init();
   });
 

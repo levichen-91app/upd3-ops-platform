@@ -5,6 +5,7 @@ import { of, throwError } from 'rxjs';
 import { AxiosResponse } from 'axios';
 import { ExternalNSReportService } from './external-ns-report.service';
 import { StatusReportRequestDto } from '../dto/status-report-request.dto';
+import { ExternalApiException } from '../../../common/exceptions/external-api.exception';
 
 /**
  * 單元測試：外部 NS Report Service
