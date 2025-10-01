@@ -35,7 +35,7 @@ describe('Notification History Validation Tests', () => {
       .expect(400);
 
     expect(response.body.success).toBe(false);
-    expect(response.body.error.code).toBe('VALIDATION_ERROR');
+    expect(response.body.error.code).toBe('INVALID_ARGUMENT');
     expect(response.body.error.message).toBe('通知ID必須為正整數');
     expect(response.body.requestId).toMatch(/^req-\d{14}-[0-9a-f-]{36}/);
     expect(mockWhaleApiService.getNotificationHistory).not.toHaveBeenCalled();
@@ -48,7 +48,7 @@ describe('Notification History Validation Tests', () => {
       .expect(400);
 
     expect(response.body.success).toBe(false);
-    expect(response.body.error.code).toBe('VALIDATION_ERROR');
+    expect(response.body.error.code).toBe('INVALID_ARGUMENT');
     expect(response.body.error.message).toBe('通知ID必須為正整數');
     expect(mockWhaleApiService.getNotificationHistory).not.toHaveBeenCalled();
   });
@@ -60,7 +60,7 @@ describe('Notification History Validation Tests', () => {
       .expect(400);
 
     expect(response.body.success).toBe(false);
-    expect(response.body.error.code).toBe('VALIDATION_ERROR');
+    expect(response.body.error.code).toBe('INVALID_ARGUMENT');
     expect(response.body.error.message).toBe('通知ID必須為正整數');
     expect(mockWhaleApiService.getNotificationHistory).not.toHaveBeenCalled();
   });
@@ -72,7 +72,7 @@ describe('Notification History Validation Tests', () => {
       .expect(400);
 
     expect(response.body.success).toBe(false);
-    expect(response.body.error.code).toBe('VALIDATION_ERROR');
+    expect(response.body.error.code).toBe('INVALID_ARGUMENT');
     expect(mockWhaleApiService.getNotificationHistory).not.toHaveBeenCalled();
   });
 
@@ -131,7 +131,7 @@ describe('Notification History Validation Tests', () => {
       .expect(400);
 
     expect(response.body.success).toBe(false);
-    expect(response.body.error.code).toBe('VALIDATION_ERROR');
+    expect(response.body.error.code).toBe('INVALID_ARGUMENT');
     expect(response.body.error.message).toBeDefined();
     expect(response.body.error.details).toBeDefined();
     expect(response.body.timestamp).toBeDefined();

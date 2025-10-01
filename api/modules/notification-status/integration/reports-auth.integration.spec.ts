@@ -66,7 +66,7 @@ describe('Reports Authentication Integration', () => {
         timestamp: expect.stringMatching(
           /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/,
         ),
-        requestId: expect.stringMatching(/^req-\d{14}-[0-9a-f-]{36}$/),
+        requestId: expect.stringMatching(/^req-\d{14}-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/),
       });
 
       // Assert: External service should not be called
@@ -128,8 +128,8 @@ describe('Reports Authentication Integration', () => {
         .expect(401);
 
       // Assert: Both responses have unique request IDs
-      expect(response1.body.requestId).toMatch(/^req-\d{14}-[0-9a-f-]{36}\d+$/);
-      expect(response2.body.requestId).toMatch(/^req-\d{14}-[0-9a-f-]{36}\d+$/);
+      expect(response1.body.requestId).toMatch(/^req-\d{14}-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/);
+      expect(response2.body.requestId).toMatch(/^req-\d{14}-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/);
       expect(response1.body.requestId).not.toBe(response2.body.requestId);
     });
 

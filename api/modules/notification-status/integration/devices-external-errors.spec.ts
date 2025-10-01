@@ -36,9 +36,9 @@ describe('Devices External API Errors (e2e)', () => {
     jest.clearAllMocks();
   });
 
-  it('should return 500 when Marketing Cloud API is unavailable', async () => {
+  it('should return 503 when Marketing Cloud API is unavailable', async () => {
     mockMarketingCloudService.getDevices.mockRejectedValue(
-      new Error('EXTERNAL_API_ERROR: Marketing Cloud API returned status 503'),
+      new Error('UNAVAILABLE: Marketing Cloud API returned status 503'),
     );
 
     const response = await request(app.getHttpServer())
@@ -48,15 +48,15 @@ describe('Devices External API Errors (e2e)', () => {
         shopId: '12345',
         phone: '0912345678',
       })
-      .expect(500);
+      .expect(503);
 
     expect(response.body.success).toBe(false);
-    expect(response.body.error.code).toBe('EXTERNAL_API_ERROR');
+    expect(response.body.error.code).toBe('UNAVAILABLE');
   });
 
-  it('should return 500 when Marketing Cloud API returns 500 error', async () => {
+  it('should return 503 when Marketing Cloud API returns 500 error', async () => {
     mockMarketingCloudService.getDevices.mockRejectedValue(
-      new Error('EXTERNAL_API_ERROR: Marketing Cloud API returned status 500'),
+      new Error('UNAVAILABLE: Marketing Cloud API returned status 500'),
     );
 
     const response = await request(app.getHttpServer())
@@ -66,15 +66,15 @@ describe('Devices External API Errors (e2e)', () => {
         shopId: '12345',
         phone: '0912345678',
       })
-      .expect(500);
+      .expect(503);
 
     expect(response.body.success).toBe(false);
-    expect(response.body.error.code).toBe('EXTERNAL_API_ERROR');
+    expect(response.body.error.code).toBe('UNAVAILABLE');
   });
 
-  it('should return 500 with timeout error when Marketing Cloud API exceeds 10-second timeout', async () => {
+  it('should return 504 with timeout error when Marketing Cloud API exceeds 10-second timeout', async () => {
     mockMarketingCloudService.getDevices.mockRejectedValue(
-      new Error('TIMEOUT_ERROR: Marketing Cloud API request timed out'),
+      new Error('DEADLINE_EXCEEDED: Marketing Cloud API request timed out'),
     );
 
     const response = await request(app.getHttpServer())
@@ -84,15 +84,15 @@ describe('Devices External API Errors (e2e)', () => {
         shopId: '12345',
         phone: '0912345678',
       })
-      .expect(500);
+      .expect(504);
 
     expect(response.body.success).toBe(false);
-    expect(response.body.error.code).toBe('TIMEOUT_ERROR');
+    expect(response.body.error.code).toBe('DEADLINE_EXCEEDED');
   });
 
-  it('should return 500 when Marketing Cloud API returns invalid JSON', async () => {
+  it('should return 503 when Marketing Cloud API returns invalid JSON', async () => {
     mockMarketingCloudService.getDevices.mockRejectedValue(
-      new Error('EXTERNAL_API_ERROR: Invalid JSON response'),
+      new Error('UNAVAILABLE: Invalid JSON response'),
     );
 
     const response = await request(app.getHttpServer())
@@ -102,15 +102,15 @@ describe('Devices External API Errors (e2e)', () => {
         shopId: '12345',
         phone: '0912345678',
       })
-      .expect(500);
+      .expect(503);
 
     expect(response.body.success).toBe(false);
-    expect(response.body.error.code).toBe('EXTERNAL_API_ERROR');
+    expect(response.body.error.code).toBe('UNAVAILABLE');
   });
 
-  it('should return 500 when Marketing Cloud API connection fails', async () => {
+  it('should return 503 when Marketing Cloud API connection fails', async () => {
     mockMarketingCloudService.getDevices.mockRejectedValue(
-      new Error('EXTERNAL_API_ERROR: Unable to connect to Marketing Cloud API'),
+      new Error('UNAVAILABLE: Unable to connect to Marketing Cloud API'),
     );
 
     const response = await request(app.getHttpServer())
@@ -120,15 +120,15 @@ describe('Devices External API Errors (e2e)', () => {
         shopId: '12345',
         phone: '0912345678',
       })
-      .expect(500);
+      .expect(503);
 
     expect(response.body.success).toBe(false);
-    expect(response.body.error.code).toBe('EXTERNAL_API_ERROR');
+    expect(response.body.error.code).toBe('UNAVAILABLE');
   });
 
-  it('should return 500 when Marketing Cloud API returns 400 bad request', async () => {
+  it('should return 503 when Marketing Cloud API returns 400 bad request', async () => {
     mockMarketingCloudService.getDevices.mockRejectedValue(
-      new Error('EXTERNAL_API_ERROR: Marketing Cloud API returned status 400'),
+      new Error('UNAVAILABLE: Marketing Cloud API returned status 400'),
     );
 
     const response = await request(app.getHttpServer())
@@ -138,15 +138,15 @@ describe('Devices External API Errors (e2e)', () => {
         shopId: '12345',
         phone: '0912345678',
       })
-      .expect(500);
+      .expect(503);
 
     expect(response.body.success).toBe(false);
-    expect(response.body.error.code).toBe('EXTERNAL_API_ERROR');
+    expect(response.body.error.code).toBe('UNAVAILABLE');
   });
 
   it('should not retry failed requests according to no-retry policy', async () => {
     mockMarketingCloudService.getDevices.mockRejectedValue(
-      new Error('EXTERNAL_API_ERROR: Marketing Cloud API returned status 500'),
+      new Error('UNAVAILABLE: Marketing Cloud API returned status 500'),
     );
 
     await request(app.getHttpServer())
@@ -156,7 +156,7 @@ describe('Devices External API Errors (e2e)', () => {
         shopId: '12345',
         phone: '0912345678',
       })
-      .expect(500);
+      .expect(503);
 
     // Should only make one request (no retries)
     expect(mockMarketingCloudService.getDevices).toHaveBeenCalledTimes(1);

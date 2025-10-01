@@ -1,0 +1,1176 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/api/v1/shops/{shopId}/suppliers": {
+      "patch": {
+        "description": "Updates supplier ID for all products matching the specified criteria in a shop and market",
+        "operationId": "SuppliersController_updateSupplierId",
+        "parameters": [
+          {
+            "name": "shopId",
+            "required": true,
+            "in": "path",
+            "description": "Shop identifier",
+            "schema": { "example": 12345, "type": "integer" }
+          },
+          {
+            "name": "ny-operator",
+            "required": true,
+            "in": "header",
+            "description": "Operator identification",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Supplier update parameters",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SupplierUpdateRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Supplier ID updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "updatedCount": { "type": "integer", "example": 5 },
+                        "shopId": { "type": "integer", "example": 12345 },
+                        "market": { "type": "string", "example": "TW" },
+                        "supplierId": { "type": "integer", "example": 200 }
+                      }
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "example": "2025-09-26T14:30:52.123Z"
+                    },
+                    "requestId": {
+                      "type": "string",
+                      "example": "req-20250926143052-a8b2c4d6e8f0-1234-5678-90ab-cdef12345678"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error or business rule violation",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - missing or invalid operator header",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+              }
+            }
+          },
+          "502": {
+            "description": "Bad Gateway - external service unavailable",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorResponse" }
+              }
+            }
+          }
+        },
+        "security": [{ "operator-auth": [] }],
+        "summary": "Update supplier ID for products",
+        "tags": ["Suppliers"]
+      }
+    },
+    "/api/v1/notification-status/detail/{shopId}/{ncId}": {
+      "get": {
+        "description": "透過商店ID和通知中心ID查詢通知的詳細資訊，獲取NSId、狀態、報告等資訊",
+        "operationId": "NotificationStatusController_getNotificationDetail",
+        "parameters": [
+          {
+            "name": "shopId",
+            "required": true,
+            "in": "path",
+            "description": "商店ID (正整數)",
+            "schema": { "example": 12345, "type": "integer" }
+          },
+          {
+            "name": "ncId",
+            "required": true,
+            "in": "path",
+            "description": "通知中心ID (UUID格式)",
+            "schema": {
+              "format": "uuid",
+              "example": "a4070188-050d-47f7-ab24-2523145408cf",
+              "type": "string"
+            }
+          },
+          {
+            "name": "ny-operator",
+            "required": true,
+            "in": "header",
+            "description": "操作者識別",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功取得通知詳細資訊 (可能為null)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationDetailResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "參數驗證失敗",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorResponseDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "內部服務錯誤",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorResponseDto" }
+              }
+            }
+          }
+        },
+        "summary": "查詢通知詳細資訊",
+        "tags": ["Notification Status"]
+      }
+    },
+    "/api/v1/notification-status/devices": {
+      "get": {
+        "description": "Retrieve all registered devices for a specific customer identified by shop ID and phone number. Used by operations teams to investigate notification delivery issues.",
+        "operationId": "NotificationStatusController_getDevices",
+        "parameters": [
+          {
+            "name": "shopId",
+            "required": true,
+            "in": "query",
+            "description": "Shop identifier",
+            "schema": { "minimum": 1, "example": 12345, "type": "integer" }
+          },
+          {
+            "name": "phone",
+            "required": true,
+            "in": "query",
+            "description": "Customer phone number",
+            "schema": {
+              "minLength": 8,
+              "maxLength": 15,
+              "pattern": "^[0-9+\\-\\s()]+$",
+              "example": "0912345678",
+              "type": "string"
+            }
+          },
+          {
+            "name": "ny-operator",
+            "in": "header",
+            "description": "Operations team authentication header",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved device list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeviceQueryResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Parameter validation failure",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponseDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponseDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "No devices found for customer",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponseDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponseDto" }
+              }
+            }
+          }
+        },
+        "summary": "Query customer device information",
+        "tags": ["Notification Status"]
+      }
+    },
+    "/api/v1/notification-status/history/{notificationId}": {
+      "get": {
+        "description": "透過通知ID查詢活動執行歷程，獲取ncId和bookDateTime",
+        "operationId": "NotificationStatusController_getNotificationHistory",
+        "parameters": [
+          {
+            "name": "notificationId",
+            "required": true,
+            "in": "path",
+            "description": "通知ID",
+            "schema": { "format": "int64", "example": 12345, "type": "integer" }
+          },
+          {
+            "name": "ny-operator",
+            "in": "header",
+            "description": "操作者認證標頭",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功取得活動歷程",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationHistoryResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "參數驗證失敗",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorResponseDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "認證失敗",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorResponseDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "通知不存在",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorResponseDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "內部服務錯誤",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorResponseDto" }
+              }
+            }
+          }
+        },
+        "summary": "查詢通知活動歷程",
+        "tags": ["Notification Status"]
+      }
+    },
+    "/api/v1/notification-status/reports": {
+      "post": {
+        "description": "根據 nsId、通知日期和通知類型查詢詳細的通知狀態報告，回傳 presigned URL 供下載 TSV 格式報告",
+        "operationId": "NotificationStatusController_getStatusReports",
+        "parameters": [
+          {
+            "name": "ny-operator",
+            "in": "header",
+            "description": "內部營運團隊認證標頭",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StatusReportRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功取得報告下載連結",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StatusReportResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "輸入參數驗證失敗",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StatusReportErrorResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "認證失敗：缺少或無效的 ny-operator header",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StatusReportErrorResponseDto"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "外部 API 調用失敗",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StatusReportErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "查詢通知狀態報告",
+        "tags": ["Notification Status"]
+      }
+    }
+  },
+  "info": {
+    "title": "UPD3 Operations Platform API",
+    "description": "Standardized API for supplier operations and management",
+    "version": "1.0",
+    "contact": {}
+  },
+  "tags": [
+    { "name": "Suppliers", "description": "Supplier management operations" }
+  ],
+  "servers": [],
+  "components": {
+    "securitySchemes": {
+      "operator-auth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "ny-operator",
+        "description": "Operator identification header"
+      }
+    },
+    "schemas": {
+      "SupplierUpdateRequestDto": {
+        "type": "object",
+        "properties": {
+          "market": {
+            "type": "string",
+            "description": "Market code (e.g., TW, HK, JP)",
+            "example": "TW",
+            "pattern": "^[A-Z]{2,4}$",
+            "minLength": 2,
+            "maxLength": 4
+          },
+          "oldSupplierId": {
+            "type": "integer",
+            "description": "Original supplier ID",
+            "example": 100,
+            "minimum": 1
+          },
+          "newSupplierId": {
+            "type": "integer",
+            "description": "New supplier ID",
+            "example": 200,
+            "minimum": 1
+          }
+        },
+        "required": ["market", "oldSupplierId", "newSupplierId"]
+      },
+      "ErrorObject": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "Structured error code",
+            "example": "VALIDATION_ERROR",
+            "enum": [
+              "VALIDATION_ERROR",
+              "MISSING_REQUIRED_FIELD",
+              "INVALID_FIELD_FORMAT",
+              "INVALID_MARKET_CODE",
+              "INVALID_SUPPLIER_ID",
+              "BUSINESS_RULE_VIOLATION",
+              "SUPPLIER_IDS_IDENTICAL",
+              "SUPPLIER_NOT_FOUND",
+              "SHOP_NOT_FOUND",
+              "EXTERNAL_SERVICE_ERROR",
+              "WHALE_API_UNAVAILABLE",
+              "DATABASE_CONNECTION_ERROR",
+              "INTERNAL_SERVER_ERROR",
+              "UNAUTHORIZED_ACCESS"
+            ]
+          },
+          "message": {
+            "type": "string",
+            "description": "English error message",
+            "example": "Market is required",
+            "minLength": 1
+          },
+          "details": {
+            "type": "object",
+            "description": "Optional error context and additional information",
+            "example": { "field": "market" }
+          }
+        },
+        "required": ["code", "message"]
+      },
+      "ApiErrorResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "number",
+            "description": "Success indicator (always false for error responses)",
+            "example": false,
+            "enum": [false]
+          },
+          "error": {
+            "description": "Error information object",
+            "allOf": [{ "$ref": "#/components/schemas/ErrorObject" }]
+          },
+          "timestamp": {
+            "type": "string",
+            "description": "ISO 8601 timestamp of the error response",
+            "example": "2025-09-26T14:30:52.123Z",
+            "format": "date-time"
+          },
+          "requestId": {
+            "type": "string",
+            "description": "Unique request identifier for tracing",
+            "example": "req-20250926143052-a8b2c4d6e8f0-1234-5678-90ab-cdef12345678",
+            "pattern": "^req-\\d{14}-[a-f0-9-]{36}$"
+          }
+        },
+        "required": ["success", "error", "timestamp", "requestId"]
+      },
+      "NotificationReportDto": {
+        "type": "object",
+        "properties": {
+          "Total": {
+            "type": "number",
+            "description": "總筆數",
+            "example": 1000
+          },
+          "NoUserData": {
+            "type": "number",
+            "description": "找不到使用者資料",
+            "example": 50
+          },
+          "InBlackList": {
+            "type": "number",
+            "description": "被黑名單篩掉",
+            "example": 20
+          },
+          "DontWantToReceiveThisMessageType": {
+            "type": "number",
+            "description": "不想收到這種訊息",
+            "example": 30
+          },
+          "Sent": { "type": "number", "description": "已遞送", "example": 800 },
+          "Fail": {
+            "type": "number",
+            "description": "遞送失敗",
+            "example": 50
+          },
+          "DidNotSend": {
+            "type": "number",
+            "description": "沒有遞送出去",
+            "example": 30
+          },
+          "Cancel": { "type": "number", "description": "取消", "example": 20 },
+          "NoTokenData": {
+            "type": "number",
+            "description": "沒有Token資料 (Push專用)",
+            "example": 0
+          },
+          "Received": {
+            "type": "number",
+            "description": "NS收到 (Push/SMS專用)",
+            "example": 0
+          },
+          "EmailIsEmpty": {
+            "type": "number",
+            "description": "Email是空值 (Email專用)",
+            "example": 0
+          },
+          "CellPhoneIsEmpty": {
+            "type": "number",
+            "description": "手機是空值 (SMS專用)",
+            "example": 0
+          },
+          "Success": {
+            "type": "number",
+            "description": "客戶確實收到 (SMS專用)",
+            "example": 0
+          },
+          "Declined": {
+            "type": "number",
+            "description": "供應商取消遞送 (SMS專用)",
+            "example": 0
+          },
+          "CellPhoneIsNotTW": {
+            "type": "number",
+            "description": "非TW電話 (SMS專用)",
+            "example": 0
+          },
+          "CellPhoneIsNotMY": {
+            "type": "number",
+            "description": "非MY電話 (SMS專用)",
+            "example": 0
+          }
+        },
+        "required": [
+          "Total",
+          "NoUserData",
+          "InBlackList",
+          "DontWantToReceiveThisMessageType",
+          "Sent",
+          "Fail",
+          "DidNotSend",
+          "Cancel"
+        ]
+      },
+      "NotificationDetailDto": {
+        "type": "object",
+        "properties": {
+          "NCId": {
+            "type": "string",
+            "description": "通知中心ID",
+            "example": "a4070188-050d-47f7-ab24-2523145408cf",
+            "format": "uuid"
+          },
+          "NSId": {
+            "type": "string",
+            "description": "通知服務ID",
+            "example": "d68e720f-62ed-4955-802b-8e3f04c56a19",
+            "format": "uuid"
+          },
+          "Status": {
+            "type": "string",
+            "description": "通知狀態",
+            "example": "Completed",
+            "enum": [
+              "Scheduled",
+              "Processing",
+              "Completed",
+              "Failed",
+              "Cancelled"
+            ]
+          },
+          "ChannelType": {
+            "type": "string",
+            "description": "通知類型",
+            "example": "Push",
+            "enum": ["Push", "Email", "SMS"]
+          },
+          "CreateDateTime": {
+            "type": "string",
+            "description": "建立時間",
+            "example": "2025-09-15T01:58:31.117",
+            "format": "date-time"
+          },
+          "Report": {
+            "description": "發送報告",
+            "allOf": [{ "$ref": "#/components/schemas/NotificationReportDto" }]
+          },
+          "ShortMessageReportLink": {
+            "type": "object",
+            "description": "簡訊報告連結",
+            "example": null,
+            "nullable": true
+          }
+        },
+        "required": [
+          "NCId",
+          "NSId",
+          "Status",
+          "ChannelType",
+          "CreateDateTime",
+          "Report"
+        ]
+      },
+      "NotificationDetailResponseDto": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "操作是否成功",
+            "example": true
+          },
+          "data": {
+            "description": "通知詳細資訊 (可能為null)",
+            "nullable": true,
+            "allOf": [{ "$ref": "#/components/schemas/NotificationDetailDto" }]
+          },
+          "timestamp": {
+            "type": "string",
+            "description": "回應時間戳",
+            "example": "2025-01-27T10:35:00Z",
+            "format": "date-time"
+          },
+          "requestId": {
+            "type": "string",
+            "description": "請求追蹤ID",
+            "example": "req-detail-123456"
+          }
+        },
+        "required": ["success", "data", "timestamp", "requestId"]
+      },
+      "ErrorDetailDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "錯誤代碼",
+            "example": "VALIDATION_ERROR",
+            "enum": [
+              "VALIDATION_ERROR",
+              "EXTERNAL_API_ERROR",
+              "TIMEOUT_ERROR",
+              "DATA_FORMAT_ERROR",
+              "INTERNAL_SERVER_ERROR"
+            ]
+          },
+          "message": {
+            "type": "string",
+            "description": "錯誤訊息",
+            "example": "輸入參數驗證失敗"
+          },
+          "details": {
+            "type": "object",
+            "description": "錯誤詳細資訊",
+            "example": "shopId must be greater than 0"
+          }
+        },
+        "required": ["code", "message"]
+      },
+      "ApiErrorResponseDto": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "操作是否成功",
+            "example": false
+          },
+          "error": {
+            "description": "錯誤詳情",
+            "allOf": [{ "$ref": "#/components/schemas/ErrorDetailDto" }]
+          },
+          "timestamp": {
+            "type": "string",
+            "description": "錯誤時間戳",
+            "example": "2025-01-27T10:35:00Z",
+            "format": "date-time"
+          },
+          "requestId": {
+            "type": "string",
+            "description": "請求追蹤ID",
+            "example": "req-detail-123456"
+          }
+        },
+        "required": ["success", "error", "timestamp", "requestId"]
+      },
+      "DeviceDto": {
+        "type": "object",
+        "properties": {
+          "guid": {
+            "type": "string",
+            "description": "Device unique identifier",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "format": "uuid"
+          },
+          "udid": {
+            "type": "string",
+            "description": "Device UDID",
+            "example": "device_udid_123"
+          },
+          "token": {
+            "type": "string",
+            "description": "Push notification token",
+            "example": "device_token_123"
+          },
+          "shopId": {
+            "type": "number",
+            "description": "Associated shop ID",
+            "example": 12345,
+            "minimum": 1
+          },
+          "platformDef": {
+            "type": "string",
+            "description": "Device platform",
+            "enum": ["iOS", "Android"],
+            "example": "iOS"
+          },
+          "memberId": {
+            "type": "number",
+            "description": "Associated member ID",
+            "example": 67890,
+            "minimum": 1
+          },
+          "advertiseId": {
+            "type": "string",
+            "description": "Advertising tracking ID",
+            "example": "ad_id_123"
+          },
+          "appVersion": {
+            "type": "string",
+            "description": "Application version",
+            "example": "1.2.3"
+          },
+          "createdDateTime": {
+            "type": "string",
+            "description": "Device registration time",
+            "example": "2024-01-15T10:00:00Z",
+            "format": "date-time"
+          },
+          "updatedDateTime": {
+            "type": "string",
+            "description": "Last update time",
+            "example": "2024-01-15T10:30:00Z",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "guid",
+          "udid",
+          "token",
+          "shopId",
+          "platformDef",
+          "memberId",
+          "createdDateTime",
+          "updatedDateTime"
+        ]
+      },
+      "DeviceQueryResponseDto": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "number",
+            "description": "Success indicator",
+            "example": true,
+            "enum": [true]
+          },
+          "data": {
+            "description": "List of customer devices (may be empty)",
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/DeviceDto" }
+          },
+          "timestamp": {
+            "type": "string",
+            "description": "Response generation time",
+            "example": "2024-01-15T10:35:00Z",
+            "format": "date-time"
+          },
+          "requestId": {
+            "type": "string",
+            "description": "Request tracking ID",
+            "example": "req-devices-123456",
+            "pattern": "^req-devices-[a-zA-Z0-9]+$"
+          }
+        },
+        "required": ["success", "data", "timestamp", "requestId"]
+      },
+      "ErrorDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "Standard error code",
+            "enum": [
+              "VALIDATION_ERROR",
+              "DEVICE_NOT_FOUND",
+              "EXTERNAL_API_ERROR",
+              "TIMEOUT_ERROR",
+              "RATE_LIMIT_ERROR",
+              "INTERNAL_SERVER_ERROR",
+              "UNAUTHORIZED"
+            ]
+          },
+          "message": {
+            "type": "string",
+            "description": "User-friendly error message",
+            "example": "Input parameter validation failed"
+          },
+          "details": {
+            "type": "object",
+            "description": "Additional error context (optional)"
+          }
+        },
+        "required": ["code", "message"]
+      },
+      "ErrorResponseDto": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "number",
+            "description": "Fixed false for errors",
+            "example": false,
+            "enum": [false]
+          },
+          "error": {
+            "description": "Error information",
+            "allOf": [{ "$ref": "#/components/schemas/ErrorDto" }]
+          },
+          "timestamp": {
+            "type": "string",
+            "description": "Error occurrence time",
+            "example": "2024-01-15T10:35:00Z",
+            "format": "date-time"
+          },
+          "requestId": {
+            "type": "string",
+            "description": "Request tracking ID",
+            "example": "req-devices-123456"
+          }
+        },
+        "required": ["success", "error", "timestamp", "requestId"]
+      },
+      "WhaleReport": {
+        "type": "object",
+        "properties": {
+          "Total": {
+            "type": "integer",
+            "description": "總數",
+            "minimum": 0,
+            "example": 1000
+          },
+          "Sent": {
+            "type": "integer",
+            "description": "已發送",
+            "minimum": 0,
+            "example": 950
+          },
+          "Success": {
+            "type": "integer",
+            "description": "成功數",
+            "minimum": 0,
+            "example": 900
+          },
+          "Fail": {
+            "type": "integer",
+            "description": "失敗數",
+            "minimum": 0,
+            "example": 50
+          },
+          "NoUser": {
+            "type": "integer",
+            "description": "無用戶數",
+            "minimum": 0,
+            "example": 50
+          }
+        },
+        "required": ["Total", "Sent", "Success", "Fail", "NoUser"]
+      },
+      "NotificationHistory": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "通知ID",
+            "format": "int64",
+            "example": 12345
+          },
+          "channel": {
+            "type": "string",
+            "description": "通知頻道",
+            "example": "Push"
+          },
+          "bookDatetime": {
+            "type": "string",
+            "description": "預定發送時間",
+            "format": "date-time",
+            "example": "2024-01-15T10:30:00Z"
+          },
+          "sentDatetime": {
+            "type": "string",
+            "description": "實際發送時間",
+            "format": "date-time",
+            "nullable": true,
+            "example": "2024-01-15T10:35:00Z"
+          },
+          "ncId": {
+            "type": "string",
+            "description": "Notification Center ID",
+            "format": "uuid",
+            "example": "a4070188-050d-47f7-ab24-2523145408cf"
+          },
+          "ncExtId": {
+            "type": "integer",
+            "description": "NC Extension ID",
+            "example": 67890
+          },
+          "status": {
+            "type": "string",
+            "description": "通知狀態",
+            "enum": [
+              "Scheduled",
+              "Booked",
+              "Sent",
+              "Error",
+              "Success",
+              "Fail",
+              "PartialFail",
+              "NoUser"
+            ],
+            "example": "Success"
+          },
+          "isSettled": {
+            "type": "boolean",
+            "description": "是否已結算",
+            "example": true
+          },
+          "originalAudienceCount": {
+            "type": "integer",
+            "description": "原始受眾數量",
+            "minimum": 0,
+            "example": 1000
+          },
+          "filteredAudienceCount": {
+            "type": "integer",
+            "description": "篩選後受眾數量",
+            "minimum": 0,
+            "example": 950
+          },
+          "sentAudienceCount": {
+            "type": "integer",
+            "description": "實際發送數量",
+            "minimum": 0,
+            "example": 900
+          },
+          "receivedAudienceCount": {
+            "type": "integer",
+            "description": "實際接收數量",
+            "minimum": 0,
+            "example": 850
+          },
+          "sentFailedCount": {
+            "type": "integer",
+            "description": "發送失敗數量",
+            "minimum": 0,
+            "example": 50
+          },
+          "report": {
+            "description": "統計報告",
+            "allOf": [{ "$ref": "#/components/schemas/WhaleReport" }]
+          }
+        },
+        "required": [
+          "id",
+          "channel",
+          "bookDatetime",
+          "sentDatetime",
+          "ncId",
+          "ncExtId",
+          "status",
+          "isSettled",
+          "originalAudienceCount",
+          "filteredAudienceCount",
+          "sentAudienceCount",
+          "receivedAudienceCount",
+          "sentFailedCount",
+          "report"
+        ]
+      },
+      "NotificationHistoryResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "number",
+            "description": "操作成功標記",
+            "enum": [true]
+          },
+          "data": {
+            "description": "通知歷程資料",
+            "allOf": [{ "$ref": "#/components/schemas/NotificationHistory" }]
+          },
+          "timestamp": {
+            "type": "string",
+            "description": "回應時間戳",
+            "format": "date-time",
+            "example": "2024-01-15T10:35:00Z"
+          },
+          "requestId": {
+            "type": "string",
+            "description": "請求追蹤ID",
+            "pattern": "^req-history-[0-9]+-[a-zA-Z0-9]+$",
+            "example": "req-history-123457"
+          }
+        },
+        "required": ["success", "data", "timestamp", "requestId"]
+      },
+      "NotificationType": {
+        "type": "string",
+        "enum": ["sms", "push", "line", "email"],
+        "description": "通知類型"
+      },
+      "StatusReportRequestDto": {
+        "type": "object",
+        "properties": {
+          "nsId": {
+            "type": "string",
+            "description": "通知系統 ID (UUID 格式)",
+            "example": "d68e720f-62ed-4955-802b-8e3f04c56a19",
+            "format": "uuid"
+          },
+          "notificationDate": {
+            "type": "string",
+            "description": "通知發送日期 (YYYY/MM/DD 格式)",
+            "example": "2024/01/15",
+            "pattern": "^\\d{4}/\\d{2}/\\d{2}$"
+          },
+          "notificationType": {
+            "description": "通知類型",
+            "example": "push",
+            "allOf": [{ "$ref": "#/components/schemas/NotificationType" }]
+          }
+        },
+        "required": ["nsId", "notificationDate", "notificationType"]
+      },
+      "StatusReportDataDto": {
+        "type": "object",
+        "properties": {
+          "downloadUrl": {
+            "type": "string",
+            "description": "報告下載連結 (presigned URL)",
+            "example": "https://s3.amazonaws.com/reports/notification-report-123.tsv?signature=abc123&expires=1640995200",
+            "format": "uri"
+          },
+          "expiredTime": {
+            "type": "number",
+            "description": "下載連結過期時間 (秒數)",
+            "example": 3600,
+            "minimum": 1
+          }
+        },
+        "required": ["downloadUrl", "expiredTime"]
+      },
+      "StatusReportResponseDto": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "請求是否成功",
+            "example": true
+          },
+          "data": {
+            "description": "報告資料",
+            "allOf": [{ "$ref": "#/components/schemas/StatusReportDataDto" }]
+          },
+          "timestamp": {
+            "type": "string",
+            "description": "請求時間戳記 (ISO 8601 格式)",
+            "example": "2024-01-15T10:30:00.000Z",
+            "format": "date-time"
+          },
+          "requestId": {
+            "type": "string",
+            "description": "請求識別碼",
+            "example": "req-reports-1705317000000-abc123",
+            "pattern": "^req-reports-\\d+-[a-zA-Z0-9]+$"
+          }
+        },
+        "required": ["success", "data", "timestamp", "requestId"]
+      },
+      "StatusReportErrorDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "錯誤代碼",
+            "example": "VALIDATION_ERROR",
+            "enum": ["VALIDATION_ERROR", "UNAUTHORIZED", "EXTERNAL_API_ERROR"]
+          },
+          "message": {
+            "type": "string",
+            "description": "錯誤訊息",
+            "example": "輸入參數驗證失敗"
+          },
+          "details": {
+            "description": "錯誤詳細資訊",
+            "oneOf": [
+              {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/StatusReportErrorDetailsDto"
+                }
+              },
+              { "$ref": "#/components/schemas/StatusReportErrorDetailsDto" }
+            ]
+          }
+        },
+        "required": ["code", "message"]
+      },
+      "StatusReportErrorResponseDto": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "請求是否成功",
+            "example": false
+          },
+          "error": {
+            "description": "錯誤資訊",
+            "allOf": [{ "$ref": "#/components/schemas/StatusReportErrorDto" }]
+          },
+          "timestamp": {
+            "type": "string",
+            "description": "請求時間戳記 (ISO 8601 格式)",
+            "example": "2024-01-15T10:30:00.000Z",
+            "format": "date-time"
+          },
+          "requestId": {
+            "type": "string",
+            "description": "請求識別碼",
+            "example": "req-reports-1705317000000-abc123",
+            "pattern": "^req-reports-\\d+-[a-zA-Z0-9]+$"
+          }
+        },
+        "required": ["success", "error", "timestamp", "requestId"]
+      }
+    }
+  }
+}

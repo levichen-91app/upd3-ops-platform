@@ -51,25 +51,29 @@ describe('Devices Not Found Scenarios (e2e)', () => {
     expect(response.body).toMatchObject({
       success: false,
       error: {
-        code: 'DEVICE_NOT_FOUND',
+        code: 'NOT_FOUND',
         message: '找不到指定客戶的設備',
-        details: {
-          shopId: 99999,
-          phone: '0987654321',
-        },
+        details: expect.arrayContaining([
+          expect.objectContaining({
+            '@type': 'type.upd3ops.com/ResourceInfo',
+            shopId: 99999,
+            phone: '0987654321',
+          }),
+        ]),
       },
       timestamp: expect.any(String),
       requestId: expect.stringMatching(
         /^req-\d{14}-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/,
       ),
     });
+    expect(response.body.error.details).toHaveLength(1);
   });
 
-  it('should return 500 when Marketing Cloud API returns 404 not found', async () => {
+  it('should return 404 when Marketing Cloud API returns 404 not found', async () => {
     // Mock the service to throw an external API error
     mockMarketingCloudService.getDevices.mockImplementation(() => {
       throw new Error(
-        'EXTERNAL_API_ERROR: Marketing Cloud API returned status 404',
+        'NOT_FOUND: Marketing Cloud API returned status 404',
       );
     });
 
@@ -80,10 +84,10 @@ describe('Devices Not Found Scenarios (e2e)', () => {
         shopId: '99999',
         phone: '0987654321',
       })
-      .expect(500);
+      .expect(404);
 
     expect(response.body.success).toBe(false);
-    expect(response.body.error.code).toBe('EXTERNAL_API_ERROR');
+    expect(response.body.error.code).toBe('NOT_FOUND');
   });
 
   it('should return 404 for valid but non-existent customer', async () => {
@@ -99,8 +103,10 @@ describe('Devices Not Found Scenarios (e2e)', () => {
       .expect(404);
 
     expect(response.body.success).toBe(false);
-    expect(response.body.error.code).toBe('DEVICE_NOT_FOUND');
-    expect(response.body.error.details).toMatchObject({
+    expect(response.body.error.code).toBe('NOT_FOUND');
+    expect(response.body.error.details).toHaveLength(1);
+    expect(response.body.error.details[0]).toMatchObject({
+      '@type': 'type.upd3ops.com/ResourceInfo',
       shopId: 12345,
       phone: '0999999999',
     });
@@ -119,8 +125,9 @@ describe('Devices Not Found Scenarios (e2e)', () => {
       .expect(404);
 
     expect(response.body.success).toBe(false);
-    expect(response.body.error.code).toBe('DEVICE_NOT_FOUND');
-    expect(response.body.error.details.shopId).toBe(99999);
+    expect(response.body.error.code).toBe('NOT_FOUND');
+    expect(response.body.error.details).toHaveLength(1);
+    expect(response.body.error.details[0].shopId).toBe(99999);
   });
 
   it('should include request tracking in 404 responses', async () => {
@@ -156,7 +163,7 @@ describe('Devices Not Found Scenarios (e2e)', () => {
       .expect(404);
 
     expect(response.body.success).toBe(false);
-    expect(response.body.error.code).toBe('DEVICE_NOT_FOUND');
+    expect(response.body.error.code).toBe('NOT_FOUND');
   });
 
   it('should handle Marketing Cloud undefined response as not found', async () => {
@@ -172,6 +179,6 @@ describe('Devices Not Found Scenarios (e2e)', () => {
       .expect(404);
 
     expect(response.body.success).toBe(false);
-    expect(response.body.error.code).toBe('DEVICE_NOT_FOUND');
+    expect(response.body.error.code).toBe('NOT_FOUND');
   });
 });

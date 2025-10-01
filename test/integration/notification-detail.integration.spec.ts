@@ -95,7 +95,7 @@ describe('Notification Detail Integration Tests', () => {
         .expect(400);
 
       expect(response.body.success).toBe(false);
-      expect(response.body.error.code).toBe('VALIDATION_ERROR');
+      expect(response.body.error.code).toBe('INVALID_ARGUMENT');
     });
 
     it('should validate ny-operator header in the complete flow', async () => {
@@ -104,7 +104,7 @@ describe('Notification Detail Integration Tests', () => {
         .expect(400);
 
       expect(response.body.success).toBe(false);
-      expect(response.body.error.code).toBe('VALIDATION_ERROR');
+      expect(response.body.error.code).toBe('INVALID_ARGUMENT');
     });
 
     it('should return null when notification does not exist', async () => {

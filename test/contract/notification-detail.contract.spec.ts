@@ -106,7 +106,7 @@ describe('Notification Detail API Contract Tests', () => {
 
       expect(response.body).toHaveProperty('success', false);
       expect(response.body).toHaveProperty('error');
-      expect(response.body.error).toHaveProperty('code', 'VALIDATION_ERROR');
+      expect(response.body.error).toHaveProperty('code', 'INVALID_ARGUMENT');
     });
 
     it('should return 400 when ncId is not UUID format', async () => {
@@ -119,7 +119,7 @@ describe('Notification Detail API Contract Tests', () => {
 
       expect(response.body).toHaveProperty('success', false);
       expect(response.body).toHaveProperty('error');
-      expect(response.body.error).toHaveProperty('code', 'VALIDATION_ERROR');
+      expect(response.body.error).toHaveProperty('code', 'INVALID_ARGUMENT');
     });
 
     it('should return 400 when ny-operator header is missing', async () => {
@@ -129,7 +129,7 @@ describe('Notification Detail API Contract Tests', () => {
 
       expect(response.body).toHaveProperty('success', false);
       expect(response.body).toHaveProperty('error');
-      expect(response.body.error).toHaveProperty('code', 'VALIDATION_ERROR');
+      expect(response.body.error).toHaveProperty('code', 'INVALID_ARGUMENT');
       expect(response.body.error.message).toContain('Missing required header');
     });
 

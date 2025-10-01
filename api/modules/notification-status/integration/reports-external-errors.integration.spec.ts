@@ -56,9 +56,9 @@ describe('Reports External Errors Integration', () => {
       'Content-Type': 'application/json',
     };
 
-    it('should return 500 when NS Report API times out', async () => {
+    it('should return 504 when NS Report API times out', async () => {
       // Arrange: Mock timeout error
-      const timeoutError = new Error('Request timeout');
+      const timeoutError = new Error('DEADLINE_EXCEEDED: Request timeout');
       timeoutError.name = 'TimeoutError';
       mockNSReportService.getStatusReport.mockRejectedValue(timeoutError);
 
@@ -67,19 +67,19 @@ describe('Reports External Errors Integration', () => {
         .post('/api/v1/notification-status/reports')
         .set(validHeaders)
         .send(validRequest)
-        .expect(500);
+        .expect(504);
 
       // Assert: Error response structure for timeout
       expect(response.body).toEqual({
         success: false,
         error: {
-          code: 'EXTERNAL_API_ERROR',
+          code: 'DEADLINE_EXCEEDED',
           message: '外部 NS Report API 調用失敗',
         },
         timestamp: expect.stringMatching(
           /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/,
         ),
-        requestId: expect.stringMatching(/^req-\d{14}-[0-9a-f-]{36}$/),
+        requestId: expect.stringMatching(/^req-\d{14}-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/),
       });
 
       // Assert: External service was called
@@ -88,9 +88,9 @@ describe('Reports External Errors Integration', () => {
       );
     });
 
-    it('should return 500 when NS Report API returns HTTP 500 error', async () => {
+    it('should return 503 when NS Report API returns HTTP 500 error', async () => {
       // Arrange: Mock HTTP 500 error
-      const httpError = new Error('Internal Server Error');
+      const httpError = new Error('UNAVAILABLE: Internal Server Error');
       httpError.name = 'HttpException';
       (httpError as any).response = {
         status: 500,
@@ -104,25 +104,25 @@ describe('Reports External Errors Integration', () => {
         .post('/api/v1/notification-status/reports')
         .set(validHeaders)
         .send(validRequest)
-        .expect(500);
+        .expect(503);
 
       // Assert: Error response structure for HTTP error
       expect(response.body.success).toBe(false);
-      expect(response.body.error.code).toBe('EXTERNAL_API_ERROR');
+      expect(response.body.error.code).toBe('UNAVAILABLE');
       expect(response.body.error.message).toContain(
         '外部 NS Report API 調用失敗',
       );
       expect(response.body.error.details).toEqual({
-        originalMessage: 'Internal Server Error',
+        originalMessage: 'UNAVAILABLE: Internal Server Error',
         errorType: 'HttpException',
         statusCode: 500,
         statusText: 'Internal Server Error',
       });
     });
 
-    it('should return 500 when NS Report API returns HTTP 404 error', async () => {
+    it('should return 404 when NS Report API returns HTTP 404 error', async () => {
       // Arrange: Mock HTTP 404 error (not found in external system)
-      const notFoundError = new Error('Report not found');
+      const notFoundError = new Error('NOT_FOUND: Report not found');
       notFoundError.name = 'HttpException';
       (notFoundError as any).response = {
         status: 404,
@@ -136,16 +136,16 @@ describe('Reports External Errors Integration', () => {
         .post('/api/v1/notification-status/reports')
         .set(validHeaders)
         .send(validRequest)
-        .expect(500);
+        .expect(404);
 
-      // Assert: External 404 becomes internal 500 (external API error)
-      expect(response.body.error.code).toBe('EXTERNAL_API_ERROR');
+      // Assert: External 404 becomes internal 404 (not found)
+      expect(response.body.error.code).toBe('NOT_FOUND');
       expect(response.body.error.details.statusCode).toBe(404);
     });
 
-    it('should return 500 when NS Report API returns HTTP 403 Forbidden', async () => {
+    it('should return 503 when NS Report API returns HTTP 403 Forbidden', async () => {
       // Arrange: Mock HTTP 403 error (authentication failure at external API)
-      const forbiddenError = new Error('Forbidden');
+      const forbiddenError = new Error('UNAVAILABLE: Forbidden');
       forbiddenError.name = 'HttpException';
       (forbiddenError as any).response = {
         status: 403,
@@ -159,16 +159,16 @@ describe('Reports External Errors Integration', () => {
         .post('/api/v1/notification-status/reports')
         .set(validHeaders)
         .send(validRequest)
-        .expect(500);
+        .expect(503);
 
-      // Assert: External 403 becomes internal 500
-      expect(response.body.error.code).toBe('EXTERNAL_API_ERROR');
+      // Assert: External 403 becomes internal 503
+      expect(response.body.error.code).toBe('UNAVAILABLE');
       expect(response.body.error.details.statusCode).toBe(403);
     });
 
-    it('should return 500 when NS Report API connection fails', async () => {
+    it('should return 503 when NS Report API connection fails', async () => {
       // Arrange: Mock connection failure
-      const connectionError = new Error('ECONNREFUSED');
+      const connectionError = new Error('UNAVAILABLE: ECONNREFUSED');
       connectionError.name = 'ConnectionError';
       (connectionError as any).code = 'ECONNREFUSED';
       mockNSReportService.getStatusReport.mockRejectedValue(connectionError);
@@ -178,20 +178,20 @@ describe('Reports External Errors Integration', () => {
         .post('/api/v1/notification-status/reports')
         .set(validHeaders)
         .send(validRequest)
-        .expect(500);
+        .expect(503);
 
       // Assert: Connection error response
-      expect(response.body.error.code).toBe('EXTERNAL_API_ERROR');
+      expect(response.body.error.code).toBe('UNAVAILABLE');
       expect(response.body.error.details).toEqual({
-        originalMessage: 'ECONNREFUSED',
+        originalMessage: 'UNAVAILABLE: ECONNREFUSED',
         errorType: 'ConnectionError',
         errorCode: 'ECONNREFUSED',
       });
     });
 
-    it('should return 500 when NS Report API returns invalid JSON response', async () => {
+    it('should return 503 when NS Report API returns invalid JSON response', async () => {
       // Arrange: Mock invalid JSON response
-      const parseError = new Error('Unexpected token < in JSON at position 0');
+      const parseError = new Error('UNAVAILABLE: Unexpected token < in JSON at position 0');
       parseError.name = 'SyntaxError';
       mockNSReportService.getStatusReport.mockRejectedValue(parseError);
 
@@ -200,14 +200,14 @@ describe('Reports External Errors Integration', () => {
         .post('/api/v1/notification-status/reports')
         .set(validHeaders)
         .send(validRequest)
-        .expect(500);
+        .expect(503);
 
       // Assert: JSON parse error response
-      expect(response.body.error.code).toBe('EXTERNAL_API_ERROR');
+      expect(response.body.error.code).toBe('UNAVAILABLE');
       expect(response.body.error.details.errorType).toBe('SyntaxError');
     });
 
-    it('should return 500 when NS Report API returns unexpected response structure', async () => {
+    it('should return 503 when NS Report API returns unexpected response structure', async () => {
       // Arrange: Mock service returning incomplete data
       mockNSReportService.getStatusReport.mockResolvedValue({
         downloadUrl: null, // Missing required field
@@ -219,10 +219,10 @@ describe('Reports External Errors Integration', () => {
         .post('/api/v1/notification-status/reports')
         .set(validHeaders)
         .send(validRequest)
-        .expect(500);
+        .expect(503);
 
       // Assert: Invalid response structure error
-      expect(response.body.error.code).toBe('EXTERNAL_API_ERROR');
+      expect(response.body.error.code).toBe('UNAVAILABLE');
       expect(response.body.error.message).toContain(
         '外部 NS Report API 調用失敗',
       );
@@ -231,9 +231,9 @@ describe('Reports External Errors Integration', () => {
     it('should maintain consistent error response format across all external failures', async () => {
       // Act: Test multiple error types
       const errorScenarios = [
-        { error: new Error('Timeout'), name: 'TimeoutError' },
-        { error: new Error('Connection failed'), name: 'ConnectionError' },
-        { error: new Error('Parse error'), name: 'SyntaxError' },
+        { error: new Error('DEADLINE_EXCEEDED: Timeout'), name: 'TimeoutError', expectedCode: 'DEADLINE_EXCEEDED', expectedStatus: 504 },
+        { error: new Error('UNAVAILABLE: Connection failed'), name: 'ConnectionError', expectedCode: 'UNAVAILABLE', expectedStatus: 503 },
+        { error: new Error('UNAVAILABLE: Parse error'), name: 'SyntaxError', expectedCode: 'UNAVAILABLE', expectedStatus: 503 },
       ];
 
       for (const scenario of errorScenarios) {
@@ -244,13 +244,13 @@ describe('Reports External Errors Integration', () => {
           .post('/api/v1/notification-status/reports')
           .set(validHeaders)
           .send(validRequest)
-          .expect(500);
+          .expect(scenario.expectedStatus);
 
         // Assert: Consistent structure across all errors
         expect(response.body).toMatchObject({
           success: false,
           error: {
-            code: 'INTERNAL_SERVER_ERROR',
+            code: scenario.expectedCode,
             message: expect.any(String),
             details: expect.objectContaining({
               originalMessage: expect.any(String),
@@ -268,7 +268,7 @@ describe('Reports External Errors Integration', () => {
     it('should include unique request IDs for external API failures', async () => {
       // Arrange: Mock error
       mockNSReportService.getStatusReport.mockRejectedValue(
-        new Error('Service unavailable'),
+        new Error('UNAVAILABLE: Service unavailable'),
       );
 
       // Act: Make multiple requests
@@ -276,18 +276,18 @@ describe('Reports External Errors Integration', () => {
         .post('/api/v1/notification-status/reports')
         .set(validHeaders)
         .send(validRequest)
-        .expect(500);
+        .expect(503);
 
       const response2 = await request(app.getHttpServer())
         .post('/api/v1/notification-status/reports')
         .set(validHeaders)
         .send(validRequest)
-        .expect(500);
+        .expect(503);
 
       // Assert: Different request IDs for each failure
       expect(response1.body.requestId).not.toBe(response2.body.requestId);
-      expect(response1.body.requestId).toMatch(/^req-\d{14}-[0-9a-f-]{36}$/);
-      expect(response2.body.requestId).toMatch(/^req-\d{14}-[0-9a-f-]{36}$/);
+      expect(response1.body.requestId).toMatch(/^req-\d{14}-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/);
+      expect(response2.body.requestId).toMatch(/^req-\d{14}-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/);
     });
   });
 });

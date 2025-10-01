@@ -96,7 +96,7 @@ describe('Notification History Contract Tests', () => {
 
       expect(response.body).toHaveProperty('success', false);
       expect(response.body).toHaveProperty('error');
-      expect(response.body.error).toHaveProperty('code', 'VALIDATION_ERROR');
+      expect(response.body.error).toHaveProperty('code', 'INVALID_ARGUMENT');
       expect(response.body.error).toHaveProperty('message');
       expect(response.body).toHaveProperty('timestamp');
       expect(response.body).toHaveProperty('requestId');

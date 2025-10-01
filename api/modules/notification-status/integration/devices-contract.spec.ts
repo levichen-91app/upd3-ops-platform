@@ -66,7 +66,7 @@ describe('Devices API Contract (e2e)', () => {
         success: true,
         data: expect.any(Array),
         timestamp: expect.any(String),
-        requestId: expect.stringMatching(/^req-\d{14}-[0-9a-f-]{36}$/),
+        requestId: expect.stringMatching(/^req-\d{14}-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/),
       });
 
       expect(response.body.data[0]).toMatchObject({
@@ -169,7 +169,7 @@ describe('Devices API Contract (e2e)', () => {
       expect(response.body).toMatchObject({
         success: false,
         error: {
-          code: 'DEVICE_NOT_FOUND',
+          code: 'NOT_FOUND',
           message: expect.any(String),
           details: {
             shopId: 99999,
@@ -196,11 +196,11 @@ describe('Devices API Contract (e2e)', () => {
       expect(response.body).toMatchObject({
         success: false,
         error: {
-          code: 'VALIDATION_ERROR',
+          code: 'INVALID_ARGUMENT',
           message: expect.any(Array),
         },
         timestamp: expect.any(String),
-        requestId: expect.stringMatching(/^req-\d{14}-[0-9a-f-]{36}$/),
+        requestId: expect.stringMatching(/^req-\d{14}-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/),
       });
     });
 
@@ -216,18 +216,18 @@ describe('Devices API Contract (e2e)', () => {
       expect(response.body).toMatchObject({
         success: false,
         error: {
-          code: 'UNAUTHORIZED',
+          code: 'UNAUTHENTICATED',
           message: expect.any(String),
         },
         timestamp: expect.any(String),
-        requestId: expect.stringMatching(/^req-\d{14}-[0-9a-f-]{36}$/),
+        requestId: expect.stringMatching(/^req-\d{14}-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/),
       });
     });
 
-    it('should return standardized 500 external API error response', async () => {
+    it('should return standardized 503 external API error response', async () => {
       mockMarketingCloudService.getDevices.mockRejectedValue(
         new Error(
-          'EXTERNAL_API_ERROR: Marketing Cloud API returned status 500',
+          'UNAVAILABLE: Marketing Cloud API returned status 500',
         ),
       );
 
@@ -238,12 +238,12 @@ describe('Devices API Contract (e2e)', () => {
           shopId: '12345',
           phone: '0912345678',
         })
-        .expect(500);
+        .expect(503);
 
       expect(response.body).toMatchObject({
         success: false,
         error: {
-          code: 'EXTERNAL_API_ERROR',
+          code: 'UNAVAILABLE',
           message: expect.any(String),
         },
         timestamp: expect.any(String),
@@ -347,7 +347,7 @@ describe('Devices API Contract (e2e)', () => {
 
       // Both should follow the same pattern
       expect(successResponse.body.requestId).toMatch(
-        /^req-\d{14}-[0-9a-f-]{36}$/,
+        /^req-\d{14}-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/,
       );
       expect(notFoundResponse.body.requestId).toMatch(
         /^req-\d{14}-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/,

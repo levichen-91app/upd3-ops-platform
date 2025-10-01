@@ -38,9 +38,13 @@ describe('Notification History Not Found Tests', () => {
       .expect(404);
 
     expect(response.body.success).toBe(false);
-    expect(response.body.error.code).toBe('NOTIFICATION_NOT_FOUND');
+    expect(response.body.error.code).toBe('NOT_FOUND');
     expect(response.body.error.message).toBe('找不到指定的通知');
-    expect(response.body.error.details.notificationId).toBe(notificationId);
+    expect(response.body.error.details).toHaveLength(1);
+    expect(response.body.error.details[0]).toMatchObject({
+      '@type': 'type.upd3ops.com/ResourceInfo',
+      notificationId: notificationId,
+    });
     expect(response.body.requestId).toMatch(/^req-\d{14}-[0-9a-f-]{36}/);
     expect(mockWhaleApiService.getNotificationHistory).toHaveBeenCalledWith(
       notificationId,
@@ -65,9 +69,10 @@ describe('Notification History Not Found Tests', () => {
       .expect(404);
 
     expect(response.body.success).toBe(false);
-    expect(response.body.error.code).toBe('NOTIFICATION_NOT_FOUND');
+    expect(response.body.error.code).toBe('NOT_FOUND');
     expect(response.body.error.message).toBe('找不到指定的通知');
-    expect(response.body.error.details.notificationId).toBe(notificationId);
+    expect(response.body.error.details).toHaveLength(1);
+    expect(response.body.error.details[0].notificationId).toBe(notificationId);
   });
 
   it('should return 404 when Whale API returns empty data object', async () => {
@@ -86,8 +91,9 @@ describe('Notification History Not Found Tests', () => {
       .expect(404);
 
     expect(response.body.success).toBe(false);
-    expect(response.body.error.code).toBe('NOTIFICATION_NOT_FOUND');
-    expect(response.body.error.details.notificationId).toBe(notificationId);
+    expect(response.body.error.code).toBe('NOT_FOUND');
+    expect(response.body.error.details).toHaveLength(1);
+    expect(response.body.error.details[0].notificationId).toBe(notificationId);
   });
 
   it('should return 404 when Whale API returns undefined', async () => {
@@ -100,12 +106,13 @@ describe('Notification History Not Found Tests', () => {
       .expect(404);
 
     expect(response.body.success).toBe(false);
-    expect(response.body.error.code).toBe('NOTIFICATION_NOT_FOUND');
+    expect(response.body.error.code).toBe('NOT_FOUND');
     expect(response.body.error.message).toBe('找不到指定的通知');
-    expect(response.body.error.details.notificationId).toBe(notificationId);
+    expect(response.body.error.details).toHaveLength(1);
+    expect(response.body.error.details[0].notificationId).toBe(notificationId);
   });
 
-  it('should distinguish between not found (404) and external API error (500)', async () => {
+  it('should distinguish between not found (404) and external API error (503)', async () => {
     // Test 404 case
     const notFoundId = 11111;
     mockWhaleApiService.getNotificationHistory.mockResolvedValueOnce(null);
@@ -115,20 +122,20 @@ describe('Notification History Not Found Tests', () => {
       .set('ny-operator', 'operations-team')
       .expect(404);
 
-    expect(notFoundResponse.body.error.code).toBe('NOTIFICATION_NOT_FOUND');
+    expect(notFoundResponse.body.error.code).toBe('NOT_FOUND');
 
-    // Test 500 case (external API failure)
+    // Test 503 case (external API failure)
     const errorId = 22222;
     mockWhaleApiService.getNotificationHistory.mockRejectedValueOnce(
-      new Error('External API failed'),
+      new Error('UNAVAILABLE: External API failed'),
     );
 
     const errorResponse = await request(app.getHttpServer())
       .get(`/api/v1/notification-status/history/${errorId}`)
       .set('ny-operator', 'operations-team')
-      .expect(500);
+      .expect(503);
 
-    expect(errorResponse.body.error.code).toBe('EXTERNAL_API_ERROR');
+    expect(errorResponse.body.error.code).toBe('UNAVAILABLE');
   });
 
   it('should include proper error details for not found cases', async () => {
@@ -146,7 +153,9 @@ describe('Notification History Not Found Tests', () => {
     expect(response.body.error).toHaveProperty('details');
     expect(response.body).toHaveProperty('timestamp');
     expect(response.body).toHaveProperty('requestId');
-    expect(response.body.error.details).toEqual({
+    expect(response.body.error.details).toHaveLength(1);
+    expect(response.body.error.details[0]).toMatchObject({
+      '@type': 'type.upd3ops.com/ResourceInfo',
       notificationId: notificationId,
     });
   });

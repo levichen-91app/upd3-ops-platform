@@ -22,7 +22,7 @@ import {
 } from '@nestjs/swagger';
 import { SupplierUpdateRequestDto } from './dto/supplier-update-request.dto';
 import { SuppliersService } from './suppliers.service';
-import { ErrorCode } from '../../common/enums/error-code.enum';
+import { ERROR_CODES } from '../../constants/error-codes.constants';
 import { ApiErrorResponse } from '../../common/interfaces/api-error-response.interface';
 import { RequestIdMiddleware } from '../../common/middleware/request-id.middleware';
 
@@ -104,7 +104,7 @@ export class SuppliersController {
     // Validate shopId is positive
     if (shopId <= 0) {
       throw new BadRequestException({
-        code: ErrorCode.VALIDATION_ERROR,
+        code: ERROR_CODES.INVALID_ARGUMENT,
         message: 'Shop ID must be a positive integer',
         details: { shopId },
       });
@@ -113,7 +113,7 @@ export class SuppliersController {
     // Validate operator header
     if (!operator || operator.trim() === '') {
       throw new UnauthorizedException({
-        code: ErrorCode.UNAUTHORIZED_ACCESS,
+        code: ERROR_CODES.UNAUTHENTICATED,
         message: 'Missing or empty ny-operator header',
       });
     }
@@ -121,7 +121,7 @@ export class SuppliersController {
     // Business logic validation: supplier IDs must be different
     if (updateDto.oldSupplierId === updateDto.newSupplierId) {
       throw new BadRequestException({
-        code: ErrorCode.SUPPLIER_IDS_IDENTICAL,
+        code: ERROR_CODES.INVALID_ARGUMENT,
         message: 'Old and new supplier IDs must be different',
         details: {
           oldSupplierId: updateDto.oldSupplierId,

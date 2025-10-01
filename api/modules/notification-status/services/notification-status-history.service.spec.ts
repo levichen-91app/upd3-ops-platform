@@ -168,7 +168,7 @@ describe('NotificationStatusService - History Method Only', () => {
         .getNotificationHistory(notificationId, testRequestId)
         .catch((e) => e);
       expect(error.getResponse()).toEqual({
-        code: 'NOTIFICATION_NOT_FOUND',
+        code: 'NOT_FOUND',
         message: '找不到指定的通知',
         details: { notificationId },
       });
@@ -248,7 +248,7 @@ describe('NotificationStatusService - History Method Only', () => {
     it('should re-throw NotFoundException without modification', async () => {
       const notificationId = 12345;
       const notFoundException = new NotFoundException({
-        code: 'NOTIFICATION_NOT_FOUND',
+        code: 'NOT_FOUND',
         message: 'Custom not found message',
         details: { notificationId },
       });

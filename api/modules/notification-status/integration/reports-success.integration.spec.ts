@@ -78,7 +78,7 @@ describe('Reports Success Integration', () => {
           expiredTime: mockDownloadData.expiredTime,
         },
         timestamp: expect.any(String),
-        requestId: expect.stringMatching(/^req-reports-\d+-[a-zA-Z0-9]+$/),
+        requestId: expect.stringMatching(/^req-\d{14}-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/),
       });
 
       // Assert: External service called with correct parameters
@@ -181,10 +181,10 @@ describe('Reports Success Integration', () => {
       // Assert: Request IDs are unique
       expect(response1.body.requestId).not.toBe(response2.body.requestId);
       expect(response1.body.requestId).toMatch(
-        /^req-reports-\d+-[a-zA-Z0-9]+$/,
+        /^req-\d{14}-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/,
       );
       expect(response2.body.requestId).toMatch(
-        /^req-reports-\d+-[a-zA-Z0-9]+$/,
+        /^req-\d{14}-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/,
       );
     });
 

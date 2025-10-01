@@ -145,7 +145,7 @@ describe('Devices Authentication (e2e)', () => {
         })
         .expect(404);
 
-      expect(response.body.error.code).toBe('DEVICE_NOT_FOUND');
+      expect(response.body.error.code).toBe('NOT_FOUND');
     });
   });
 
@@ -163,7 +163,7 @@ describe('Devices Authentication (e2e)', () => {
         .expect(404);
 
       expect(response.body.success).toBe(false);
-      expect(response.body.error.code).toBe('DEVICE_NOT_FOUND');
+      expect(response.body.error.code).toBe('NOT_FOUND');
     });
 
     it('should accept Ny-Operator header format (HTTP headers are case-insensitive)', async () => {
@@ -179,7 +179,7 @@ describe('Devices Authentication (e2e)', () => {
         .expect(404);
 
       expect(response.body.success).toBe(false);
-      expect(response.body.error.code).toBe('DEVICE_NOT_FOUND');
+      expect(response.body.error.code).toBe('NOT_FOUND');
     });
   });
 
@@ -194,7 +194,7 @@ describe('Devices Authentication (e2e)', () => {
         .expect(401);
 
       expect(response.body.requestId).toBeDefined();
-      expect(response.body.requestId).toMatch(/^req-\d{14}-[0-9a-f-]{36}$/);
+      expect(response.body.requestId).toMatch(/^req-\d{14}-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/);
       expect(response.body.timestamp).toBeDefined();
       expect(new Date(response.body.timestamp)).toBeInstanceOf(Date);
     });
@@ -246,7 +246,7 @@ describe('Devices Authentication (e2e)', () => {
         })
         .expect(200);
 
-      expect(response.body.requestId).toMatch(/^req-\d{14}-[0-9a-f-]{36}$/);
+      expect(response.body.requestId).toMatch(/^req-\d{14}-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/);
     });
   });
 
@@ -265,7 +265,7 @@ describe('Devices Authentication (e2e)', () => {
         })
         .expect(404);
 
-      expect(response.body.error.code).toBe('DEVICE_NOT_FOUND');
+      expect(response.body.error.code).toBe('NOT_FOUND');
     });
 
     it('should reject when ny-operator is among multiple auth headers but invalid', async () => {

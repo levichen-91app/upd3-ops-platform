@@ -184,5 +184,4 @@ export type ErrorMessage =
 /**
  * 服務錯誤訊息類型
  */
-export type ServiceErrorMessage =
-  (typeof SERVICE_ERROR_MESSAGES)[keyof typeof SERVICE_DOMAINS][string];
+export type ServiceErrorMessage = string;

@@ -68,7 +68,7 @@ describe('Reports Validation Integration', () => {
         expect(response.body).toEqual({
           success: false,
           error: {
-            code: 'VALIDATION_ERROR',
+            code: 'INVALID_ARGUMENT',
             message: '輸入參數驗證失敗',
             details: expect.arrayContaining([
               expect.objectContaining({
@@ -102,7 +102,7 @@ describe('Reports Validation Integration', () => {
           .expect(400);
 
         // Assert
-        expect(response.body.error.code).toBe('VALIDATION_ERROR');
+        expect(response.body.error.code).toBe('INVALID_ARGUMENT');
         expect(response.body.error.details).toEqual(
           expect.arrayContaining([
             expect.objectContaining({
@@ -165,7 +165,7 @@ describe('Reports Validation Integration', () => {
             .send(invalidRequest)
             .expect(400);
 
-          expect(response.body.error.code).toBe('VALIDATION_ERROR');
+          expect(response.body.error.code).toBe('INVALID_ARGUMENT');
           expect(response.body.error.message).toBe('輸入參數驗證失敗');
           expect(response.body.error.details).toEqual(
             expect.arrayContaining([
@@ -193,7 +193,7 @@ describe('Reports Validation Integration', () => {
           .expect(400);
 
         // Assert
-        expect(response.body.error.code).toBe('VALIDATION_ERROR');
+        expect(response.body.error.code).toBe('INVALID_ARGUMENT');
         expect(response.body.error.message).toBe('輸入參數驗證失敗');
         expect(response.body.error.details).toEqual(
           expect.arrayContaining([
@@ -232,7 +232,7 @@ describe('Reports Validation Integration', () => {
             .send(invalidRequest)
             .expect(400);
 
-          expect(response.body.error.code).toBe('VALIDATION_ERROR');
+          expect(response.body.error.code).toBe('INVALID_ARGUMENT');
           expect(response.body.error.message).toBe('輸入參數驗證失敗');
           expect(response.body.error.details).toEqual(
             expect.arrayContaining([
@@ -294,7 +294,7 @@ describe('Reports Validation Integration', () => {
           .expect(400);
 
         // Assert: All errors included
-        expect(response.body.error.code).toBe('VALIDATION_ERROR');
+        expect(response.body.error.code).toBe('INVALID_ARGUMENT');
         expect(response.body.error.message).toBe('輸入參數驗證失敗');
         expect(response.body.error.details).toHaveLength(3);
 
@@ -323,7 +323,7 @@ describe('Reports Validation Integration', () => {
           .expect(400);
 
         // Assert
-        expect(response.body.error.code).toBe('VALIDATION_ERROR');
+        expect(response.body.error.code).toBe('INVALID_ARGUMENT');
         expect(response.body.error.message).toBe('輸入參數驗證失敗');
         expect(response.body.error.details.length).toBeGreaterThan(0);
       });
@@ -347,7 +347,7 @@ describe('Reports Validation Integration', () => {
       expect(response.body).toMatchObject({
         success: false,
         error: {
-          code: 'VALIDATION_ERROR',
+          code: 'INVALID_ARGUMENT',
           message: '輸入參數驗證失敗',
           details: expect.any(Array), // Exception filter converts ValidationPipe errors to details array
         },

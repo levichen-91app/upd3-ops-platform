@@ -52,13 +52,11 @@ import {
   StatusReportErrorResponseDto,
 } from './dto/status-report-response.dto';
 import { NyOperatorGuard } from './guards/ny-operator.guard';
-import { NotificationStatusExceptionFilter } from '../../common/filters/notification-status-exception.filter';
 import { RequestIdMiddleware } from '../../common/middleware/request-id.middleware';
 import { NY_OPERATOR_HEADER } from '../../constants/headers.constants';
 
 @ApiTags('Notification Status')
 @Controller('api/v1/notification-status')
-@UseFilters(NotificationStatusExceptionFilter)
 @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
 export class NotificationStatusController {
   constructor(

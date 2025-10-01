@@ -3,7 +3,7 @@ import { BadRequestException, UnauthorizedException } from '@nestjs/common';
 import { SuppliersController } from './suppliers.controller';
 import { SuppliersService } from './suppliers.service';
 import { SupplierUpdateRequestDto } from './dto/supplier-update-request.dto';
-import { ErrorCode } from '../../common/enums/error-code.enum';
+import { ERROR_CODES } from '../../constants/error-codes.constants';
 
 describe('SuppliersController', () => {
   let controller: SuppliersController;
@@ -85,7 +85,7 @@ describe('SuppliersController', () => {
         ),
       ).rejects.toThrow(
         new BadRequestException({
-          code: ErrorCode.VALIDATION_ERROR,
+          code: ERROR_CODES.VALIDATION_ERROR,
           message: 'Shop ID must be a positive integer',
           details: { shopId: 0 },
         }),
@@ -104,7 +104,7 @@ describe('SuppliersController', () => {
         ),
       ).rejects.toThrow(
         new BadRequestException({
-          code: ErrorCode.VALIDATION_ERROR,
+          code: ERROR_CODES.VALIDATION_ERROR,
           message: 'Shop ID must be a positive integer',
           details: { shopId: -1 },
         }),
@@ -123,7 +123,7 @@ describe('SuppliersController', () => {
         ),
       ).rejects.toThrow(
         new UnauthorizedException({
-          code: ErrorCode.UNAUTHORIZED_ACCESS,
+          code: ERROR_CODES.UNAUTHENTICATED,
           message: 'Missing or empty ny-operator header',
         }),
       );
@@ -141,7 +141,7 @@ describe('SuppliersController', () => {
         ),
       ).rejects.toThrow(
         new UnauthorizedException({
-          code: ErrorCode.UNAUTHORIZED_ACCESS,
+          code: ERROR_CODES.UNAUTHENTICATED,
           message: 'Missing or empty ny-operator header',
         }),
       );
@@ -165,7 +165,7 @@ describe('SuppliersController', () => {
         ),
       ).rejects.toThrow(
         new BadRequestException({
-          code: ErrorCode.SUPPLIER_IDS_IDENTICAL,
+          code: ERROR_CODES.SUPPLIER_IDS_IDENTICAL,
           message: 'Old and new supplier IDs must be different',
           details: {
             oldSupplierId: 100,

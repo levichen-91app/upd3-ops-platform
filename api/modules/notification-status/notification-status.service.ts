@@ -88,14 +88,10 @@ export class NotificationStatusService {
         );
 
         // 使用業務邏輯異常處理找不到設備的情況
-        throw new BusinessNotFoundException(
-          ERROR_CODES.DEVICE_NOT_FOUND,
-          '找不到指定客戶的設備',
-          {
-            shopId,
-            phone,
-          },
-        );
+        throw new BusinessNotFoundException('找不到指定客戶的設備', {
+          shopId,
+          phone,
+        });
       }
 
       this.logger.log(
@@ -119,19 +115,8 @@ export class NotificationStatusService {
         throw error;
       }
 
-      // 檢查是否為超時錯誤
-      if (error.message?.startsWith('TIMEOUT_ERROR:')) {
-        throw new ExternalApiException(
-          'Marketing Cloud API 請求逾時',
-          { originalError: error.message },
-          ERROR_CODES.TIMEOUT_ERROR,
-        );
-      }
-
-      // 其他錯誤視為外部 API 錯誤
-      throw new ExternalApiException('Marketing Cloud API 調用失敗', {
-        originalError: error.message,
-      });
+      // 其他錯誤重新拋出（已由 MarketingCloudService 處理）
+      throw error;
     }
   }
 
@@ -153,13 +138,9 @@ export class NotificationStatusService {
         this.logger.log(
           `Notification ${notificationId} not found in Whale API - requestId: ${requestId}`,
         );
-        throw new BusinessNotFoundException(
-          ERROR_CODES.NOTIFICATION_NOT_FOUND,
-          '找不到指定的通知',
-          {
-            notificationId,
-          },
-        );
+        throw new BusinessNotFoundException('找不到指定的通知', {
+          notificationId,
+        });
       }
 
       // Transform Whale API response to internal format
@@ -207,39 +188,8 @@ export class NotificationStatusService {
         throw error;
       }
 
-      // 處理超時錯誤
-      if (error.message && error.message.includes('Timeout')) {
-        throw new ExternalApiException(
-          'Whale API 請求逾時',
-          { errorType: 'TIMEOUT', originalError: error.message },
-          ERROR_CODES.TIMEOUT_ERROR,
-        );
-      }
-
-      // 處理 HTTP 錯誤
-      if (error.name === 'AxiosError' && error.response) {
-        throw new ExternalApiException(
-          `Whale API 回傳狀態碼 ${error.response.status}`,
-          { statusCode: error.response.status, originalError: error.message },
-        );
-      }
-
-      // 處理連接錯誤
-      if (
-        error.message &&
-        (error.message.includes('ECONNREFUSED') ||
-          error.message.includes('ENOTFOUND'))
-      ) {
-        throw new ExternalApiException('無法連接到 Whale API', {
-          errorType: 'CONNECTION',
-          originalError: error.message,
-        });
-      }
-
-      // 其他錯誤視為外部 API 錯誤
-      throw new ExternalApiException('Whale API 調用失敗', {
-        originalError: error.message,
-      });
+      // 其他錯誤重新拋出（已由 WhaleApiService 處理）
+      throw error;
     }
   }
 }

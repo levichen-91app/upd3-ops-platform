@@ -47,7 +47,7 @@ describe('Devices Validation (e2e)', () => {
         .expect(400);
 
       expect(response.body.success).toBe(false);
-      expect(response.body.error.code).toBe('VALIDATION_ERROR');
+      expect(response.body.error.code).toBe('INVALID_ARGUMENT');
       expect(response.body.error.message).toContain('輸入參數驗證失敗');
     });
 
@@ -62,7 +62,7 @@ describe('Devices Validation (e2e)', () => {
         .expect(400);
 
       expect(response.body.success).toBe(false);
-      expect(response.body.error.code).toBe('VALIDATION_ERROR');
+      expect(response.body.error.code).toBe('INVALID_ARGUMENT');
     });
 
     it('should return 400 when shopId is negative', async () => {
@@ -76,7 +76,7 @@ describe('Devices Validation (e2e)', () => {
         .expect(400);
 
       expect(response.body.success).toBe(false);
-      expect(response.body.error.code).toBe('VALIDATION_ERROR');
+      expect(response.body.error.code).toBe('INVALID_ARGUMENT');
     });
 
     it('should return 400 when shopId is zero', async () => {
@@ -90,7 +90,7 @@ describe('Devices Validation (e2e)', () => {
         .expect(400);
 
       expect(response.body.success).toBe(false);
-      expect(response.body.error.code).toBe('VALIDATION_ERROR');
+      expect(response.body.error.code).toBe('INVALID_ARGUMENT');
     });
   });
 
@@ -105,7 +105,7 @@ describe('Devices Validation (e2e)', () => {
         .expect(400);
 
       expect(response.body.success).toBe(false);
-      expect(response.body.error.code).toBe('VALIDATION_ERROR');
+      expect(response.body.error.code).toBe('INVALID_ARGUMENT');
       expect(response.body.error.message).toContain('輸入參數驗證失敗');
     });
 
@@ -120,7 +120,7 @@ describe('Devices Validation (e2e)', () => {
         .expect(400);
 
       expect(response.body.success).toBe(false);
-      expect(response.body.error.code).toBe('VALIDATION_ERROR');
+      expect(response.body.error.code).toBe('INVALID_ARGUMENT');
       expect(response.body.error.message).toContain('輸入參數驗證失敗');
     });
 
@@ -135,7 +135,7 @@ describe('Devices Validation (e2e)', () => {
         .expect(400);
 
       expect(response.body.success).toBe(false);
-      expect(response.body.error.code).toBe('VALIDATION_ERROR');
+      expect(response.body.error.code).toBe('INVALID_ARGUMENT');
     });
 
     it('should accept valid Taiwan mobile phone numbers', async () => {
@@ -183,7 +183,7 @@ describe('Devices Validation (e2e)', () => {
         .expect(400);
 
       expect(response.body.success).toBe(false);
-      expect(response.body.error.code).toBe('VALIDATION_ERROR');
+      expect(response.body.error.code).toBe('INVALID_ARGUMENT');
     });
 
     it('should ignore extra query parameters', async () => {
@@ -229,7 +229,7 @@ describe('Devices Validation (e2e)', () => {
         .expect(404);
 
       expect(response.body.success).toBe(false);
-      expect(response.body.error.code).toBe('DEVICE_NOT_FOUND');
+      expect(response.body.error.code).toBe('NOT_FOUND');
     });
   });
 

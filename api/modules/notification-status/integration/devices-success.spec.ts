@@ -77,7 +77,7 @@ describe('Devices Success Scenarios (e2e)', () => {
       appVersion: '1.2.3',
     });
     expect(response.body.timestamp).toBeDefined();
-    expect(response.body.requestId).toMatch(/^req-\d{14}-[0-9a-f-]{36}$/);
+    expect(response.body.requestId).toMatch(/^req-\d{14}-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/);
   });
 
   it('should return multiple devices for customer with multiple registrations', async () => {
