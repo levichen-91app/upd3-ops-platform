@@ -5,26 +5,20 @@ import { ApiProperty } from '@nestjs/swagger';
  */
 export class ErrorObject {
   @ApiProperty({
-    description: 'Structured error code',
-    example: 'VALIDATION_ERROR',
+    description: 'Google Cloud API standard error code (UPPER_SNAKE_CASE)',
+    example: 'NOT_FOUND',
     enum: [
-      // Validation errors (1000-1999)
-      'VALIDATION_ERROR',
-      'MISSING_REQUIRED_FIELD',
-      'INVALID_FIELD_FORMAT',
-      'INVALID_MARKET_CODE',
-      'INVALID_SUPPLIER_ID',
-      // Business logic errors (4000-4999)
-      'BUSINESS_RULE_VIOLATION',
-      'SUPPLIER_IDS_IDENTICAL',
-      'SUPPLIER_NOT_FOUND',
-      'SHOP_NOT_FOUND',
-      // System errors (5000-5999)
-      'EXTERNAL_SERVICE_ERROR',
-      'WHALE_API_UNAVAILABLE',
-      'DATABASE_CONNECTION_ERROR',
-      'INTERNAL_SERVER_ERROR',
-      'UNAUTHORIZED_ACCESS',
+      // Google RPC Standard Codes
+      'INVALID_ARGUMENT',
+      'UNAUTHENTICATED',
+      'PERMISSION_DENIED',
+      'NOT_FOUND',
+      'RESOURCE_EXHAUSTED',
+      'INTERNAL',
+      'UNAVAILABLE',
+      'DEADLINE_EXCEEDED',
+      // Deprecated (for backward compatibility)
+      'EXTERNAL_API_ERROR',
     ],
   })
   public readonly code: string;

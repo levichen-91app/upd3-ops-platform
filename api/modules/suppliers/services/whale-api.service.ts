@@ -1,6 +1,5 @@
 import {
   Injectable,
-  BadGatewayException,
   Logger,
   Inject,
 } from '@nestjs/common';
@@ -12,7 +11,8 @@ import {
   IWhaleApiService,
   WhaleApiUpdateResponse,
 } from '../interfaces/whale-api.interface';
-import { ErrorCode } from '../../../common/enums/error-code.enum';
+import { ExternalApiErrorHandler } from '../../../common/helpers/external-api-error-handler';
+import { SERVICE_DOMAINS } from '../../../constants/error-types.constants';
 import externalApisConfig from '../../../config/external-apis.config';
 
 @Injectable()
@@ -103,53 +103,15 @@ export class WhaleApiService implements IWhaleApiService {
       return {
         updatedCount: response.data?.updatedCount || 0,
       };
-    } catch (error) {
-      this.handleError(error, shopId);
-    }
-  }
-
-  private handleError(error: any, shopId: number): never {
-    const errorMessage =
-      error instanceof Error ? error.message : 'Unknown error';
-    const errorResponse = error?.response;
-    const errorCode = error?.code;
-
-    this.logger.error(`Whale API call failed`, {
-      shopId,
-      error: errorMessage,
-      status: errorResponse?.status,
-      data: errorResponse?.data,
-    });
-
-    if (
-      errorCode === 'ECONNREFUSED' ||
-      errorCode === 'ENOTFOUND' ||
-      errorCode === 'ETIMEDOUT' ||
-      errorCode === 'ECONNABORTED'
-    ) {
-      throw new BadGatewayException({
-        code: ErrorCode.WHALE_API_UNAVAILABLE,
-        message: 'External service is temporarily unavailable',
-        details: {
-          service: 'whale-api',
-          errorCode: errorCode,
-          timeout: this.whaleApiConfig.timeout,
-        },
+    } catch (error: any) {
+      this.logger.error(`Whale API call failed for shop ${shopId}`, {
+        shopId,
+        error: error.message,
+        status: error.response?.status,
       });
-    }
 
-    if (errorResponse?.status >= 400) {
-      throw new BadGatewayException({
-        code: ErrorCode.EXTERNAL_SERVICE_ERROR,
-        message: 'External service error',
-        details: {
-          service: 'whale-api',
-          statusCode: errorResponse.status,
-          message: errorResponse?.data?.message,
-        },
-      });
+      // 使用統一的錯誤處理器，自動映射到對應的 Google RPC Code
+      ExternalApiErrorHandler.handleAxiosError(error, SERVICE_DOMAINS.WHALE_API);
     }
-
-    throw error;
   }
 }

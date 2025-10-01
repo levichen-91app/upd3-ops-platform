@@ -12,7 +12,7 @@ import {
   ApiErrorResponse,
   ErrorObject,
 } from '../interfaces/api-error-response.interface';
-import { ErrorCode, ErrorCodeCategory } from '../enums/error-code.enum';
+import { ERROR_CODES } from '../../constants/error-codes.constants';
 import { RequestIdMiddleware } from '../middleware/request-id.middleware';
 
 @Injectable()
@@ -27,7 +27,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
     const requestId = RequestIdMiddleware.getRequestId(request);
 
     let status: number;
-    let errorCode: ErrorCode;
+    let errorCode: string;
     let message: string;
     let details: any = undefined;
 
@@ -46,7 +46,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
         message = customError.message;
         details = customError.details;
       }
-      // Handle validation errors
+      // Handle validation errors (400)
       else if (
         status === 400 &&
         typeof exceptionResponse === 'object' &&
@@ -56,23 +56,33 @@ export class HttpExceptionFilter implements ExceptionFilter {
           ? exceptionResponse.message
           : [exceptionResponse.message];
 
-        message = messages[0] || 'Validation failed';
-        errorCode = message.toLowerCase().includes('required')
-          ? ErrorCode.MISSING_REQUIRED_FIELD
-          : ErrorCode.VALIDATION_ERROR;
-        details = { validationErrors: messages };
+        message = messages[0] || 'Invalid request parameters provided';
+        errorCode = ERROR_CODES.INVALID_ARGUMENT; // Google RPC Code
+        details = [
+          {
+            '@type': 'type.upd3ops.com/ValidationError',
+            validationErrors: messages,
+          },
+        ];
       }
-      // Handle authorization errors
+      // Handle authorization errors (401)
       else if (status === 401) {
-        errorCode = ErrorCode.UNAUTHORIZED_ACCESS;
-        message = 'Invalid or missing authentication credentials';
+        errorCode = ERROR_CODES.UNAUTHENTICATED; // Google RPC Code
+        message = 'Authentication required';
+      }
+      // Handle forbidden errors (403)
+      else if (status === 403) {
+        errorCode = ERROR_CODES.PERMISSION_DENIED; // Google RPC Code
+        message = 'Permission denied';
+      }
+      // Handle not found errors (404)
+      else if (status === 404) {
+        errorCode = ERROR_CODES.NOT_FOUND; // Google RPC Code
+        message = 'Requested resource not found';
       }
       // Handle other HTTP exceptions
       else {
-        errorCode =
-          status >= 500
-            ? ErrorCode.INTERNAL_SERVER_ERROR
-            : ErrorCode.VALIDATION_ERROR;
+        errorCode = status >= 500 ? ERROR_CODES.INTERNAL : ERROR_CODES.INVALID_ARGUMENT;
         message =
           typeof exceptionResponse === 'string'
             ? exceptionResponse
@@ -81,7 +91,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
     } else {
       // Handle non-HTTP exceptions
       status = HttpStatus.INTERNAL_SERVER_ERROR;
-      errorCode = ErrorCode.INTERNAL_SERVER_ERROR;
+      errorCode = ERROR_CODES.INTERNAL; // Google RPC Code
       message =
         exception instanceof Error
           ? exception.message
