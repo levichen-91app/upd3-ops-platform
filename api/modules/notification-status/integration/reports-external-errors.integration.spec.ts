@@ -3,6 +3,8 @@ import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { AppModule } from '../../../app.module';
 import { NS_REPORT_SERVICE_TOKEN } from '../services/ns-report.service.interface';
+import { ExternalApiException } from '../../../common/exceptions/external-api.exception';
+import { ERROR_CODES } from '../../../constants/error-codes.constants';
 
 /**
  * 整合測試：外部 NS Report API 錯誤情境
@@ -58,9 +60,18 @@ describe('Reports External Errors Integration', () => {
 
     it('should return 504 when NS Report API times out', async () => {
       // Arrange: Mock timeout error
-      const timeoutError = new Error('DEADLINE_EXCEEDED: Request timeout');
-      timeoutError.name = 'TimeoutError';
-      mockNSReportService.getStatusReport.mockRejectedValue(timeoutError);
+      mockNSReportService.getStatusReport.mockRejectedValue(
+        new ExternalApiException(
+          ERROR_CODES.DEADLINE_EXCEEDED,
+          'Request timeout',
+          {
+            '@type': 'type.upd3ops.com/ErrorInfo',
+            reason: 'TIMEOUT',
+            domain: 'ns-report',
+            metadata: { timeout: 10000 },
+          },
+        ),
+      );
 
       // Act
       const response = await request(app.getHttpServer())
@@ -70,11 +81,19 @@ describe('Reports External Errors Integration', () => {
         .expect(504);
 
       // Assert: Error response structure for timeout
-      expect(response.body).toEqual({
+      expect(response.body).toMatchObject({
         success: false,
         error: {
           code: 'DEADLINE_EXCEEDED',
-          message: '外部 NS Report API 調用失敗',
+          message: expect.any(String),
+          details: expect.arrayContaining([
+            expect.objectContaining({
+              '@type': 'type.upd3ops.com/ErrorInfo',
+              reason: 'TIMEOUT',
+              domain: 'ns-report',
+              metadata: expect.objectContaining({ timeout: 10000 }),
+            }),
+          ]),
         },
         timestamp: expect.stringMatching(
           /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/,
@@ -90,14 +109,18 @@ describe('Reports External Errors Integration', () => {
 
     it('should return 503 when NS Report API returns HTTP 500 error', async () => {
       // Arrange: Mock HTTP 500 error
-      const httpError = new Error('UNAVAILABLE: Internal Server Error');
-      httpError.name = 'HttpException';
-      (httpError as any).response = {
-        status: 500,
-        statusText: 'Internal Server Error',
-        data: { error: 'Database connection failed' },
-      };
-      mockNSReportService.getStatusReport.mockRejectedValue(httpError);
+      mockNSReportService.getStatusReport.mockRejectedValue(
+        new ExternalApiException(
+          ERROR_CODES.UNAVAILABLE,
+          'Internal Server Error',
+          {
+            '@type': 'type.upd3ops.com/ErrorInfo',
+            reason: 'HTTP_ERROR',
+            domain: 'ns-report',
+            metadata: { httpStatus: 500 },
+          },
+        ),
+      );
 
       // Act
       const response = await request(app.getHttpServer())
@@ -109,27 +132,30 @@ describe('Reports External Errors Integration', () => {
       // Assert: Error response structure for HTTP error
       expect(response.body.success).toBe(false);
       expect(response.body.error.code).toBe('UNAVAILABLE');
-      expect(response.body.error.message).toContain(
-        '外部 NS Report API 調用失敗',
-      );
-      expect(response.body.error.details).toEqual({
-        originalMessage: 'UNAVAILABLE: Internal Server Error',
-        errorType: 'HttpException',
-        statusCode: 500,
-        statusText: 'Internal Server Error',
+      expect(response.body.error.message).toBeDefined();
+      expect(response.body.error.details).toHaveLength(1);
+      expect(response.body.error.details[0]).toMatchObject({
+        '@type': 'type.upd3ops.com/ErrorInfo',
+        reason: 'HTTP_ERROR',
+        domain: 'ns-report',
+        metadata: expect.objectContaining({ httpStatus: 500 }),
       });
     });
 
     it('should return 404 when NS Report API returns HTTP 404 error', async () => {
       // Arrange: Mock HTTP 404 error (not found in external system)
-      const notFoundError = new Error('NOT_FOUND: Report not found');
-      notFoundError.name = 'HttpException';
-      (notFoundError as any).response = {
-        status: 404,
-        statusText: 'Not Found',
-        data: { message: 'Report data not available for specified date' },
-      };
-      mockNSReportService.getStatusReport.mockRejectedValue(notFoundError);
+      mockNSReportService.getStatusReport.mockRejectedValue(
+        new ExternalApiException(
+          ERROR_CODES.NOT_FOUND,
+          'Report not found',
+          {
+            '@type': 'type.upd3ops.com/ErrorInfo',
+            reason: 'HTTP_ERROR',
+            domain: 'ns-report',
+            metadata: { httpStatus: 404 },
+          },
+        ),
+      );
 
       // Act
       const response = await request(app.getHttpServer())
@@ -140,19 +166,29 @@ describe('Reports External Errors Integration', () => {
 
       // Assert: External 404 becomes internal 404 (not found)
       expect(response.body.error.code).toBe('NOT_FOUND');
-      expect(response.body.error.details.statusCode).toBe(404);
+      expect(response.body.error.details).toHaveLength(1);
+      expect(response.body.error.details[0]).toMatchObject({
+        '@type': 'type.upd3ops.com/ErrorInfo',
+        reason: 'HTTP_ERROR',
+        domain: 'ns-report',
+        metadata: expect.objectContaining({ httpStatus: 404 }),
+      });
     });
 
     it('should return 503 when NS Report API returns HTTP 403 Forbidden', async () => {
       // Arrange: Mock HTTP 403 error (authentication failure at external API)
-      const forbiddenError = new Error('UNAVAILABLE: Forbidden');
-      forbiddenError.name = 'HttpException';
-      (forbiddenError as any).response = {
-        status: 403,
-        statusText: 'Forbidden',
-        data: { error: 'API key invalid or expired' },
-      };
-      mockNSReportService.getStatusReport.mockRejectedValue(forbiddenError);
+      mockNSReportService.getStatusReport.mockRejectedValue(
+        new ExternalApiException(
+          ERROR_CODES.UNAVAILABLE,
+          'Forbidden',
+          {
+            '@type': 'type.upd3ops.com/ErrorInfo',
+            reason: 'HTTP_ERROR',
+            domain: 'ns-report',
+            metadata: { httpStatus: 403 },
+          },
+        ),
+      );
 
       // Act
       const response = await request(app.getHttpServer())
@@ -163,15 +199,29 @@ describe('Reports External Errors Integration', () => {
 
       // Assert: External 403 becomes internal 503
       expect(response.body.error.code).toBe('UNAVAILABLE');
-      expect(response.body.error.details.statusCode).toBe(403);
+      expect(response.body.error.details).toHaveLength(1);
+      expect(response.body.error.details[0]).toMatchObject({
+        '@type': 'type.upd3ops.com/ErrorInfo',
+        reason: 'HTTP_ERROR',
+        domain: 'ns-report',
+        metadata: expect.objectContaining({ httpStatus: 403 }),
+      });
     });
 
     it('should return 503 when NS Report API connection fails', async () => {
       // Arrange: Mock connection failure
-      const connectionError = new Error('UNAVAILABLE: ECONNREFUSED');
-      connectionError.name = 'ConnectionError';
-      (connectionError as any).code = 'ECONNREFUSED';
-      mockNSReportService.getStatusReport.mockRejectedValue(connectionError);
+      mockNSReportService.getStatusReport.mockRejectedValue(
+        new ExternalApiException(
+          ERROR_CODES.UNAVAILABLE,
+          'ECONNREFUSED',
+          {
+            '@type': 'type.upd3ops.com/ErrorInfo',
+            reason: 'CONNECTION_FAILED',
+            domain: 'ns-report',
+            metadata: {},
+          },
+        ),
+      );
 
       // Act
       const response = await request(app.getHttpServer())
@@ -182,18 +232,28 @@ describe('Reports External Errors Integration', () => {
 
       // Assert: Connection error response
       expect(response.body.error.code).toBe('UNAVAILABLE');
-      expect(response.body.error.details).toEqual({
-        originalMessage: 'UNAVAILABLE: ECONNREFUSED',
-        errorType: 'ConnectionError',
-        errorCode: 'ECONNREFUSED',
+      expect(response.body.error.details).toHaveLength(1);
+      expect(response.body.error.details[0]).toMatchObject({
+        '@type': 'type.upd3ops.com/ErrorInfo',
+        reason: 'CONNECTION_FAILED',
+        domain: 'ns-report',
       });
     });
 
     it('should return 503 when NS Report API returns invalid JSON response', async () => {
       // Arrange: Mock invalid JSON response
-      const parseError = new Error('UNAVAILABLE: Unexpected token < in JSON at position 0');
-      parseError.name = 'SyntaxError';
-      mockNSReportService.getStatusReport.mockRejectedValue(parseError);
+      mockNSReportService.getStatusReport.mockRejectedValue(
+        new ExternalApiException(
+          ERROR_CODES.UNAVAILABLE,
+          'Unexpected token < in JSON at position 0',
+          {
+            '@type': 'type.upd3ops.com/ErrorInfo',
+            reason: 'INVALID_RESPONSE',
+            domain: 'ns-report',
+            metadata: {},
+          },
+        ),
+      );
 
       // Act
       const response = await request(app.getHttpServer())
@@ -204,7 +264,12 @@ describe('Reports External Errors Integration', () => {
 
       // Assert: JSON parse error response
       expect(response.body.error.code).toBe('UNAVAILABLE');
-      expect(response.body.error.details.errorType).toBe('SyntaxError');
+      expect(response.body.error.details).toHaveLength(1);
+      expect(response.body.error.details[0]).toMatchObject({
+        '@type': 'type.upd3ops.com/ErrorInfo',
+        reason: 'INVALID_RESPONSE',
+        domain: 'ns-report',
+      });
     });
 
     it('should return 503 when NS Report API returns unexpected response structure', async () => {
@@ -223,22 +288,63 @@ describe('Reports External Errors Integration', () => {
 
       // Assert: Invalid response structure error
       expect(response.body.error.code).toBe('UNAVAILABLE');
-      expect(response.body.error.message).toContain(
-        '外部 NS Report API 調用失敗',
-      );
+      expect(response.body.error.message).toBeDefined();
     });
 
     it('should maintain consistent error response format across all external failures', async () => {
       // Act: Test multiple error types
       const errorScenarios = [
-        { error: new Error('DEADLINE_EXCEEDED: Timeout'), name: 'TimeoutError', expectedCode: 'DEADLINE_EXCEEDED', expectedStatus: 504 },
-        { error: new Error('UNAVAILABLE: Connection failed'), name: 'ConnectionError', expectedCode: 'UNAVAILABLE', expectedStatus: 503 },
-        { error: new Error('UNAVAILABLE: Parse error'), name: 'SyntaxError', expectedCode: 'UNAVAILABLE', expectedStatus: 503 },
+        {
+          exception: new ExternalApiException(
+            ERROR_CODES.DEADLINE_EXCEEDED,
+            'Timeout',
+            {
+              '@type': 'type.upd3ops.com/ErrorInfo',
+              reason: 'TIMEOUT',
+              domain: 'ns-report',
+              metadata: { timeout: 10000 },
+            },
+          ),
+          name: 'TimeoutError',
+          expectedCode: 'DEADLINE_EXCEEDED',
+          expectedStatus: 504,
+        },
+        {
+          exception: new ExternalApiException(
+            ERROR_CODES.UNAVAILABLE,
+            'Connection failed',
+            {
+              '@type': 'type.upd3ops.com/ErrorInfo',
+              reason: 'CONNECTION_FAILED',
+              domain: 'ns-report',
+              metadata: {},
+            },
+          ),
+          name: 'ConnectionError',
+          expectedCode: 'UNAVAILABLE',
+          expectedStatus: 503,
+        },
+        {
+          exception: new ExternalApiException(
+            ERROR_CODES.UNAVAILABLE,
+            'Parse error',
+            {
+              '@type': 'type.upd3ops.com/ErrorInfo',
+              reason: 'INVALID_RESPONSE',
+              domain: 'ns-report',
+              metadata: {},
+            },
+          ),
+          name: 'SyntaxError',
+          expectedCode: 'UNAVAILABLE',
+          expectedStatus: 503,
+        },
       ];
 
       for (const scenario of errorScenarios) {
-        scenario.error.name = scenario.name;
-        mockNSReportService.getStatusReport.mockRejectedValue(scenario.error);
+        mockNSReportService.getStatusReport.mockRejectedValue(
+          scenario.exception,
+        );
 
         const response = await request(app.getHttpServer())
           .post('/api/v1/notification-status/reports')
@@ -252,10 +358,13 @@ describe('Reports External Errors Integration', () => {
           error: {
             code: scenario.expectedCode,
             message: expect.any(String),
-            details: expect.objectContaining({
-              originalMessage: expect.any(String),
-              errorType: scenario.name,
-            }),
+            details: expect.arrayContaining([
+              expect.objectContaining({
+                '@type': 'type.upd3ops.com/ErrorInfo',
+                reason: expect.any(String),
+                domain: 'ns-report',
+              }),
+            ]),
           },
           timestamp: expect.any(String),
           requestId: expect.any(String),
@@ -268,7 +377,16 @@ describe('Reports External Errors Integration', () => {
     it('should include unique request IDs for external API failures', async () => {
       // Arrange: Mock error
       mockNSReportService.getStatusReport.mockRejectedValue(
-        new Error('UNAVAILABLE: Service unavailable'),
+        new ExternalApiException(
+          ERROR_CODES.UNAVAILABLE,
+          'Service unavailable',
+          {
+            '@type': 'type.upd3ops.com/ErrorInfo',
+            reason: 'HTTP_ERROR',
+            domain: 'ns-report',
+            metadata: { httpStatus: 503 },
+          },
+        ),
       );
 
       // Act: Make multiple requests

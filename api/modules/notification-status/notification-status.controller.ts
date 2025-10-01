@@ -110,7 +110,7 @@ export class NotificationStatusController {
     // Validate ny-operator header
     if (!nyOperator || nyOperator.trim() === '') {
       throw new BadRequestException({
-        code: 'VALIDATION_ERROR',
+        code: ERROR_CODES.INVALID_ARGUMENT,
         message: 'Missing required header',
         details: 'ny-operator header is required',
       });
@@ -125,7 +125,7 @@ export class NotificationStatusController {
     // Validate shopId
     if (isNaN(queryDto.shopId) || queryDto.shopId <= 0) {
       throw new BadRequestException({
-        code: 'VALIDATION_ERROR',
+        code: ERROR_CODES.INVALID_ARGUMENT,
         message: '輸入參數驗證失敗',
         details: 'shopId must be a positive integer',
       });
@@ -136,7 +136,7 @@ export class NotificationStatusController {
       /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
     if (!uuidRegex.test(queryDto.ncId)) {
       throw new BadRequestException({
-        code: 'VALIDATION_ERROR',
+        code: ERROR_CODES.INVALID_ARGUMENT,
         message: '輸入參數驗證失敗',
         details: 'ncId must be a valid UUID format',
       });
@@ -257,7 +257,7 @@ export class NotificationStatusController {
     // Validate parameter format first (reject decimals, non-numeric strings)
     if (!/^\d+$/.test(notificationIdParam)) {
       throw new BadRequestException({
-        code: 'VALIDATION_ERROR',
+        code: ERROR_CODES.INVALID_ARGUMENT,
         message: '通知ID必須為正整數',
         details: 'notificationId must be a positive integer',
       });
@@ -272,7 +272,7 @@ export class NotificationStatusController {
       !Number.isInteger(notificationId)
     ) {
       throw new BadRequestException({
-        code: 'VALIDATION_ERROR',
+        code: ERROR_CODES.INVALID_ARGUMENT,
         message: '通知ID必須為正整數',
         details: 'notificationId must be a positive integer',
       });

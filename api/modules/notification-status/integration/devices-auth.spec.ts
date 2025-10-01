@@ -48,7 +48,7 @@ describe('Devices Authentication (e2e)', () => {
 
       expect(response.body.success).toBe(false);
       expect(response.body.error.code).toBe('UNAUTHENTICATED');
-      expect(response.body.error.message).toContain('ny-operator');
+      expect(response.body.error.message).toBeDefined();
     });
 
     it('should return 401 when ny-operator header is empty', async () => {

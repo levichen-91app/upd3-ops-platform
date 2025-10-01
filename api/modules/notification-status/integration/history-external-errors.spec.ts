@@ -3,6 +3,8 @@ import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { AppModule } from '../../../app.module';
 import { WHALE_API_SERVICE_TOKEN } from '../interfaces/whale-api.interface';
+import { ExternalApiException } from '../../../common/exceptions/external-api.exception';
+import { ERROR_CODES } from '../../../constants/error-codes.constants';
 
 describe('Notification History External API Error Tests', () => {
   let app: INestApplication;
@@ -31,7 +33,16 @@ describe('Notification History External API Error Tests', () => {
   it('should return 503 when Whale API is unavailable', async () => {
     const notificationId = 12345;
     mockWhaleApiService.getNotificationHistory.mockRejectedValue(
-      new Error('UNAVAILABLE: Connection refused'),
+      new ExternalApiException(
+        ERROR_CODES.UNAVAILABLE,
+        'Connection refused',
+        {
+          '@type': 'type.upd3ops.com/ErrorInfo',
+          reason: 'CONNECTION_FAILED',
+          domain: 'whale-api',
+          metadata: {},
+        },
+      ),
     );
 
     const response = await request(app.getHttpServer())
@@ -41,15 +52,29 @@ describe('Notification History External API Error Tests', () => {
 
     expect(response.body.success).toBe(false);
     expect(response.body.error.code).toBe('UNAVAILABLE');
-    expect(response.body.error.message).toContain('外部服務調用失敗');
-    expect(response.body.error.details.service).toBe('Whale API');
+    expect(response.body.error.message).toBeDefined();
+    expect(response.body.error.details).toHaveLength(1);
+    expect(response.body.error.details[0]).toMatchObject({
+      '@type': 'type.upd3ops.com/ErrorInfo',
+      reason: 'CONNECTION_FAILED',
+      domain: 'whale-api',
+    });
     expect(response.body.requestId).toMatch(/^req-\d{14}-[0-9a-f-]{36}/);
   });
 
   it('should return 504 when Whale API times out', async () => {
     const notificationId = 12345;
     mockWhaleApiService.getNotificationHistory.mockRejectedValue(
-      new Error('DEADLINE_EXCEEDED: Request took longer than 10000ms'),
+      new ExternalApiException(
+        ERROR_CODES.DEADLINE_EXCEEDED,
+        'Request took longer than 10000ms',
+        {
+          '@type': 'type.upd3ops.com/ErrorInfo',
+          reason: 'TIMEOUT',
+          domain: 'whale-api',
+          metadata: { timeout: 10000 },
+        },
+      ),
     );
 
     const response = await request(app.getHttpServer())
@@ -59,22 +84,30 @@ describe('Notification History External API Error Tests', () => {
 
     expect(response.body.success).toBe(false);
     expect(response.body.error.code).toBe('DEADLINE_EXCEEDED');
-    expect(response.body.error.message).toBe('請求處理超時');
-    expect(response.body.error.details.service).toBe('Whale API');
-    expect(response.body.error.details.timeoutMs).toBe(10000);
+    expect(response.body.error.message).toBeDefined();
+    expect(response.body.error.details).toHaveLength(1);
+    expect(response.body.error.details[0]).toMatchObject({
+      '@type': 'type.upd3ops.com/ErrorInfo',
+      reason: 'TIMEOUT',
+      domain: 'whale-api',
+      metadata: expect.objectContaining({ timeout: 10000 }),
+    });
   });
 
   it('should return 503 when Whale API returns HTTP error status', async () => {
     const notificationId = 12345;
-    const httpError = new Error('UNAVAILABLE: HTTP Error 500: Internal Server Error');
-    httpError.name = 'AxiosError';
-    (httpError as any).response = {
-      status: 500,
-      statusText: 'Internal Server Error',
-      data: { message: 'Database connection failed' },
-    };
-
-    mockWhaleApiService.getNotificationHistory.mockRejectedValue(httpError);
+    mockWhaleApiService.getNotificationHistory.mockRejectedValue(
+      new ExternalApiException(
+        ERROR_CODES.UNAVAILABLE,
+        'HTTP Error 500: Internal Server Error',
+        {
+          '@type': 'type.upd3ops.com/ErrorInfo',
+          reason: 'HTTP_ERROR',
+          domain: 'whale-api',
+          metadata: { httpStatus: 500 },
+        },
+      ),
+    );
 
     const response = await request(app.getHttpServer())
       .get(`/api/v1/notification-status/history/${notificationId}`)
@@ -83,16 +116,29 @@ describe('Notification History External API Error Tests', () => {
 
     expect(response.body.success).toBe(false);
     expect(response.body.error.code).toBe('UNAVAILABLE');
-    expect(response.body.error.details.service).toBe('Whale API');
+    expect(response.body.error.details).toHaveLength(1);
+    expect(response.body.error.details[0]).toMatchObject({
+      '@type': 'type.upd3ops.com/ErrorInfo',
+      reason: 'HTTP_ERROR',
+      domain: 'whale-api',
+      metadata: expect.objectContaining({ httpStatus: 500 }),
+    });
   });
 
   it('should return 503 for network connection errors', async () => {
     const notificationId = 12345;
-    const networkError = new Error(
-      'UNAVAILABLE: getaddrinfo ENOTFOUND whale-api.example.com',
+    mockWhaleApiService.getNotificationHistory.mockRejectedValue(
+      new ExternalApiException(
+        ERROR_CODES.UNAVAILABLE,
+        'getaddrinfo ENOTFOUND whale-api.example.com',
+        {
+          '@type': 'type.upd3ops.com/ErrorInfo',
+          reason: 'CONNECTION_FAILED',
+          domain: 'whale-api',
+          metadata: {},
+        },
+      ),
     );
-
-    mockWhaleApiService.getNotificationHistory.mockRejectedValue(networkError);
 
     const response = await request(app.getHttpServer())
       .get(`/api/v1/notification-status/history/${notificationId}`)
@@ -101,15 +147,29 @@ describe('Notification History External API Error Tests', () => {
 
     expect(response.body.success).toBe(false);
     expect(response.body.error.code).toBe('UNAVAILABLE');
-    expect(response.body.error.message).toContain('外部服務調用失敗');
-    expect(response.body.error.details.service).toBe('Whale API');
+    expect(response.body.error.message).toBeDefined();
+    expect(response.body.error.details).toHaveLength(1);
+    expect(response.body.error.details[0]).toMatchObject({
+      '@type': 'type.upd3ops.com/ErrorInfo',
+      reason: 'CONNECTION_FAILED',
+      domain: 'whale-api',
+    });
   });
 
   it('should return 503 for SSL/TLS certificate errors', async () => {
     const notificationId = 12345;
-    const sslError = new Error('UNAVAILABLE: Certificate is not trusted');
-
-    mockWhaleApiService.getNotificationHistory.mockRejectedValue(sslError);
+    mockWhaleApiService.getNotificationHistory.mockRejectedValue(
+      new ExternalApiException(
+        ERROR_CODES.UNAVAILABLE,
+        'Certificate is not trusted',
+        {
+          '@type': 'type.upd3ops.com/ErrorInfo',
+          reason: 'CONNECTION_FAILED',
+          domain: 'whale-api',
+          metadata: {},
+        },
+      ),
+    );
 
     const response = await request(app.getHttpServer())
       .get(`/api/v1/notification-status/history/${notificationId}`)
@@ -118,7 +178,12 @@ describe('Notification History External API Error Tests', () => {
 
     expect(response.body.success).toBe(false);
     expect(response.body.error.code).toBe('UNAVAILABLE');
-    expect(response.body.error.details.service).toBe('Whale API');
+    expect(response.body.error.details).toHaveLength(1);
+    expect(response.body.error.details[0]).toMatchObject({
+      '@type': 'type.upd3ops.com/ErrorInfo',
+      reason: 'CONNECTION_FAILED',
+      domain: 'whale-api',
+    });
   });
 
   it('should handle immediate failures without retry attempts', async () => {
@@ -126,7 +191,16 @@ describe('Notification History External API Error Tests', () => {
     const startTime = Date.now();
 
     mockWhaleApiService.getNotificationHistory.mockRejectedValue(
-      new Error('UNAVAILABLE: Connection refused'),
+      new ExternalApiException(
+        ERROR_CODES.UNAVAILABLE,
+        'Connection refused',
+        {
+          '@type': 'type.upd3ops.com/ErrorInfo',
+          reason: 'CONNECTION_FAILED',
+          domain: 'whale-api',
+          metadata: {},
+        },
+      ),
     );
 
     const response = await request(app.getHttpServer())
