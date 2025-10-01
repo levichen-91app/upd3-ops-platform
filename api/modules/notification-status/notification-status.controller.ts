@@ -47,6 +47,7 @@ import {
 import { NotificationHistoryQuery } from './dto/notification-history-query.dto';
 import { NotificationHistoryResponse } from './dto/notification-history-response.dto';
 import { StatusReportRequestDto } from './dto/status-report-request.dto';
+import { ERROR_CODES } from '../../constants/error-codes.constants';
 import {
   StatusReportResponseDto,
   StatusReportErrorResponseDto,
