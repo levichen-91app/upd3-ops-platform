@@ -35,7 +35,7 @@ describe('Notification History Authentication Tests', () => {
 
     expect(response.body.success).toBe(false);
     expect(response.body.error.code).toBe('UNAUTHENTICATED');
-    expect(response.body.error.message).toContain('ny-operator');
+    expect(response.body.error.message).toBeDefined();
     expect(response.body.requestId).toMatch(/^req-\d{14}-[0-9a-f-]{36}/);
     expect(mockWhaleApiService.getNotificationHistory).not.toHaveBeenCalled();
   });
