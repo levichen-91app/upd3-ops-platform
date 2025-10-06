@@ -55,6 +55,7 @@ import {
 import { NyOperatorGuard } from './guards/ny-operator.guard';
 import { RequestIdMiddleware } from '../../common/middleware/request-id.middleware';
 import { NY_OPERATOR_HEADER } from '../../constants/headers.constants';
+import { AuditLog } from '../../common/decorators/audit-log.decorator';
 
 @ApiTags('Notification Status')
 @Controller('api/v1/notification-status')
@@ -288,6 +289,7 @@ export class NotificationStatusController {
   }
 
   @Post('reports')
+  @AuditLog({ page: 'notification-status', action: 'query-status-report' })
   @HttpCode(200)
   @UseGuards(NyOperatorGuard)
   @ApiOperation({

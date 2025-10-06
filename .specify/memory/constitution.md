@@ -1,7 +1,7 @@
 # 後端服務開發規範：依賴抽象化與測試優先設計 (完整細節版)
 
-**版本**：1.0  
-**發布日期**：2025-09-27
+**版本**：1.1  
+**發布日期**：2025-10-06
 
 ---
 
@@ -1117,6 +1117,237 @@ export class NotificationStatusService {
 
 ---
 
+### 4.6 規範六：Decorator 優先的功能標記機制
+
+#### 條文
+
+當需要為特定 API 端點添加橫切關注點（Cross-cutting Concerns）功能時，如稽核日誌、快取、權限控制等，必須優先採用 Decorator 方式進行標記，避免使用全域路徑匹配或硬編碼方式。
+
+#### 設計原則
+
+**4.6.1 明確性優於隱式**
+
+功能的作用範圍必須在程式碼中明確可見，避免依賴外部配置或隱式規則。
+
+**4.6.2 Decorator 優先策略**
+
+- **第一選擇**：使用 Custom Decorator 標記需要特殊處理的端點
+- **第二選擇**：若 Decorator 無法滿足需求，才考慮 Guard 或 Interceptor 的全域配置
+- **禁止選擇**：路徑字串匹配、硬編碼 URL 規則
+
+#### 實作範例
+
+**稽核日誌功能實作**
+
+```typescript
+// ✅ 正確做法：使用 Decorator 標記
+@Controller('shops')
+export class ShopsController {
+  @Patch(':shopId/suppliers')
+  @AuditLog({
+    page: 'supplier-management',
+    action: 'update-supplier'
+  })
+  async updateSupplier(
+    @Param('shopId') shopId: number,
+    @Body() dto: SupplierUpdateDto
+  ) {
+    return this.shopsService.updateSupplier(shopId, dto);
+  }
+
+  @Get(':shopId')  // 沒有 @AuditLog，不會被稽核
+  async getShop(@Param('shopId') shopId: number) {
+    return this.shopsService.getShop(shopId);
+  }
+}
+```
+
+**Decorator 定義規範**
+
+```typescript
+// api/common/decorators/audit-log.decorator.ts
+export interface AuditLogOptions {
+  page: string;           // 業務頁面識別
+  action: string;         // 業務動作描述
+  excludeFields?: string[]; // 額外遮罩欄位（可選）
+}
+
+export const AuditLog = (options: AuditLogOptions) => {
+  return applyDecorators(
+    SetMetadata(AUDIT_LOG_METADATA_KEY, options),
+    UseInterceptors(AuditLogInterceptor)
+  );
+};
+```
+
+**Interceptor 實作規範**
+
+```typescript
+// api/common/interceptors/audit-log.interceptor.ts
+@Injectable()
+export class AuditLogInterceptor implements NestInterceptor {
+  constructor(private readonly reflector: Reflector) {}
+
+  intercept(context: ExecutionContext, next: CallHandler) {
+    // ✅ 只處理有 @AuditLog decorator 的端點
+    const auditOptions = this.reflector.get<AuditLogOptions>(
+      AUDIT_LOG_METADATA_KEY,
+      context.getHandler()
+    );
+    
+    if (!auditOptions) {
+      return next.handle(); // 沒有 decorator 就跳過
+    }
+    
+    // 處理稽核邏輯...
+    const { page, action } = auditOptions;
+    // ...
+  }
+}
+```
+
+#### 適用場景
+
+**適合使用 Decorator 的功能**：
+- 稽核日誌記錄
+- API 快取控制
+- 權限檢查標記
+- 速率限制控制
+- 資料驗證規則
+- 回應格式轉換
+
+**範例應用**：
+
+```typescript
+// 快取控制
+@Get('products')
+@CacheFor({ ttl: 300, key: 'products-list' })
+async getProducts() {}
+
+// 權限控制
+@Post('admin/users')
+@RequireRole(['admin', 'super-admin'])
+async createUser() {}
+
+// 速率限制
+@Post('password-reset')
+@RateLimit({ requests: 3, window: '1h' })
+async resetPassword() {}
+```
+
+#### 禁止的做法
+
+**❌ 路徑硬編碼**
+```typescript
+// 錯誤：在 Interceptor 中硬編碼路徑
+@Injectable()
+export class AuditLogInterceptor {
+  intercept(context: ExecutionContext, next: CallHandler) {
+    const request = context.switchToHttp().getRequest();
+    
+    // ❌ 禁止：路徑字串匹配
+    if (request.url.startsWith('/api/v1/shops/') || 
+        request.url.startsWith('/api/v1/notification-status/')) {
+      // 處理稽核...
+    }
+  }
+}
+```
+
+**❌ 全域配置檔案**
+```typescript
+// ❌ 禁止：外部配置檔案定義作用範圍
+const AUDIT_ROUTES = [
+  '/api/v1/shops/*',
+  '/api/v1/notification-status/*'
+];
+```
+
+#### 新增 API 的使用方式
+
+**使用者操作**：
+```typescript
+// 新增 API 時，只需加上 Decorator
+@Controller('new-feature')
+export class NewFeatureController {
+  @Post()
+  @AuditLog({
+    page: 'new-feature-management',
+    action: 'create-item'
+  })
+  async createItem(@Body() dto: CreateItemDto) {
+    // 自動被稽核，無需修改任何其他程式碼
+    return this.service.create(dto);
+  }
+}
+```
+
+#### 理由
+
+**1. 維護性**
+- 新增 API 無需修改 Interceptor 或配置檔案
+- API 重構時，Decorator 會跟著一起移動
+- 減少因路徑變更導致的功能失效
+
+**2. 可讀性**
+- 一眼就能看出哪些 API 具有特殊功能
+- 業務資訊（page, action）直接定義在 API 旁邊
+- 不需要查看其他檔案了解功能範圍
+
+**3. 可測試性**
+- 可以單獨測試 Decorator metadata
+- Mock Interceptor 行為更簡單
+- 測試覆蓋率更容易達成
+
+**4. 類型安全**
+- TypeScript 檢查 Decorator 參數
+- 編譯時發現配置錯誤
+- IDE 自動完成和重構支援
+
+**5. 客製化能力**
+```typescript
+// 不同 API 可以有不同的配置
+@AuditLog({
+  page: 'payment',
+  action: 'process-payment',
+  excludeFields: ['creditCard', 'bankAccount'] // 額外遮罩
+})
+async processPayment() {}
+```
+
+#### 模式對比
+
+| 方面 | Decorator 模式 | 全域攔截模式 |
+|------|---------------|-------------|
+| **新增 API** | ✅ 只需加 Decorator | ❌ 需修改 Interceptor 程式碼 |
+| **業務資訊** | ✅ 明確定義在 Decorator 中 | ❌ 需從路徑推斷 |
+| **維護性** | ✅ Decorator 跟著 API 移動 | ❌ 路徑變更需同步修改 |
+| **可讀性** | ✅ 一眼看出功能範圍 | ❌ 需查看其他檔案 |
+| **客製化** | ✅ 每個 API 可獨立配置 | ❌ 難以針對特定 API 調整 |
+| **測試** | ✅ 可單獨測試 metadata | ❌ 需測試完整路徑匹配邏輯 |
+
+#### 實作檢查清單
+
+**Decorator 設計要求**：
+- [ ] 介面定義明確的選項類型
+- [ ] 支援可選參數提供彈性
+- [ ] 使用 `applyDecorators` 組合多個功能
+- [ ] 提供 TypeScript 類型檢查
+
+**Interceptor 設計要求**：
+- [ ] 使用 `Reflector` 讀取 metadata
+- [ ] 沒有 decorator 時直接跳過處理
+- [ ] 錯誤處理不影響主要業務流程
+- [ ] 支援多個 decorator 組合使用
+
+**禁止事項**：
+- [ ] 不得在 Interceptor 中硬編碼路徑規則
+- [ ] 不得使用外部配置檔案定義功能範圍
+- [ ] 不得依賴 URL 字串匹配邏輯
+- [ ] 不得為了「簡便」而犧牲明確性
+
+---
+
 ## 5. 開發流程 (TDD)
 
 1. **閱讀規格** → specs/{feature-id}/spec.md
@@ -1444,6 +1675,14 @@ test(notification-status): 補充設備查詢整合測試
 - [ ] 配置項目集中在 `api/config/` 目錄
 - [ ] Header 名稱使用統一常數定義
 - [ ] Exception 類別按照錯誤類型正確分類
+
+### Decorator 設計要求（新增）
+- [ ] 橫切關注點功能優先使用 Decorator 標記而非全域攔截
+- [ ] 避免在 Interceptor 中硬編碼路徑規則或 URL 字串匹配
+- [ ] Decorator 介面定義明確的選項類型和 TypeScript 檢查
+- [ ] 使用 `Reflector` 讀取 metadata，沒有 decorator 時跳過處理
+- [ ] 新增 API 時通過加上 Decorator 即可啟用功能，無需修改其他程式碼
+- [ ] 業務資訊（如 page、action）直接定義在 Decorator 中，便於維護和閱讀
 
 ### 測試品質要求（新增）
 - [ ] 單元測試覆蓋率 ≥ 95% (業務邏輯類別)

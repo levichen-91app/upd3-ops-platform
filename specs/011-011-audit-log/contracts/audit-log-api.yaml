@@ -1,0 +1,444 @@
+openapi: 3.0.3
+info:
+  title: 稽核日誌 API
+  description: 系統操作稽核日誌查詢 API 規範
+  version: 1.0.0
+  contact:
+    name: UPD3 Ops Platform Team
+    email: dev@91app.com
+
+servers:
+  - url: http://localhost:3000
+    description: 開發環境
+  - url: https://api.upd3ops.com
+    description: 生產環境
+
+paths:
+  /api/v1/audit-logs:
+    get:
+      summary: 查詢稽核日誌
+      description: |
+        查詢系統操作稽核日誌，支援多種過濾條件和分頁。
+        
+        **查詢限制**:
+        - 最多查詢 7 天內的資料
+        - 每頁最多 100 筆記錄
+        - 需要有效的 ny-operator 認證標頭
+        
+        **查詢範圍**:
+        - `/api/v1/shops/*` 端點的寫入操作
+        - `/api/v1/notification-status/*` 端點的寫入操作
+        - 方法: POST, PUT, PATCH, DELETE
+      operationId: queryAuditLogs
+      tags:
+        - audit-logs
+      security:
+        - OperatorAuth: []
+      parameters:
+        - name: operatorFilter
+          in: query
+          description: 過濾特定操作者
+          required: false
+          schema:
+            type: string
+            maxLength: 255
+            example: "admin@91app.com"
+        - name: pathFilter
+          in: query
+          description: 過濾特定 API 路徑關鍵字
+          required: false
+          schema:
+            type: string
+            maxLength: 500
+            example: "suppliers"
+        - name: pageFilter
+          in: query
+          description: 過濾特定業務頁面
+          required: false
+          schema:
+            type: string
+            maxLength: 100
+            example: "supplier-management"
+        - name: method
+          in: query
+          description: 過濾特定 HTTP 方法
+          required: false
+          schema:
+            type: string
+            enum: [POST, PUT, PATCH, DELETE]
+            example: "POST"
+        - name: statusCode
+          in: query
+          description: 過濾特定 HTTP 狀態碼
+          required: false
+          schema:
+            type: integer
+            minimum: 100
+            maximum: 599
+            example: 200
+        - name: startDate
+          in: query
+          description: 查詢起始時間 (ISO 8601)，最早 7 天前
+          required: false
+          schema:
+            type: string
+            format: date-time
+            example: "2025-10-01T00:00:00.000Z"
+        - name: endDate
+          in: query
+          description: 查詢結束時間 (ISO 8601)，必須 >= startDate
+          required: false
+          schema:
+            type: string
+            format: date-time
+            example: "2025-10-06T23:59:59.999Z"
+        - name: limit
+          in: query
+          description: 每頁筆數
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+            example: 50
+        - name: offset
+          in: query
+          description: 分頁偏移量
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+            example: 0
+      responses:
+        '200':
+          description: 查詢成功
+          headers:
+            x-request-id:
+              description: 請求追蹤 ID
+              schema:
+                type: string
+                pattern: '^req-\d{14}-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuditLogQueryResponse'
+              examples:
+                success_with_data:
+                  summary: 成功查詢包含資料
+                  value:
+                    success: true
+                    data:
+                      - id: "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+                        operator: "admin@91app.com"
+                        page: "supplier-management"
+                        action: "update-supplier"
+                        fields:
+                          shopId: 12345
+                          market: "TW"
+                          oldSupplierId: 100
+                          newSupplierId: 200
+                        metadata:
+                          method: "PATCH"
+                          path: "/api/v1/shops/12345/suppliers"
+                          statusCode: 200
+                        ipAddress: "192.168.1.100"
+                        userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+                        createdAt: "2025-10-06T14:30:52.123Z"
+                        requestId: "req-20251006143052-abc123"
+                    pagination:
+                      total: 1
+                      limit: 50
+                      offset: 0
+                    timestamp: "2025-10-06T14:30:52.123Z"
+                    requestId: "req-20251006143052-def456"
+                success_empty:
+                  summary: 成功查詢無資料
+                  value:
+                    success: true
+                    data: []
+                    pagination:
+                      total: 0
+                      limit: 50
+                      offset: 0
+                    timestamp: "2025-10-06T14:30:52.123Z"
+                    requestId: "req-20251006143052-ghi789"
+        '400':
+          description: 請求參數錯誤
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalid_date_range:
+                  summary: 查詢範圍超過 7 天限制
+                  value:
+                    success: false
+                    error:
+                      code: "INVALID_ARGUMENT"
+                      message: "Query date range exceeds 7-day limit"
+                      details:
+                        - "@type": "type.upd3ops.com/ValidationError"
+                          field: "startDate"
+                          reason: "DATE_RANGE_EXCEEDED"
+                          maxDays: 7
+                    timestamp: "2025-10-06T14:30:52.123Z"
+                    requestId: "req-20251006143052-error1"
+                invalid_pagination:
+                  summary: 分頁參數錯誤
+                  value:
+                    success: false
+                    error:
+                      code: "INVALID_ARGUMENT"
+                      message: "Invalid pagination parameters"
+                      details:
+                        - "@type": "type.upd3ops.com/ValidationError"
+                          field: "limit"
+                          reason: "PARAMETER_OUT_OF_RANGE"
+                          maxValue: 100
+                    timestamp: "2025-10-06T14:30:52.123Z"
+                    requestId: "req-20251006143052-error2"
+        '401':
+          description: 認證失敗
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                error:
+                  code: "UNAUTHENTICATED"
+                  message: "Missing or invalid ny-operator header"
+                  details:
+                    - "@type": "type.upd3ops.com/AuthError"
+                      reason: "MISSING_OPERATOR_HEADER"
+                timestamp: "2025-10-06T14:30:52.123Z"
+                requestId: "req-20251006143052-auth1"
+        '503':
+          description: 服務暫時不可用
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                error:
+                  code: "UNAVAILABLE"
+                  message: "Audit log storage temporarily unavailable"
+                  details:
+                    - "@type": "type.upd3ops.com/ErrorInfo"
+                      reason: "STORAGE_ACCESS_FAILED"
+                      domain: "audit-log"
+                timestamp: "2025-10-06T14:30:52.123Z"
+                requestId: "req-20251006143052-storage1"
+
+components:
+  securitySchemes:
+    OperatorAuth:
+      type: apiKey
+      in: header
+      name: ny-operator
+      description: 營運平台操作者識別標頭
+
+  schemas:
+    AuditLogQueryResponse:
+      type: object
+      required:
+        - success
+        - data
+        - pagination
+        - timestamp
+        - requestId
+      properties:
+        success:
+          type: boolean
+          enum: [true]
+          description: 操作成功標識
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/AuditLogEntry'
+          description: 稽核日誌項目清單
+        pagination:
+          $ref: '#/components/schemas/PaginationInfo'
+        timestamp:
+          type: string
+          format: date-time
+          description: 回應時間戳記 (ISO 8601)
+          example: "2025-10-06T14:30:52.123Z"
+        requestId:
+          type: string
+          pattern: '^req-\d{14}-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$'
+          description: 請求追蹤 ID
+          example: "req-20251006143052-abc123"
+
+    AuditLogEntry:
+      type: object
+      required:
+        - id
+        - operator
+        - page
+        - action
+        - fields
+        - metadata
+        - createdAt
+        - requestId
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: 稽核日誌唯一識別碼
+          example: "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+        operator:
+          type: string
+          maxLength: 255
+          description: 操作者識別
+          example: "admin@91app.com"
+        page:
+          type: string
+          maxLength: 100
+          description: 操作頁面或功能識別
+          example: "supplier-management"
+        action:
+          type: string
+          maxLength: 50
+          description: 操作動作描述
+          example: "update-supplier"
+        fields:
+          type: object
+          description: 操作相關的業務欄位
+          additionalProperties: true
+          example:
+            shopId: 12345
+            market: "TW"
+            oldSupplierId: 100
+            newSupplierId: 200
+        metadata:
+          type: object
+          required:
+            - method
+            - path
+            - statusCode
+          properties:
+            method:
+              type: string
+              enum: [POST, PUT, PATCH, DELETE]
+              description: HTTP 方法
+            path:
+              type: string
+              maxLength: 500
+              description: API 路徑
+            statusCode:
+              type: integer
+              minimum: 100
+              maximum: 599
+              description: HTTP 回應狀態碼
+          additionalProperties: false
+          description: 技術相關的元資料
+        ipAddress:
+          type: string
+          nullable: true
+          maxLength: 45
+          description: 客戶端 IP 位址 (IPv4/IPv6)
+          example: "192.168.1.100"
+        userAgent:
+          type: string
+          nullable: true
+          maxLength: 1000
+          description: 使用者代理字串
+          example: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+        createdAt:
+          type: string
+          format: date-time
+          description: 稽核日誌建立時間 (ISO 8601)
+          example: "2025-10-06T14:30:52.123Z"
+        requestId:
+          type: string
+          pattern: '^req-\d{14}-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$'
+          description: 關聯的請求追蹤 ID
+          example: "req-20251006143052-abc123"
+
+    PaginationInfo:
+      type: object
+      required:
+        - total
+        - limit
+        - offset
+      properties:
+        total:
+          type: integer
+          minimum: 0
+          description: 符合查詢條件的總筆數
+          example: 150
+        limit:
+          type: integer
+          minimum: 1
+          maximum: 100
+          description: 每頁筆數
+          example: 50
+        offset:
+          type: integer
+          minimum: 0
+          description: 分頁偏移量
+          example: 0
+
+    ErrorResponse:
+      type: object
+      required:
+        - success
+        - error
+        - timestamp
+        - requestId
+      properties:
+        success:
+          type: boolean
+          enum: [false]
+          description: 操作失敗標識
+        error:
+          type: object
+          required:
+            - code
+            - message
+          properties:
+            code:
+              type: string
+              enum:
+                - INVALID_ARGUMENT
+                - UNAUTHENTICATED
+                - PERMISSION_DENIED
+                - NOT_FOUND
+                - RESOURCE_EXHAUSTED
+                - INTERNAL
+                - UNAVAILABLE
+                - DEADLINE_EXCEEDED
+              description: 標準化錯誤代碼 (Google RPC Code)
+            message:
+              type: string
+              maxLength: 500
+              description: 錯誤描述訊息
+            details:
+              type: array
+              items:
+                type: object
+                required:
+                  - "@type"
+                properties:
+                  "@type":
+                    type: string
+                    description: 錯誤詳細資訊類型
+                    example: "type.upd3ops.com/ValidationError"
+                additionalProperties: true
+              description: 錯誤詳細資訊陣列
+        timestamp:
+          type: string
+          format: date-time
+          description: 錯誤發生時間戳記
+        requestId:
+          type: string
+          pattern: '^req-\d{14}-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$'
+          description: 請求追蹤 ID
+
+tags:
+  - name: audit-logs
+    description: 稽核日誌相關操作

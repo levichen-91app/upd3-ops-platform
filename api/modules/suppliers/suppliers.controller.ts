@@ -25,6 +25,7 @@ import { SuppliersService } from './suppliers.service';
 import { ERROR_CODES } from '../../constants/error-codes.constants';
 import { ApiErrorResponse } from '../../common/interfaces/api-error-response.interface';
 import { RequestIdMiddleware } from '../../common/middleware/request-id.middleware';
+import { AuditLog } from '../../common/decorators/audit-log.decorator';
 
 @ApiTags('Suppliers')
 @Controller('api/v1/shops/:shopId/suppliers')
@@ -32,6 +33,7 @@ export class SuppliersController {
   constructor(private readonly suppliersService: SuppliersService) {}
 
   @Patch()
+  @AuditLog({ page: 'supplier-management', action: 'update-supplier' })
   @ApiSecurity('operator-auth')
   @ApiOperation({
     summary: 'Update supplier ID for products',

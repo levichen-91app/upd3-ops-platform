@@ -32,6 +32,7 @@
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.2",
     "joi": "^18.0.1",
+    "node-cron": "^4.2.1",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
     "swagger-ui-express": "^5.0.1",
@@ -48,6 +49,7 @@
     "@types/jest": "^30.0.0",
     "@types/nock": "^10.0.3",
     "@types/node": "^22.10.7",
+    "@types/node-cron": "^3.0.11",
     "@types/supertest": "^6.0.2",
     "@types/swagger-ui-express": "^4.1.8",
     "@types/uuid": "^9.0.7",
@@ -89,7 +91,9 @@
     ],
     "coverageDirectory": "coverage",
     "testEnvironment": "node",
-    "setupFilesAfterEnv": ["<rootDir>/api/test-setup.ts"],
+    "setupFilesAfterEnv": [
+      "<rootDir>/api/test-setup.ts"
+    ],
     "moduleNameMapper": {
       "^@/(.*)$": "<rootDir>/api/$1"
     }
