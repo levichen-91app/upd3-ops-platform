@@ -1,6 +1,6 @@
 openapi: 3.0.0
 paths:
-  '/api/v1/shops/{shopId}/suppliers':
+  "/api/v1/shops/{shopId}/suppliers":
     patch:
       description: >-
         Updates supplier ID for all products matching the specified criteria in
@@ -26,9 +26,9 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/SupplierUpdateRequestDto'
+              $ref: "#/components/schemas/SupplierUpdateRequestDto"
       responses:
-        '200':
+        "200":
           description: Supplier ID updated successfully
           content:
             application/json:
@@ -55,47 +55,47 @@ paths:
                         example: 200
                   timestamp:
                     type: string
-                    example: '2025-09-26T14:30:52.123Z'
+                    example: "2025-09-26T14:30:52.123Z"
                   requestId:
                     type: string
                     example: >-
                       req-20250926143052-a8b2c4d6e8f0-1234-5678-90ab-cdef12345678
-        '400':
-          description: 'INVALID_ARGUMENT: Validation error or business rule violation'
+        "400":
+          description: "INVALID_ARGUMENT: Validation error or business rule violation"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiErrorResponse'
-        '401':
-          description: 'UNAUTHENTICATED: Missing or invalid operator header'
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "401":
+          description: "UNAUTHENTICATED: Missing or invalid operator header"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiErrorResponse'
-        '404':
-          description: 'NOT_FOUND: Supplier or shop not found'
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "404":
+          description: "NOT_FOUND: Supplier or shop not found"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiErrorResponse'
-        '503':
-          description: 'UNAVAILABLE: External service (Whale API) unavailable'
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "503":
+          description: "UNAVAILABLE: External service (Whale API) unavailable"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiErrorResponse'
-        '504':
-          description: 'DEADLINE_EXCEEDED: External service request timeout'
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "504":
+          description: "DEADLINE_EXCEEDED: External service request timeout"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiErrorResponse'
+                $ref: "#/components/schemas/ApiErrorResponse"
       security:
         - operator-auth: []
       summary: Update supplier ID for products
       tags:
         - Suppliers
-  '/api/v1/notification-status/detail/{shopId}/{ncId}':
+  "/api/v1/notification-status/detail/{shopId}/{ncId}":
     get:
       description: 透過商店ID和通知中心ID查詢通知的詳細資訊，獲取NSId、狀態、報告等資訊
       operationId: NotificationStatusController_getNotificationDetail
@@ -122,42 +122,42 @@ paths:
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: 成功取得通知詳細資訊 (可能為null)
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/NotificationDetailResponseDto'
-        '400':
-          description: 'INVALID_ARGUMENT: 參數驗證失敗'
+                $ref: "#/components/schemas/NotificationDetailResponseDto"
+        "400":
+          description: "INVALID_ARGUMENT: 參數驗證失敗"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiErrorResponseDto'
-        '401':
-          description: 'UNAUTHENTICATED: 缺少或無效的 ny-operator header'
+                $ref: "#/components/schemas/ApiErrorResponseDto"
+        "401":
+          description: "UNAUTHENTICATED: 缺少或無效的 ny-operator header"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiErrorResponseDto'
-        '404':
-          description: 'NOT_FOUND: 通知不存在'
+                $ref: "#/components/schemas/ApiErrorResponseDto"
+        "404":
+          description: "NOT_FOUND: 通知不存在"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiErrorResponseDto'
-        '503':
-          description: 'UNAVAILABLE: NC Detail 服務不可用'
+                $ref: "#/components/schemas/ApiErrorResponseDto"
+        "503":
+          description: "UNAVAILABLE: NC Detail 服務不可用"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiErrorResponseDto'
-        '504':
-          description: 'DEADLINE_EXCEEDED: NC Detail 服務請求超時'
+                $ref: "#/components/schemas/ApiErrorResponseDto"
+        "504":
+          description: "DEADLINE_EXCEEDED: NC Detail 服務請求超時"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiErrorResponseDto'
+                $ref: "#/components/schemas/ApiErrorResponseDto"
       summary: 查詢通知詳細資訊
       tags:
         - Notification Status
@@ -194,46 +194,101 @@ paths:
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: Successfully retrieved device list
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DeviceQueryResponseDto'
-        '400':
-          description: 'INVALID_ARGUMENT: Parameter validation failure'
+                $ref: "#/components/schemas/DeviceQueryResponseDto"
+              example:
+                success: true
+                data:
+                  - guid: "123e4567-e89b-12d3-a456-426614174001"
+                    udid: "device_udid_001"
+                    token: "token_ios_xxxxxx001"
+                    shopId: 12345
+                    platformDef: "iOS"
+                    memberId: 67890
+                    advertiseId: "ad_id_ios_001"
+                    appVersion: "2.1.0"
+                    createdDateTime: "2024-01-10T08:30:00Z"
+                    updatedDateTime: "2024-01-15T10:30:00Z"
+                  - guid: "223e4567-e89b-12d3-a456-426614174002"
+                    udid: "device_udid_002"
+                    token: "token_android_xxxxxx002"
+                    shopId: 12345
+                    platformDef: "Android"
+                    memberId: 67890
+                    advertiseId: "ad_id_android_002"
+                    appVersion: "2.0.8"
+                    createdDateTime: "2024-01-12T14:20:00Z"
+                    updatedDateTime: "2024-01-14T16:45:00Z"
+                  - guid: "323e4567-e89b-12d3-a456-426614174003"
+                    udid: "device_udid_003"
+                    token: "token_ios_xxxxxx003"
+                    shopId: 12345
+                    platformDef: "iOS"
+                    memberId: 67890
+                    advertiseId: "ad_id_ios_003"
+                    appVersion: "2.1.1"
+                    createdDateTime: "2024-01-08T09:15:00Z"
+                    updatedDateTime: "2024-01-15T11:00:00Z"
+                  - guid: "423e4567-e89b-12d3-a456-426614174004"
+                    udid: "device_udid_004"
+                    token: "token_android_xxxxxx004"
+                    shopId: 12345
+                    platformDef: "Android"
+                    memberId: 67890
+                    advertiseId: "ad_id_android_004"
+                    appVersion: "2.0.9"
+                    createdDateTime: "2024-01-05T12:00:00Z"
+                    updatedDateTime: "2024-01-13T08:30:00Z"
+                  - guid: "523e4567-e89b-12d3-a456-426614174005"
+                    udid: "device_udid_005"
+                    token: "token_ios_xxxxxx005"
+                    shopId: 12345
+                    platformDef: "iOS"
+                    memberId: 67890
+                    advertiseId: "ad_id_ios_005"
+                    appVersion: "2.1.0"
+                    createdDateTime: "2024-01-11T15:45:00Z"
+                    updatedDateTime: "2024-01-15T09:20:00Z"
+                timestamp: "2024-01-15T10:35:00Z"
+                requestId: "req-devices-mock-12345"
+        "400":
+          description: "INVALID_ARGUMENT: Parameter validation failure"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponseDto'
-        '401':
-          description: 'UNAUTHENTICATED: Missing or invalid ny-operator header'
+                $ref: "#/components/schemas/ErrorResponseDto"
+        "401":
+          description: "UNAUTHENTICATED: Missing or invalid ny-operator header"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponseDto'
-        '404':
-          description: 'NOT_FOUND: No devices found for customer'
+                $ref: "#/components/schemas/ErrorResponseDto"
+        "404":
+          description: "NOT_FOUND: No devices found for customer"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponseDto'
-        '503':
-          description: 'UNAVAILABLE: Marketing Cloud service unavailable'
+                $ref: "#/components/schemas/ErrorResponseDto"
+        "503":
+          description: "UNAVAILABLE: Marketing Cloud service unavailable"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponseDto'
-        '504':
-          description: 'DEADLINE_EXCEEDED: Marketing Cloud request timeout'
+                $ref: "#/components/schemas/ErrorResponseDto"
+        "504":
+          description: "DEADLINE_EXCEEDED: Marketing Cloud request timeout"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponseDto'
+                $ref: "#/components/schemas/ErrorResponseDto"
       summary: Query customer device information
       tags:
         - Notification Status
-  '/api/v1/notification-status/history/{notificationId}':
+  "/api/v1/notification-status/history/{notificationId}":
     get:
       description: 透過通知ID查詢活動執行歷程，獲取ncId和bookDateTime
       operationId: NotificationStatusController_getNotificationHistory
@@ -253,42 +308,42 @@ paths:
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: 成功取得活動歷程
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/NotificationHistoryResponse'
-        '400':
-          description: 'INVALID_ARGUMENT: 參數驗證失敗'
+                $ref: "#/components/schemas/NotificationHistoryResponse"
+        "400":
+          description: "INVALID_ARGUMENT: 參數驗證失敗"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiErrorResponseDto'
-        '401':
-          description: 'UNAUTHENTICATED: 缺少或無效的 ny-operator header'
+                $ref: "#/components/schemas/ApiErrorResponseDto"
+        "401":
+          description: "UNAUTHENTICATED: 缺少或無效的 ny-operator header"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiErrorResponseDto'
-        '404':
-          description: 'NOT_FOUND: 通知不存在'
+                $ref: "#/components/schemas/ApiErrorResponseDto"
+        "404":
+          description: "NOT_FOUND: 通知不存在"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiErrorResponseDto'
-        '503':
-          description: 'UNAVAILABLE: Whale API 服務不可用'
+                $ref: "#/components/schemas/ApiErrorResponseDto"
+        "503":
+          description: "UNAVAILABLE: Whale API 服務不可用"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiErrorResponseDto'
-        '504':
-          description: 'DEADLINE_EXCEEDED: Whale API 請求超時'
+                $ref: "#/components/schemas/ApiErrorResponseDto"
+        "504":
+          description: "DEADLINE_EXCEEDED: Whale API 請求超時"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiErrorResponseDto'
+                $ref: "#/components/schemas/ApiErrorResponseDto"
       summary: 查詢通知活動歷程
       tags:
         - Notification Status
@@ -308,55 +363,188 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/StatusReportRequestDto'
+              $ref: "#/components/schemas/StatusReportRequestDto"
       responses:
-        '200':
+        "200":
           description: 成功取得報告下載連結
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/StatusReportResponseDto'
-        '400':
-          description: 'INVALID_ARGUMENT: 輸入參數驗證失敗'
+                $ref: "#/components/schemas/StatusReportResponseDto"
+        "400":
+          description: "INVALID_ARGUMENT: 輸入參數驗證失敗"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/StatusReportErrorResponseDto'
-        '401':
-          description: 'UNAUTHENTICATED: 缺少或無效的 ny-operator header'
+                $ref: "#/components/schemas/StatusReportErrorResponseDto"
+        "401":
+          description: "UNAUTHENTICATED: 缺少或無效的 ny-operator header"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/StatusReportErrorResponseDto'
-        '404':
-          description: 'NOT_FOUND: 報告檔案不存在'
+                $ref: "#/components/schemas/StatusReportErrorResponseDto"
+        "404":
+          description: "NOT_FOUND: 報告檔案不存在"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/StatusReportErrorResponseDto'
-        '503':
-          description: 'UNAVAILABLE: NS Report 服務不可用'
+                $ref: "#/components/schemas/StatusReportErrorResponseDto"
+        "503":
+          description: "UNAVAILABLE: NS Report 服務不可用"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/StatusReportErrorResponseDto'
-        '504':
-          description: 'DEADLINE_EXCEEDED: NS Report 服務請求超時'
+                $ref: "#/components/schemas/StatusReportErrorResponseDto"
+        "504":
+          description: "DEADLINE_EXCEEDED: NS Report 服務請求超時"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/StatusReportErrorResponseDto'
+                $ref: "#/components/schemas/StatusReportErrorResponseDto"
       summary: 查詢通知狀態報告
       tags:
         - Notification Status
+  /api/v1/audit-logs:
+    get:
+      summary: 查詢稽核日誌
+      description: 根據操作者、頁面、動作等條件查詢系統操作記錄
+      operationId: AuditLogController_getAuditLogs
+      tags:
+        - Audit Logs
+      security:
+        - operator-auth: []
+      parameters:
+        - name: ny-operator
+          in: header
+          required: true
+          description: 操作者識別
+          schema:
+            type: string
+        - name: operatorFilter
+          in: query
+          required: false
+          description: 篩選特定操作者 (不填則查詢所有,用於查詢他人操作記錄)
+          schema:
+            type: string
+            maxLength: 255
+            example: "admin@91app.com"
+        - name: pathFilter
+          in: query
+          required: false
+          description: 篩選特定 API 路徑關鍵字
+          schema:
+            type: string
+            maxLength: 500
+            example: "suppliers"
+        - name: pageFilter
+          in: query
+          required: false
+          description: 篩選特定業務頁面
+          schema:
+            type: string
+            maxLength: 100
+            example: "supplier-management"
+        - name: action
+          in: query
+          required: false
+          description: 篩選特定業務動作
+          schema:
+            type: string
+            maxLength: 50
+            example: "update-supplier"
+        - name: method
+          in: query
+          required: false
+          description: 篩選特定 HTTP 方法
+          schema:
+            type: string
+            enum: [POST, PUT, PATCH, DELETE]
+            example: "POST"
+        - name: statusCode
+          in: query
+          required: false
+          description: 篩選特定 HTTP 狀態碼
+          schema:
+            type: integer
+            minimum: 100
+            maximum: 599
+            example: 200
+        - name: startDate
+          in: query
+          required: false
+          description: 查詢起始時間 (ISO 8601 格式)
+          schema:
+            type: string
+            format: date-time
+            example: "2025-10-01T00:00:00Z"
+        - name: endDate
+          in: query
+          required: false
+          description: 查詢結束時間 (ISO 8601 格式)
+          schema:
+            type: string
+            format: date-time
+            example: "2025-10-04T23:59:59Z"
+        - name: limit
+          in: query
+          required: false
+          description: 每頁筆數
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+            example: 50
+        - name: offset
+          in: query
+          required: false
+          description: 分頁偏移量
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+            example: 0
+      responses:
+        "200":
+          description: 成功取得稽核日誌
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuditLogListResponseDto"
+        "400":
+          description: "INVALID_ARGUMENT: 參數驗證失敗"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "401":
+          description: "UNAUTHENTICATED: 缺少或無效的 ny-operator header"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "503":
+          description: "UNAVAILABLE: 稽核日誌服務不可用"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "504":
+          description: "DEADLINE_EXCEEDED: 稽核日誌服務請求超時"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
 info:
   title: UPD3 Operations Platform API
   description: Standardized API for supplier operations and management
-  version: '1.0'
+  version: "1.0"
   contact: {}
 tags:
   - name: Suppliers
     description: Supplier management operations
+  - name: Audit Logs
+    description: 系統操作稽核日誌管理
 servers: []
 components:
   securitySchemes:
@@ -371,9 +559,9 @@ components:
       properties:
         market:
           type: string
-          description: 'Market code (e.g., TW, HK, JP)'
+          description: "Market code (e.g., TW, HK, JP)"
           example: TW
-          pattern: '^[A-Z]{2,4}$'
+          pattern: "^[A-Z]{2,4}$"
           minLength: 2
           maxLength: 4
         oldSupplierId:
@@ -417,7 +605,7 @@ components:
           items:
             type: object
             properties:
-              '@type':
+              "@type":
                 type: string
                 description: Error detail type
                 example: type.upd3ops.com/ErrorInfo
@@ -448,11 +636,11 @@ components:
         error:
           description: Error information object
           allOf:
-            - $ref: '#/components/schemas/ErrorObject'
+            - $ref: "#/components/schemas/ErrorObject"
         timestamp:
           type: string
           description: ISO 8601 timestamp of the error response
-          example: '2025-09-26T14:30:52.123Z'
+          example: "2025-09-26T14:30:52.123Z"
           format: date-time
         requestId:
           type: string
@@ -574,12 +762,12 @@ components:
         CreateDateTime:
           type: string
           description: 建立時間
-          example: '2025-09-15T01:58:31.117'
+          example: "2025-09-15T01:58:31.117"
           format: date-time
         Report:
           description: 發送報告
           allOf:
-            - $ref: '#/components/schemas/NotificationReportDto'
+            - $ref: "#/components/schemas/NotificationReportDto"
         ShortMessageReportLink:
           type: object
           description: 簡訊報告連結
@@ -603,11 +791,11 @@ components:
           description: 通知詳細資訊 (可能為null)
           nullable: true
           allOf:
-            - $ref: '#/components/schemas/NotificationDetailDto'
+            - $ref: "#/components/schemas/NotificationDetailDto"
         timestamp:
           type: string
           description: 回應時間戳
-          example: '2025-01-27T10:35:00Z'
+          example: "2025-01-27T10:35:00Z"
           format: date-time
         requestId:
           type: string
@@ -644,7 +832,7 @@ components:
           items:
             type: object
             properties:
-              '@type':
+              "@type":
                 type: string
                 description: 錯誤詳情類型
                 example: type.upd3ops.com/ErrorInfo
@@ -673,11 +861,11 @@ components:
         error:
           description: 錯誤詳情
           allOf:
-            - $ref: '#/components/schemas/ErrorDetailDto'
+            - $ref: "#/components/schemas/ErrorDetailDto"
         timestamp:
           type: string
           description: 錯誤時間戳
-          example: '2025-01-27T10:35:00Z'
+          example: "2025-01-27T10:35:00Z"
           format: date-time
         requestId:
           type: string
@@ -732,12 +920,12 @@ components:
         createdDateTime:
           type: string
           description: Device registration time
-          example: '2024-01-15T10:00:00Z'
+          example: "2024-01-15T10:00:00Z"
           format: date-time
         updatedDateTime:
           type: string
           description: Last update time
-          example: '2024-01-15T10:30:00Z'
+          example: "2024-01-15T10:30:00Z"
           format: date-time
       required:
         - guid
@@ -761,17 +949,17 @@ components:
           description: List of customer devices (may be empty)
           type: array
           items:
-            $ref: '#/components/schemas/DeviceDto'
+            $ref: "#/components/schemas/DeviceDto"
         timestamp:
           type: string
           description: Response generation time
-          example: '2024-01-15T10:35:00Z'
+          example: "2024-01-15T10:35:00Z"
           format: date-time
         requestId:
           type: string
           description: Request tracking ID
           example: req-devices-123456
-          pattern: '^req-devices-[a-zA-Z0-9]+$'
+          pattern: "^req-devices-[a-zA-Z0-9]+$"
       required:
         - success
         - data
@@ -803,7 +991,7 @@ components:
           items:
             type: object
             properties:
-              '@type':
+              "@type":
                 type: string
                 description: Error detail type
                 example: type.upd3ops.com/ErrorInfo
@@ -834,11 +1022,11 @@ components:
         error:
           description: Error information
           allOf:
-            - $ref: '#/components/schemas/ErrorDto'
+            - $ref: "#/components/schemas/ErrorDto"
         timestamp:
           type: string
           description: Error occurrence time
-          example: '2024-01-15T10:35:00Z'
+          example: "2024-01-15T10:35:00Z"
           format: date-time
         requestId:
           type: string
@@ -899,13 +1087,13 @@ components:
           type: string
           description: 預定發送時間
           format: date-time
-          example: '2024-01-15T10:30:00Z'
+          example: "2024-01-15T10:30:00Z"
         sentDatetime:
           type: string
           description: 實際發送時間
           format: date-time
           nullable: true
-          example: '2024-01-15T10:35:00Z'
+          example: "2024-01-15T10:35:00Z"
         ncId:
           type: string
           description: Notification Center ID
@@ -960,7 +1148,7 @@ components:
         report:
           description: 統計報告
           allOf:
-            - $ref: '#/components/schemas/WhaleReport'
+            - $ref: "#/components/schemas/WhaleReport"
       required:
         - id
         - channel
@@ -987,16 +1175,16 @@ components:
         data:
           description: 通知歷程資料
           allOf:
-            - $ref: '#/components/schemas/NotificationHistory'
+            - $ref: "#/components/schemas/NotificationHistory"
         timestamp:
           type: string
           description: 回應時間戳
           format: date-time
-          example: '2024-01-15T10:35:00Z'
+          example: "2024-01-15T10:35:00Z"
         requestId:
           type: string
           description: 請求追蹤ID
-          pattern: '^req-history-[0-9]+-[a-zA-Z0-9]+$'
+          pattern: "^req-history-[0-9]+-[a-zA-Z0-9]+$"
           example: req-history-123457
       required:
         - success
@@ -1028,7 +1216,7 @@ components:
           description: 通知類型
           example: push
           allOf:
-            - $ref: '#/components/schemas/NotificationType'
+            - $ref: "#/components/schemas/NotificationType"
       required:
         - nsId
         - notificationDate
@@ -1060,11 +1248,11 @@ components:
         data:
           description: 報告資料
           allOf:
-            - $ref: '#/components/schemas/StatusReportDataDto'
+            - $ref: "#/components/schemas/StatusReportDataDto"
         timestamp:
           type: string
           description: 請求時間戳記 (ISO 8601 格式)
-          example: '2024-01-15T10:30:00.000Z'
+          example: "2024-01-15T10:30:00.000Z"
           format: date-time
         requestId:
           type: string
@@ -1102,7 +1290,7 @@ components:
           items:
             type: object
             properties:
-              '@type':
+              "@type":
                 type: string
                 description: 錯誤詳情類型
                 example: type.upd3ops.com/ErrorInfo
@@ -1131,11 +1319,11 @@ components:
         error:
           description: 錯誤資訊
           allOf:
-            - $ref: '#/components/schemas/StatusReportErrorDto'
+            - $ref: "#/components/schemas/StatusReportErrorDto"
         timestamp:
           type: string
           description: 請求時間戳記 (ISO 8601 格式)
-          example: '2024-01-15T10:30:00.000Z'
+          example: "2024-01-15T10:30:00.000Z"
           format: date-time
         requestId:
           type: string
@@ -1147,3 +1335,137 @@ components:
         - error
         - timestamp
         - requestId
+    AuditLogDto:
+      type: object
+      required:
+        - id
+        - operator
+        - page
+        - action
+        - fields
+        - createdAt
+        - requestId
+      properties:
+        id:
+          type: string
+          description: 稽核日誌唯一識別碼
+          format: uuid
+          example: "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+        operator:
+          type: string
+          description: 操作者識別
+          example: "admin@91app.com"
+        page:
+          type: string
+          description: 操作頁面
+          example: "supplier-management"
+        action:
+          type: string
+          description: 執行動作
+          example: "update-supplier"
+        fields:
+          type: object
+          description: 填入欄位內容
+          additionalProperties: true
+          example:
+            shopId: 12345
+            market: "TW"
+            oldSupplierId: 100
+            newSupplierId: 200
+        metadata:
+          type: object
+          description: 技術層中繼資料
+          required:
+            - method
+            - path
+            - statusCode
+          properties:
+            method:
+              type: string
+              enum: [POST, PUT, PATCH, DELETE]
+              description: HTTP 方法
+              example: "PATCH"
+            path:
+              type: string
+              maxLength: 500
+              description: API 路徑
+              example: "/api/v1/shops/12345/suppliers"
+            statusCode:
+              type: integer
+              minimum: 100
+              maximum: 599
+              description: HTTP 狀態碼
+              example: 200
+          additionalProperties: false
+          nullable: true
+        ipAddress:
+          type: string
+          description: 操作者 IP 位址
+          example: "192.168.1.100"
+          nullable: true
+        userAgent:
+          type: string
+          description: 操作者瀏覽器資訊
+          example: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+          nullable: true
+        createdAt:
+          type: string
+          description: 建立時間 (ISO 8601 格式)
+          format: date-time
+          example: "2025-10-04T14:30:52.123Z"
+        requestId:
+          type: string
+          description: 關聯的請求 ID
+          pattern: "^req-[0-9]{14}-[a-f0-9-]{36}$"
+          example: "req-20251004143052-a8b2c4d6-dd70-4edd-9f86-a2cfc0e8be22"
+    AuditLogListResponseDto:
+      type: object
+      required:
+        - success
+        - data
+        - pagination
+        - timestamp
+        - requestId
+      properties:
+        success:
+          type: boolean
+          description: 操作成功標記
+          example: true
+        data:
+          type: array
+          description: 稽核日誌列表
+          items:
+            $ref: "#/components/schemas/AuditLogDto"
+        pagination:
+          type: object
+          description: 分頁資訊
+          required:
+            - total
+            - limit
+            - offset
+          properties:
+            total:
+              type: integer
+              description: 總筆數
+              minimum: 0
+              example: 150
+            limit:
+              type: integer
+              description: 每頁筆數
+              minimum: 1
+              example: 50
+            offset:
+              type: integer
+              description: 目前偏移量
+              minimum: 0
+              example: 0
+        timestamp:
+          type: string
+          description: 回應時間戳記 (ISO 8601 格式)
+          format: date-time
+          example: "2025-10-04T14:30:52.123Z"
+        requestId:
+          type: string
+          description: 請求追蹤 ID
+          pattern: "^req-[0-9]{14}-[a-f0-9-]{36}$"
+          example: "req-20251004143052-a8b2c4d6-dd70-4edd-9f86-a2cfc0e8be22"
